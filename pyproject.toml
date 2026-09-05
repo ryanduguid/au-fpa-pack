@@ -1,5 +1,5 @@
 [project]
-name = "firefalcon"
+name = "au-fpa-pack"
 version = "0.1.0"
 description = "Australian FP&A pack on openfpa: 30 June years, Xero AU, GST/BAS. Upstream is Jeff Brines / Guiderail."
 readme = "README.md"
@@ -38,8 +38,8 @@ dev = [
 openfpa = "pyfpa.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ryanduguid/FireFalcon"
-Repository = "https://github.com/ryanduguid/FireFalcon"
+Homepage = "https://github.com/ryanduguid/au-fpa-pack"
+Repository = "https://github.com/ryanduguid/au-fpa-pack"
 Upstream = "https://github.com/JeffBrines/openfpa"
 
 [build-system]
