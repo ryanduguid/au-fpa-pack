@@ -23,7 +23,7 @@ than creating a public inbox.
 
 ## Upstream
 
-FireFalcon is an Australian pack built on
+au-fpa-pack is an Australian pack built on
 [openfpa](https://github.com/JeffBrines/openfpa) by Guiderail. A vulnerability
 in the shared `pyfpa` kernel belongs upstream. Report it to the openfpa
 maintainers as well, and say here that you have done so, so the fix is not
@@ -31,7 +31,7 @@ duplicated or delayed.
 
 ## What this project does and does not do
 
-FireFalcon runs locally against files you provide. It does not ship
+au-fpa-pack runs locally against files you provide. It does not ship
 credentials, does not authenticate to Xero or any other accounting system, and
 does not post journals, lodge a BAS or a tax return, make payments, or send
 client correspondence.

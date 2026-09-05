@@ -1,6 +1,6 @@
 # Disclaimer
 
-FireFalcon provides Australian FP&A tools, 30 June fiscal year alignments, GST/BAS cash timing models, and payroll on-cost calculators built on openfpa. It is not tax, legal, accounting, financial, investment, BAS-agent, registered-tax-agent, or assurance advice. It is not an assessment, a private ruling, or a statutory lodgment.
+au-fpa-pack provides Australian FP&A tools, 30 June fiscal year alignments, GST/BAS cash timing models, and payroll on-cost calculators built on openfpa. It is not tax, legal, accounting, financial, investment, BAS-agent, registered-tax-agent, or assurance advice. It is not an assessment, a private ruling, or a statutory lodgment.
 
 This project is not affiliated with, sponsored by, endorsed by, or approved by:
 
