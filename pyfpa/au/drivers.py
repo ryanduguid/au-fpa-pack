@@ -51,7 +51,7 @@ ABS_DATAFLOWS = {
     "labour_force": "LF",
 }
 
-_UA = "FireFalcon-au (github.com/ryanduguid/FireFalcon)"
+_UA = "au-fpa-pack (github.com/ryanduguid/au-fpa-pack)"
 
 
 class DriverSeries(BaseModel):
