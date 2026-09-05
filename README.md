@@ -1,8 +1,8 @@
-# FireFalcon
+# au-fpa-pack
 
 ```
 +----------------------------------------------------------------------+
-|                              FireFalcon                              |
+|                             au-fpa-pack                              |
 +----------------------------------------------------------------------+
 |          Australian FP&A pack on openfpa: 30 June, Xero AU           |
 +----------------------------------+-----------------------------------+
@@ -13,17 +13,17 @@
 | AU payroll on cost rules         | -                                 |
 +----------------------------------+-----------------------------------+
 ```
-Australian FP&A pack on [openfpa](https://github.com/JeffBrines/openfpa) (Jeff Brines / Guiderail): 30 June years, Xero AU, GST/BAS. Not the upstream product.
+Australian FP&A pack on [openfpa](https://github.com/JeffBrines/openfpa) (Jeff Brines / Guiderail): 30 June years, Xero AU, GST/BAS. Not the upstream product. Formerly FireFalcon.
 
-[![CI](https://github.com/ryanduguid/FireFalcon/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanduguid/FireFalcon/actions/workflows/ci.yml)
+[![CI](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
 
-**FireFalcon is an Australian FP&A pack** on a fork of
+**au-fpa-pack is an Australian FP&A pack** on a fork of
 [openfpa](https://github.com/JeffBrines/openfpa). The kernel, skills, and MIT
 license stay with Guiderail's openfpa. This repo adds 30 June years, Xero
 Australia, GST/BAS cash timing, AU payroll on-costs, and two worked examples:
 Harbour Light (synthetic) and ARB Corporation (ASX: ARB).
 
-**Package lifecycle:** source-only. Install from this repository; the `firefalcon`
+**Package lifecycle:** source-only. Install from this repository; the `au-fpa-pack`
 distribution is not published to PyPI.
 
 **openfpa is an FP&A workbench an AI coding agent can run.** It gives the agent a
@@ -338,8 +338,8 @@ with `entrypoint-register --kind connector`.
 Clone the repository and install it into a Python 3.11 or newer environment:
 
 ```bash
-git clone https://github.com/ryanduguid/FireFalcon
-cd FireFalcon
+git clone https://github.com/ryanduguid/au-fpa-pack
+cd au-fpa-pack
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
@@ -448,7 +448,7 @@ This fork is not a claim to be upstream.
 
 ## Python kernel
 
-The importable package is `pyfpa`. The distribution name is `firefalcon`.
+The importable package is `pyfpa`. The distribution name is `au-fpa-pack`.
 
 ```python
 import pyfpa
@@ -565,4 +565,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow and
 ## License
 
 MIT. See [`LICENSE`](LICENSE). The `pyfpa` kernel is built and maintained by
-[Guiderail](https://www.guiderail.io). FireFalcon is a fork, not a replacement.
+[Guiderail](https://www.guiderail.io). au-fpa-pack is a fork, not a replacement.
