@@ -6,7 +6,6 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
-
 MetricDirection = Literal["lower", "higher"]
 
 
@@ -31,7 +30,7 @@ class ResearchObjective(BaseModel):
     passable aggregate. None disables the guard."""
 
     @model_validator(mode="after")
-    def _unique_metrics(self) -> "ResearchObjective":
+    def _unique_metrics(self) -> ResearchObjective:
         names = [metric.name for metric in self.metrics]
         if len(names) != len(set(names)):
             raise ValueError("objective metric names must be unique")

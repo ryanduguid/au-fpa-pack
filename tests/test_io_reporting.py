@@ -1,6 +1,7 @@
-import pyfpa
 import pandas as pd
-from pyfpa.io.reporting import to_briefing_md, forecast_to_excel
+
+import pyfpa
+from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
 
 REPO_ROOT = __import__("pathlib").Path(__file__).resolve().parents[1]
 

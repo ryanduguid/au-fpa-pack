@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
-
 
 _REQUIRED_COLUMNS = {"revenue", "ebitda", "net_income", "ending_cash"}
 
@@ -17,7 +17,7 @@ def to_briefing_md(
     forecast_df: pd.DataFrame,
     *,
     title: str = "Cash Flow Briefing",
-    runway: dict | None = None,
+    runway: dict[str, Any] | None = None,
 ) -> str:
     """Render a monthly forecast as a board-style markdown briefing.
 

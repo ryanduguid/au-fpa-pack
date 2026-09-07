@@ -38,7 +38,9 @@ def _curl(url: str) -> bytes:
     # exit instead of an error body that would parse as missing data. -S keeps
     # the reason on stderr.
     result = subprocess.run(
-        ["curl", "-sS", "--fail", "-H", f"User-Agent: {UA}", url], capture_output=True
+        ["curl", "-sS", "--fail", "-H", f"User-Agent: {UA}", url],
+        capture_output=True,
+        check=False,
     )
     if result.returncode != 0:
         raise RuntimeError(f"curl failed for {url}: {result.stderr.decode()[:200]}")
@@ -95,7 +97,10 @@ def latest_quarter(tag: str) -> tuple[str, str, float]:
     ]
     if not quarters:
         raise RuntimeError(f"no ~quarterly value for concept {tag}")
-    r = sorted(quarters, key=lambda r: r["end"])[-1]
+    latest_end = max(row["end"] for row in quarters)
+    # Last row wins on a tied period end, as in `annual`/`instant` above: EDGAR
+    # lists the most recently filed value for a period last.
+    r = [row for row in quarters if row["end"] == latest_end][-1]
     return r["start"], r["end"], float(r["val"])
 
 
@@ -231,15 +236,19 @@ def write_sources() -> None:
         "",
         "## Segment net sales + Adjusted EBITDA",
         "",
-        f"FY2025 10-K segment footnote: "
-        f"https://www.sec.gov/Archives/edgar/data/1424929/{TENK[2025]}/{SEG_REPORT}",
+        (
+            f"FY2025 10-K segment footnote: "
+            f"https://www.sec.gov/Archives/edgar/data/1424929/{TENK[2025]}/{SEG_REPORT}"
+        ),
         "(Fox reports segment **Adjusted EBITDA** under ASU 2023-07 - not segment gross",
         "profit or operating income. The table carries FY2023-FY2025.)",
         "",
         "## Marucci acquisition anchor (Phase D divestiture)",
         "",
-        f"FY2023 10-K acquisitions footnote: "
-        f"https://www.sec.gov/Archives/edgar/data/1424929/{TENK[2023]}/R97.htm",
+        (
+            f"FY2023 10-K acquisitions footnote: "
+            f"https://www.sec.gov/Archives/edgar/data/1424929/{TENK[2023]}/R97.htm"
+        ),
         "- Acquired 2023-11-14; total consideration **$567,194K** (cash $567,092K).",
         "- Goodwill $244,790K; finite-lived intangibles $279,100K; inventory $44,972K.",
         "- Pro-forma (R98): combined FY2023 sales with full-year Marucci ~$1,632,076K.",

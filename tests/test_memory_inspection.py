@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pyfpa.memory.inspection import inspect_data_files, InspectionResult
+from pyfpa.memory.inspection import InspectionResult, inspect_data_files
 
 
 def test_classifies_financial_files_by_name(tmp_path):

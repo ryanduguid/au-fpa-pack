@@ -1,9 +1,13 @@
 import pytest
-from pyfpa.memory.corrections import (
-    Override, Correction, save_correction, load_corrections,
-)
+
 from pyfpa.config.schemas import EntityConfig
-from pyfpa.memory.corrections import apply_corrections
+from pyfpa.memory.corrections import (
+    Correction,
+    Override,
+    apply_corrections,
+    load_corrections,
+    save_correction,
+)
 
 
 def _cfg():

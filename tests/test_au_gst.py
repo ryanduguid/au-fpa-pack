@@ -4,7 +4,13 @@ import pandas as pd
 import pytest
 
 from pyfpa.au.calendar import fy_month_range
-from pyfpa.au.gst import BasCycle, GstAssumptions, bas_schedule, gst_weekly_flows, monthly_gst
+from pyfpa.au.gst import (
+    BasCycle,
+    GstAssumptions,
+    bas_schedule,
+    gst_weekly_flows,
+    monthly_gst,
+)
 
 
 @pytest.fixture

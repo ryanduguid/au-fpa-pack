@@ -1,9 +1,9 @@
+from pyfpa.backtest.score import score_forecast
+from pyfpa.backtest.snapshot import save_snapshot, snapshot_forecast
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.backtest.snapshot import snapshot_forecast, save_snapshot
-from pyfpa.backtest.score import score_forecast
-from pyfpa.portfolio.manifest import Portfolio, ClientRef
-from pyfpa.portfolio.mine import mine_priors, find_recurring_skills
+from pyfpa.portfolio.manifest import ClientRef, Portfolio
+from pyfpa.portfolio.mine import find_recurring_skills, mine_priors
 
 
 def _base_cfg(dio):

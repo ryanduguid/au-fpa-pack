@@ -43,8 +43,9 @@ def test_verify_fails_on_corrupted_formula(tmp_path):
 
 
 def test_missing_formulas_dependency_message():
-    import pyfpa.excel.verify as v
     import builtins
+
+    import pyfpa.excel.verify as v
     real_import = builtins.__import__
 
     def fake_import(name, *args, **kwargs):

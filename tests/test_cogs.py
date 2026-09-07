@@ -1,6 +1,6 @@
-from pyfpa.config.schemas import (Channel, EntityConfig, WorkingCapitalConfig)
-from pyfpa.models.revenue import revenue_from_config
+from pyfpa.config.schemas import Channel, EntityConfig, WorkingCapitalConfig
 from pyfpa.models.cogs import cogs_from_config
+from pyfpa.models.revenue import revenue_from_config
 
 
 def test_cogs_applies_per_channel_pct(sample_config):

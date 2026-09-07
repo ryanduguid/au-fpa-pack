@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel
@@ -30,7 +30,7 @@ class Correction(BaseModel):
     notes: str = ""
 
 
-def _split_frontmatter(text: str) -> tuple[dict, str]:
+def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     if text.startswith("---"):
         _, frontmatter, body = text.split("---", 2)
         return yaml.safe_load(frontmatter) or {}, body.strip()

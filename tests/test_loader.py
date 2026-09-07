@@ -1,18 +1,21 @@
 import pytest
 from pydantic import ValidationError
+
 from pyfpa.config.schemas import (
-    EntityConfig, Channel, WorkingCapitalConfig,
+    Channel,
+    EntityConfig,
+    WorkingCapitalConfig,
 )
 
 
 def _minimal_kwargs():
-    return dict(
-        name="X",
-        start_month="2026-01",
-        channels=[Channel(name="D2C", annual_revenue=1200.0,
-                          seasonality=[1.0] * 12, cogs_pct=0.5)],
-        working_capital=WorkingCapitalConfig(dso_days=30, dpo_days=30, dio_days=0),
-    )
+    return {
+        "name": "X",
+        "start_month": "2026-01",
+        "channels": [Channel(name="D2C", annual_revenue=1200.0,
+                             seasonality=[1.0] * 12, cogs_pct=0.5)],
+        "working_capital": WorkingCapitalConfig(dso_days=30, dpo_days=30, dio_days=0),
+    }
 
 
 def test_entity_config_defaults():
@@ -40,6 +43,7 @@ def test_bad_start_month_rejected():
 
 # --- append to tests/test_loader.py ---
 from pathlib import Path
+
 from pyfpa.config.loader import load_config
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

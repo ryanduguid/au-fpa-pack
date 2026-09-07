@@ -11,9 +11,14 @@ kind; this is a side-of-the-desk project.
 git clone https://github.com/JeffBrines/openfpa
 cd openfpa
 pip install -e ".[dev]"
+ruff check .       # lint and import order, part of the merge gate
+mypy               # strict type check of pyfpa, part of the merge gate
 pytest -q          # the merge gate, and it should be green
 pytest -m network  # the live checks, which fetch RBA CSVs over the internet
 ```
+
+CI runs `ruff check .` and `mypy` before the test matrix, so a lint or typing
+failure stops the run early. `ruff check . --fix` applies the safe fixes.
 
 `pytest.ini` deselects the `network` marker by default, so a Reserve Bank outage or a
 published layout change cannot fail a branch that did not cause it. Run `pytest -m
@@ -26,7 +31,8 @@ The distribution is `au-fpa-pack`; the importable package is `pyfpa` (`import py
 
 1. Fork, branch, and make your change.
 2. **Add tests for new behavior.** The project is test-first, and CI runs the suite on
-   Python 3.11, 3.12, and 3.13. A green suite is required to merge.
+   Python 3.11, 3.12, and 3.13. A green suite is required to merge, as are clean
+   `ruff check .` and `mypy` runs.
 3. Open a PR describing what you changed and why. For anything non-trivial, open an Issue
    first so we can talk through the approach before you build.
 

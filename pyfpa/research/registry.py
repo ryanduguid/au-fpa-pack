@@ -78,7 +78,7 @@ def promote_challenger(
     approved_by: str,
     approved_at: str,
     notes: str = "",
-    objective: "ResearchObjective | None" = None,
+    objective: ResearchObjective | None = None,
 ) -> ModelRegistry:
     """Promote a challenger only with an explicit human approval record.
 
@@ -89,20 +89,25 @@ def promote_challenger(
     """
     if not approved_by.strip():
         raise ValueError("promotion requires approved_by")
-    if epoch.status != "proposed" or not epoch.evaluation.promotion_eligible:
+    evaluation = epoch.evaluation
+    if (
+        epoch.status != "proposed"
+        or evaluation is None
+        or not evaluation.promotion_eligible
+    ):
         raise ValueError("promotion requires a proposed, promotion-eligible epoch")
     if objective is not None:
         recomputed = evaluate_challenger(
             objective,
-            epoch.evaluation.champion_metrics,
-            epoch.evaluation.challenger_metrics,
+            evaluation.champion_metrics,
+            evaluation.challenger_metrics,
             epoch.checks,
         )
         # Complexity inputs are not stored on the epoch, so reapply the STORED
         # complexity cost to the recomputed weighted improvement. Everything
         # derivable from metrics (weights, clamp, regression guard, hard checks)
         # is re-derived; only the complexity term is trusted from the record.
-        faithful_gain = recomputed.weighted_improvement - epoch.evaluation.complexity_cost
+        faithful_gain = recomputed.weighted_improvement - evaluation.complexity_cost
         reproduces = (
             recomputed.hard_checks_passed
             and recomputed.regression_guard_passed

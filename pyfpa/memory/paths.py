@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 _SEGMENT = re.compile(r"^(\w+)(?:\[(\*|\d+)\])?$")
 
@@ -21,7 +22,9 @@ def _parse_path(path: str) -> list[tuple[str, str | int | None]]:
     return parsed
 
 
-def _set_segments(node, segments, value) -> None:
+def _set_segments(
+    node: Any, segments: list[tuple[str, str | int | None]], value: float
+) -> None:
     (key, index), rest = segments[0], segments[1:]
     if not isinstance(node, dict) or key not in node:
         raise ValueError(f"override path key not found: {key!r}")
@@ -33,7 +36,10 @@ def _set_segments(node, segments, value) -> None:
         return
     target = node[key]
     if not isinstance(target, list):
-        raise ValueError(f"override path expects a list at {key!r}, got {type(target).__name__}")
+        # _set_by_path re-raises this as the ValueError the public contract promises.
+        raise TypeError(
+            f"override path expects a list at {key!r}, got {type(target).__name__}"
+        )
     items = range(len(target)) if index == "*" else [int(index)]
     for i in items:
         if rest:
@@ -42,7 +48,7 @@ def _set_segments(node, segments, value) -> None:
             target[i] = value
 
 
-def _set_by_path(data: dict, path: str, value: float) -> None:
+def _set_by_path(data: dict[str, Any], path: str, value: float) -> None:
     """Set ``value`` at ``path`` in ``data`` (in place).
 
     Supports:
@@ -58,7 +64,7 @@ def _set_by_path(data: dict, path: str, value: float) -> None:
         raise ValueError(f"cannot apply override path {path!r}: {exc}") from exc
 
 
-def apply_override(data: dict, path: str, value: float) -> None:
+def apply_override(data: dict[str, Any], path: str, value: float) -> None:
     """Set ``value`` at dotted ``path`` (supports ``name``, ``name[n]``, ``name[*]``)
     in ``data``, in place. Public wrapper over the internal path setter."""
     _set_by_path(data, path, value)

@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
 from pydantic import BaseModel
 
-from pyfpa.config.schemas import EntityConfig
 from pyfpa.backtest.score import DEFAULT_SCORE_LINES, ScoreResult, extract_lines
+from pyfpa.config.schemas import EntityConfig
 
 
 class Snapshot(BaseModel):
@@ -17,7 +18,7 @@ class Snapshot(BaseModel):
 
     label: str
     created: str                  # caller-supplied date string; never generated here
-    assumptions: dict             # serialized EntityConfig
+    assumptions: dict[str, Any]   # serialized EntityConfig
     predicted: dict[str, float]
     score: ScoreResult | None = None
 

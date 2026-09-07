@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
+from pyfpa.backtest.score import (
+    DEFAULT_SCORE_LINES,
+    ScoreResult,
+    aggregate_periods,
+    extract_lines,
+    score_forecast,
+)
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.backtest.score import (
-    DEFAULT_SCORE_LINES, ScoreResult, aggregate_periods, extract_lines, score_forecast,
-)
 
 BuildCfgFn = Callable[[dict[str, Mapping[str, float]]], EntityConfig]
 
@@ -30,7 +34,9 @@ def holdout_backtest(
     fit_periods = periods[:-holdout]
     holdout_periods = periods[-holdout:]
 
-    fit_actuals = {p: dict(actuals_by_period[p]) for p in fit_periods}
+    fit_actuals: dict[str, Mapping[str, float]] = {
+        p: dict(actuals_by_period[p]) for p in fit_periods
+    }
     cfg = build_cfg_fn(fit_actuals)
     predicted = extract_lines(cashflow_from_config(cfg), score_lines)
     actual = aggregate_periods([dict(actuals_by_period[p]) for p in holdout_periods], score_lines)

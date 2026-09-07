@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import statistics
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -30,7 +31,7 @@ class SkillCandidate(BaseModel):
     source: str
 
 
-def _get_by_path(data: dict, path: str) -> float | None:
+def _get_by_path(data: dict[str, Any], path: str) -> float | None:
     node = data
     for segment in path.split("."):
         if not isinstance(node, dict) or segment not in node:

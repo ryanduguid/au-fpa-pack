@@ -95,12 +95,12 @@ class EntityConfig(BaseModel):
     def _valid_month(cls, v: str) -> str:
         try:
             pd.Period(v, freq="M")
-        except Exception as e:  # noqa: BLE001 - re-raised as ValueError for pydantic
+        except Exception as e:
             raise ValueError(f"start_month must be YYYY-MM, got {v!r}") from e
         return v
 
     @model_validator(mode="after")
-    def _unique_line_names(self) -> "EntityConfig":
+    def _unique_line_names(self) -> EntityConfig:
         for field in ("channels", "opex", "debt"):
             names = [item.name.casefold() for item in getattr(self, field)]
             if len(names) != len(set(names)):

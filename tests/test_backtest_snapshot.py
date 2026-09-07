@@ -1,8 +1,9 @@
 import pytest
+
+from pyfpa.backtest.score import score_forecast
+from pyfpa.backtest.snapshot import load_snapshot, save_snapshot, snapshot_forecast
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.backtest.snapshot import snapshot_forecast, save_snapshot, load_snapshot
-from pyfpa.backtest.score import score_forecast
 
 
 def _cfg():
@@ -36,5 +37,6 @@ def test_snapshot_round_trip(tmp_path):
     back = load_snapshot(p)
     assert back.label == "2026"
     assert back.predicted == snap.predicted
+    assert back.score is not None
     assert back.score.fitness == pytest.approx(0.0)
     assert back.assumptions == snap.assumptions

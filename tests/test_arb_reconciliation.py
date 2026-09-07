@@ -52,6 +52,7 @@ def test_source_csvs_match_appendix_4e_totals():
 
 def test_phase_a_reproduces_fy2025_operating_mechanics():
     import arb_model as am
+
     from pyfpa.analysis.reconcile import reconcile
 
     model = am.phase_a_model("FY2025", "FY2024")
@@ -79,6 +80,7 @@ def test_historical_holdout_rejects_uniform_export_rate():
 
 def test_forecast_is_coherent():
     import arb_model as am
+
     from pyfpa.analysis.segments import roll_up_segments
 
     forecast, segs = am.build_forecast()
@@ -124,6 +126,7 @@ def test_registered_challenger_resolves_to_a_committed_research_epoch():
     assert epochs["arb-fy2025-001-uniform-export-rate"].status == "discarded"
 
     challenger = registry.challengers[0]
+    assert challenger.source_epoch is not None
     promoted = promote_challenger(
         registry,
         challenger_id=challenger.model_id,
@@ -132,6 +135,7 @@ def test_registered_challenger_resolves_to_a_committed_research_epoch():
         approved_at="2026-08-21",
         objective=load_research_objective(research / "objective.yaml"),
     )
+    assert promoted.champion is not None
     assert promoted.champion.model_id == challenger.model_id
     # The committed registry stays unpromoted; promotion needs a human.
     assert registry.promotions == []

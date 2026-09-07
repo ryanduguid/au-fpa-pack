@@ -28,7 +28,7 @@ def fy_year(period: str | pd.Period) -> int:
     July 2026 -> 2027; June 2026 -> 2026.
     """
     p = _as_period(period)
-    return p.year + 1 if p.month >= 7 else p.year
+    return int(p.year) + 1 if p.month >= 7 else int(p.year)
 
 
 def fy_label(period: str | pd.Period) -> str:
@@ -60,7 +60,7 @@ def fy_month_range(fy: int) -> pd.PeriodIndex:
 
 def format_au_date(value: pd.Timestamp | str) -> str:
     """Render a date as dd/mm/yyyy."""
-    return pd.Timestamp(value).strftime("%d/%m/%Y")
+    return str(pd.Timestamp(value).strftime("%d/%m/%Y"))
 
 
 def fy_summary(frame: pd.DataFrame, by: str = "fy") -> pd.DataFrame:

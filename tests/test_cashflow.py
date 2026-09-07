@@ -20,8 +20,12 @@ def test_cashflow_full_forecast(sample_config):
 
 
 def test_nol_shelters_tax():
-    from pyfpa.config.schemas import (Channel, EntityConfig, OpeningBalances,
-                                      WorkingCapitalConfig)
+    from pyfpa.config.schemas import (
+        Channel,
+        EntityConfig,
+        OpeningBalances,
+        WorkingCapitalConfig,
+    )
     cfg = EntityConfig(
         name="P", start_month="2026-01", horizon_months=12, tax_rate=0.25,
         channels=[Channel(name="C", annual_revenue=2400.0,
@@ -40,6 +44,7 @@ def test_nol_shelters_tax():
 
 def test_ridgeline_config_runs_end_to_end():
     from pathlib import Path
+
     from pyfpa.config.loader import load_config
     repo_root = Path(__file__).resolve().parents[1]
     cfg = load_config(repo_root / "examples/ridgeline/config.yaml")
@@ -52,6 +57,7 @@ def test_ridgeline_config_runs_end_to_end():
 def test_ridgeline_golden_snapshot():
     """Locks the flagship demo output. If engine math changes, update intentionally."""
     from pathlib import Path
+
     from pyfpa.config.loader import load_config
     repo_root = Path(__file__).resolve().parents[1]
     cf = cashflow_from_config(load_config(repo_root / "examples/ridgeline/config.yaml"))

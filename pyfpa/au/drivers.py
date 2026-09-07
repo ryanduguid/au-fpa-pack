@@ -24,7 +24,7 @@ import io
 import json
 import os
 import urllib.request
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -61,7 +61,7 @@ class DriverSeries(BaseModel):
     source: str  # 'rba' | 'abs'
     source_url: str
     series_id: str
-    retrieved: date
+    retrieved: date  # UTC fetch date, so provenance does not vary by machine
     units: str = ""
     frequency: str = ""
     data: dict[str, float] = Field(default_factory=dict)  # {period: value}
@@ -76,7 +76,8 @@ class DriverSeries(BaseModel):
 def _fetch(url: str, headers: dict[str, str] | None = None, timeout: int = 60) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": _UA, **(headers or {})})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read()
+        body: bytes = resp.read()
+    return body
 
 
 def fetch_rba_series(name: str) -> DriverSeries:
@@ -125,7 +126,7 @@ def fetch_rba_series(name: str) -> DriverSeries:
         source="rba",
         source_url=url,
         series_id=series_id,
-        retrieved=date.today(),
+        retrieved=datetime.now(tz=UTC).date(),
         units=units,
         frequency="M",
         data=data,
@@ -177,7 +178,7 @@ def fetch_abs_series(name: str, api_key: str | None = None) -> DriverSeries:
         source="abs",
         source_url=url,
         series_id=dataflow,
-        retrieved=date.today(),
+        retrieved=datetime.now(tz=UTC).date(),
         frequency=frequency,
         data=data,
     )

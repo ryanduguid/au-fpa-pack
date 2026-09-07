@@ -16,7 +16,7 @@ class WeeklyFlow(BaseModel):
     end_week: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
-    def _end_after_start(self) -> "WeeklyFlow":
+    def _end_after_start(self) -> WeeklyFlow:
         if self.end_week is not None and self.end_week < self.start_week:
             raise ValueError("end_week must be >= start_week")
         return self

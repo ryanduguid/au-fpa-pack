@@ -1,6 +1,7 @@
 import pytest
-from pyfpa.config.schemas import EntityConfig
+
 from pyfpa.backtest.holdout import holdout_backtest
+from pyfpa.config.schemas import EntityConfig
 
 
 def _actuals():

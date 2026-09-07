@@ -1,7 +1,11 @@
 import pytest
 
 from pyfpa.config.schemas import (
-    Channel, DebtInstrument, EntityConfig, OpeningBalances, OpexLine,
+    Channel,
+    DebtInstrument,
+    EntityConfig,
+    OpeningBalances,
+    OpexLine,
     WorkingCapitalConfig,
 )
 

@@ -3,14 +3,13 @@ from __future__ import annotations
 import csv
 from collections import Counter
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from pyfpa.io.pl_csv import _parse_amount
-
 
 SourceKind = Literal[
     "local_file",
@@ -62,7 +61,7 @@ class SourceRegistry(BaseModel):
     sources: list[SourceRecord] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def validate_unique_source_ids(self):
+    def validate_unique_source_ids(self) -> SourceRegistry:
         source_ids = [source.source_id for source in self.sources]
         duplicates = sorted(
             source_id
@@ -87,7 +86,7 @@ class MappingRule(BaseModel):
         return value.strip()
 
     @model_validator(mode="after")
-    def validate_rule(self):
+    def validate_rule(self) -> MappingRule:
         if not self.source_value:
             raise ValueError("source_value must not be empty")
         if self.status == "mapped" and not self.target:
@@ -102,7 +101,7 @@ class MappingRegistry(BaseModel):
     mappings: list[MappingRule] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def validate_unique_mapping_keys(self):
+    def validate_unique_mapping_keys(self) -> MappingRegistry:
         keys = [
             (mapping.source_id, mapping.source_value)
             for mapping in self.mappings
@@ -194,7 +193,7 @@ def register_mapping(
     })
 
 
-def profile_table(path: str | Path) -> dict:
+def profile_table(path: str | Path) -> dict[str, Any]:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"source file not found: {path}")
@@ -209,7 +208,7 @@ def profile_table(path: str | Path) -> dict:
         raise ValueError("source-profile supports CSV, TSV, XLS, XLSM, and XLSX")
     return {
         "path": str(path),
-        "rows": int(len(frame)),
+        "rows": len(frame),
         "columns": [str(column) for column in frame.columns],
         "empty_by_column": {
             str(column): int(frame[column].isna().sum())
@@ -228,7 +227,7 @@ def reconcile_account_table(
     amount_column: str,
     expected: dict[str, float] | None = None,
     tolerance: float = 0.01,
-) -> dict:
+) -> dict[str, Any]:
     path = Path(path)
     if path.suffix.casefold() != ".csv":
         raise ValueError("reconcile-source currently supports CSV files")
