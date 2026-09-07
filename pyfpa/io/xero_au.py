@@ -245,8 +245,8 @@ def from_xero(
 ) -> dict[str, float]:
     """Return a normalised {account: amount} table from a Xero export.
 
-    Mirrors ``from_quickbooks``/``from_netsuite``: reads a CSV export,
-    falling back to the bundled fixture. There is no live path here; a
+    Reads a CSV export, falling back to the bundled fixture. There is no
+    live path here; a
     per-company connector supplies one.
     """
     path = fixture or (_FIXTURES / ("xero_bs_au.csv" if balance_sheet else "xero_pl_au.csv"))
