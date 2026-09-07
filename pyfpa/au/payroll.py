@@ -61,7 +61,7 @@ class Role(BaseModel):
             return v
         try:
             pd.Period(v, freq="M")
-        except Exception as e:  # noqa: BLE001 - re-raised for pydantic
+        except Exception as e:
             raise ValueError(f"month must be YYYY-MM, got {v!r}") from e
         return v
 
@@ -80,11 +80,13 @@ class PayrollAssumptions(BaseModel):
 
 
 def _employed(role: Role, period: pd.Period) -> bool:
-    if role.start_month is not None and period < pd.Period(role.start_month, freq="M"):
-        return False
-    if role.end_month is not None and period > pd.Period(role.end_month, freq="M"):
-        return False
-    return True
+    before_start = role.start_month is not None and period < pd.Period(
+        role.start_month, freq="M"
+    )
+    after_end = role.end_month is not None and period > pd.Period(
+        role.end_month, freq="M"
+    )
+    return not (before_start or after_end)
 
 
 def payroll_forecast(

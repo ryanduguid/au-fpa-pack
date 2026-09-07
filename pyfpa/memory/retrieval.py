@@ -6,7 +6,6 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field
 
-
 _TOKEN = re.compile(r"[a-z0-9][a-z0-9_-]+")
 _IGNORED_FILES = {"index.yaml", "context-pack.md"}
 

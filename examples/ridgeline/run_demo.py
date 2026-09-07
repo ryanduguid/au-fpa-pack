@@ -15,9 +15,9 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 import pyfpa
+from pyfpa.excel.model_workbook import model_to_excel
 from pyfpa.io.loaders import load_cash13_config
 from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
-from pyfpa.excel.model_workbook import model_to_excel
 
 _TITLE = "Ridgeline Chair Co."
 
@@ -54,7 +54,7 @@ def run_demo(output_dir: str | Path) -> dict:
 
 if __name__ == "__main__":
     figures = run_demo(_REPO_ROOT / "docs/demo")
-    print(f"Wrote briefing.md + forecast.xlsx to docs/demo/")
-    print(f"Wrote model.xlsx (live-formula workbook) to docs/demo/")
+    print("Wrote briefing.md + forecast.xlsx to docs/demo/")
+    print("Wrote model.xlsx (live-formula workbook) to docs/demo/")
     for key, value in figures.items():
         print(f"  {key}: {value}")

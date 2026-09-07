@@ -3,10 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pyfpa.memory.workspace import Workspace, initialize_workspace, workspace_path
 from pyfpa.memory.entrypoints import load_entrypoint_registry
-from pyfpa.memory.lineage import load_mapping_registry, load_source_registry
-from pyfpa.memory.onboarding import PROFILE_HEADINGS, render_business_profile
 from pyfpa.memory.intake import (
     Intake,
     load_intake,
@@ -14,6 +11,9 @@ from pyfpa.memory.intake import (
     record_intake_fact,
     save_intake,
 )
+from pyfpa.memory.lineage import load_mapping_registry, load_source_registry
+from pyfpa.memory.onboarding import PROFILE_HEADINGS, render_business_profile
+from pyfpa.memory.workspace import Workspace, initialize_workspace, workspace_path
 from pyfpa.research.objective import load_research_objective
 from pyfpa.research.registry import load_model_registry
 
@@ -29,7 +29,7 @@ def test_workspace_open_returns_a_canonical_immutable_value(tmp_path):
     legacy_root = Path("relative") / ".." / "company"
     assert workspace_path(legacy_root) == legacy_root / ".fpa"
     with pytest.raises(FrozenInstanceError):
-        workspace.root = tmp_path
+        workspace.root = tmp_path  # type: ignore[misc]
 
 
 def test_workspace_owns_initialisation_and_intake_readiness(tmp_path):
@@ -83,7 +83,7 @@ def test_workspace_rejects_unknown_or_escaping_generated_paths(tmp_path):
     workspace = Workspace.open(tmp_path)
 
     with pytest.raises(ValueError, match="generated namespace"):
-        workspace.generated_path("unknown")
+        workspace.generated_path("unknown")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="escapes company root"):
         workspace.assert_safe_existing_chain(tmp_path.parent / "outside")
 

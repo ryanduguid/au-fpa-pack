@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pyfpa.memory.diagnostics import validate_workspace, WorkspaceReport
+from pyfpa.memory.diagnostics import WorkspaceReport, validate_workspace
 
 
 def _init_workspace(root: Path) -> None:

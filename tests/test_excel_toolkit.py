@@ -2,7 +2,11 @@
 from openpyxl import Workbook, load_workbook
 
 from pyfpa.excel.toolkit import (
-    add_named_cell, add_named_row, fill_formula_row, money_format, percent_format,
+    add_named_cell,
+    add_named_row,
+    fill_formula_row,
+    money_format,
+    percent_format,
 )
 
 

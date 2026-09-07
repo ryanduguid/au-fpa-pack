@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from pyfpa.cash13.schemas import WeeklyFlow
 
 
@@ -8,6 +10,7 @@ def expand_flow(flow: WeeklyFlow, weeks: int) -> list[float]:
     amounts = [0.0] * weeks
     end = flow.end_week if flow.end_week is not None else weeks
 
+    hit_weeks: Sequence[int]
     if flow.recurrence == "once":
         hit_weeks = [flow.start_week]
     elif flow.recurrence == "weekly":

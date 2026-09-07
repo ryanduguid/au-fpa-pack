@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field, model_validator
 from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.research.objective import ResearchObjective
 
-
 EpochStatus = Literal["generated", "evaluated", "discarded", "proposed", "promoted"]
 
 #: Per-metric improvement is clamped to this magnitude before weighting.
@@ -49,8 +48,10 @@ class ResearchEpoch(BaseModel):
     notes: str = ""
 
     @model_validator(mode="after")
-    def _evaluation_matches_status(self) -> "ResearchEpoch":
-        if self.status != "generated" and self.evaluation is None:
+    def _evaluation_matches_status(self) -> ResearchEpoch:
+        if self.status == "generated":
+            return self
+        if self.evaluation is None:
             raise ValueError(f"{self.status} epochs require an evaluation")
         if self.status in {"proposed", "promoted"} and not self.evaluation.promotion_eligible:
             raise ValueError("only promotion-eligible epochs may be proposed or promoted")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import stat
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -32,14 +33,14 @@ _GENERATED_NAMESPACES: tuple[GeneratedNamespace, ...] = (
 _FILE_ATTRIBUTE_REPARSE_POINT = 0x400
 
 
-def _lstat(path: Path):
+def _lstat(path: Path) -> os.stat_result | None:
     try:
         return path.lstat()
     except FileNotFoundError:
         return None
 
 
-def _is_link_or_reparse(path_stat) -> bool:
+def _is_link_or_reparse(path_stat: os.stat_result) -> bool:
     return stat.S_ISLNK(path_stat.st_mode) or bool(
         getattr(path_stat, "st_file_attributes", 0)
         & _FILE_ATTRIBUTE_REPARSE_POINT

@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import pytest
+
 from pyfpa.cash13.schemas import Cash13Config
 from pyfpa.io.loaders import load_cash13_config
 
@@ -19,7 +21,7 @@ def test_load_cash13_missing_file_raises():
 
 
 # --- append to tests/test_io_loaders.py ---
-import pyfpa  # noqa: E402
+import pyfpa
 
 
 def test_io_public_exports():

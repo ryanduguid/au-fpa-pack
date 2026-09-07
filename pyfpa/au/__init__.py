@@ -26,7 +26,13 @@ from pyfpa.au.drivers import (
     load_snapshot,
     save_snapshot,
 )
-from pyfpa.au.gst import BasCycle, GstAssumptions, bas_schedule, gst_weekly_flows, monthly_gst
+from pyfpa.au.gst import (
+    BasCycle,
+    GstAssumptions,
+    bas_schedule,
+    gst_weekly_flows,
+    monthly_gst,
+)
 from pyfpa.au.payroll import PayrollAssumptions, Role, payroll_forecast
 from pyfpa.au.rates import (
     load_gst_bas_data,

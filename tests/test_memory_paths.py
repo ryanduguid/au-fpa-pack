@@ -1,4 +1,5 @@
 import pytest
+
 from pyfpa.memory.paths import _set_by_path
 
 

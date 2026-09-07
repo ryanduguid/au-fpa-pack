@@ -1,5 +1,5 @@
-from pyfpa.cash13.schemas import WeeklyFlow
 from pyfpa.cash13.flows import expand_flow
+from pyfpa.cash13.schemas import WeeklyFlow
 
 
 def test_once_hits_single_week():

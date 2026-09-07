@@ -176,7 +176,11 @@ def command_experiment_list(args: argparse.Namespace) -> int:
 
 
 def command_context_pack(args: argparse.Namespace) -> int:
-    from pyfpa.memory.retrieval import build_context_pack, build_memory_index, search_memory
+    from pyfpa.memory.retrieval import (
+        build_context_pack,
+        build_memory_index,
+        search_memory,
+    )
 
     opened = Workspace.open(args.path)
     root = opened.root

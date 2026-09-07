@@ -18,7 +18,7 @@ REPO = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 sys.path.insert(0, str(REPO / "scripts"))
-import au_drivers_snapshot as snapshot  # noqa: E402
+import au_drivers_snapshot as snapshot
 
 
 def _sample(url: str, headers=None, timeout: int = 60) -> bytes:

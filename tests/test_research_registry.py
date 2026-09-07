@@ -171,4 +171,5 @@ def test_promote_without_objective_trusts_stored_evaluation():
         approved_by="CFO",
         approved_at="2026-06-09",
     )
+    assert promoted.champion is not None
     assert promoted.champion.model_id == "model-v2"

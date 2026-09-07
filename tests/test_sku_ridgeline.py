@@ -1,6 +1,7 @@
 from pathlib import Path
+
+from pyfpa.analysis.sku import pareto_breakpoint, sku_profitability
 from pyfpa.io.loaders import load_skus
-from pyfpa.analysis.sku import sku_profitability, pareto_breakpoint
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

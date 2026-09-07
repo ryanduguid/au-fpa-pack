@@ -1,5 +1,5 @@
-from pyfpa.models.revenue import revenue_from_config
 from pyfpa.models.cogs import cogs_from_config
+from pyfpa.models.revenue import revenue_from_config
 from pyfpa.models.working_capital import working_capital_from_config
 
 

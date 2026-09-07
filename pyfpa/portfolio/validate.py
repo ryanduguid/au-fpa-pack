@@ -5,10 +5,16 @@ import statistics
 
 from pydantic import BaseModel
 
+from pyfpa.backtest.score import (
+    DEFAULT_SCORE_LINES,
+    ScoreResult,
+    extract_lines,
+    score_forecast,
+)
+from pyfpa.backtest.snapshot import Snapshot
 from pyfpa.config.schemas import EntityConfig
-from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.backtest.score import DEFAULT_SCORE_LINES, extract_lines, score_forecast
 from pyfpa.memory.paths import apply_override
+from pyfpa.models.cashflow import cashflow_from_config
 from pyfpa.portfolio.manifest import ClientRef
 from pyfpa.portfolio.mine import client_driver_value
 from pyfpa.portfolio.recover import best_snapshot, recover_actuals
@@ -26,31 +32,31 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
     best-snapshot config, re-forecast, and score against that client's recovered
     actuals. A prior is `validated` if the mean fitness delta (new - original) is
     <= tolerance with >= 2 folds - a peer-derived value does not degrade held-out fit."""
-    usable = []
+    usable: list[tuple[float, Snapshot, ScoreResult]] = []
     for c in type_clients:
         snap = best_snapshot(c.path)
         value = client_driver_value(c, driver)
         if snap is not None and snap.score is not None and value is not None:
-            usable.append((value, snap))
+            usable.append((value, snap, snap.score))
     n = len(usable)
     if n < 2:
         return ValidationResult(mean_delta=0.0, n_folds=n, validated=False)
 
     deltas = []
-    for i, (_, snap) in enumerate(usable):
+    for i, (_, snap, score) in enumerate(usable):
         peer_values = [usable[j][0] for j in range(n) if j != i]
         prior_value = statistics.median(peer_values)
         data = copy.deepcopy(snap.assumptions)
         apply_override(data, driver, prior_value)
         forecast = cashflow_from_config(EntityConfig.model_validate(data))
         # Score over the SAME lines/weights Loop A used for this snapshot, so the new
-        # fitness and snap.score.fitness are apples-to-apples (not assumed defaults).
-        scored_lines = list(snap.score.per_line) or DEFAULT_SCORE_LINES
+        # fitness and the stored fitness are apples-to-apples (not assumed defaults).
+        scored_lines = list(score.per_line) or DEFAULT_SCORE_LINES
         predicted = extract_lines(forecast, scored_lines)
         new_fitness = score_forecast(
-            predicted, recover_actuals(snap), weights=snap.score.weights or None
+            predicted, recover_actuals(snap), weights=score.weights or None
         ).fitness
-        deltas.append(new_fitness - snap.score.fitness)
+        deltas.append(new_fitness - score.fitness)
 
     mean_delta = statistics.fmean(deltas)
     return ValidationResult(mean_delta=mean_delta, n_folds=n, validated=mean_delta <= tolerance)

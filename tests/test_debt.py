@@ -1,6 +1,10 @@
+from pyfpa.config.schemas import (
+    Channel,
+    DebtInstrument,
+    EntityConfig,
+    WorkingCapitalConfig,
+)
 from pyfpa.models.debt import debt_from_config
-from pyfpa.config.schemas import (Channel, DebtInstrument, EntityConfig,
-                                  WorkingCapitalConfig)
 
 
 def test_term_loan_amortization(sample_config):

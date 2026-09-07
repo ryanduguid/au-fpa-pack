@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-import argparse
 from pathlib import Path
-from typing import Any
-
+from typing import Any, NoReturn
 
 SCHEMA_VERSION = 1
 EXIT_OK = 0
@@ -14,7 +13,7 @@ EXIT_USAGE = 2
 
 
 class JsonArgumentParser(argparse.ArgumentParser):
-    def error(self, message: str) -> None:
+    def error(self, message: str) -> NoReturn:
         _write_json(
             {
                 "schema_version": SCHEMA_VERSION,

@@ -1,7 +1,12 @@
 import pandas as pd
 import pytest
-from pyfpa.backtest.score import extract_lines, aggregate_periods, DEFAULT_SCORE_LINES
-from pyfpa.backtest.score import score_forecast
+
+from pyfpa.backtest.score import (
+    DEFAULT_SCORE_LINES,
+    aggregate_periods,
+    extract_lines,
+    score_forecast,
+)
 
 
 def _forecast():

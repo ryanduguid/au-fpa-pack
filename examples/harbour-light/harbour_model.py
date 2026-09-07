@@ -12,7 +12,13 @@ from pathlib import Path
 import pandas as pd
 
 from pyfpa.au.calendar import fy_month_range
-from pyfpa.au.gst import BasCycle, GstAssumptions, bas_schedule, gst_weekly_flows, monthly_gst
+from pyfpa.au.gst import (
+    BasCycle,
+    GstAssumptions,
+    bas_schedule,
+    gst_weekly_flows,
+    monthly_gst,
+)
 from pyfpa.au.payroll import PayrollAssumptions, Role, payroll_forecast
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.config.schemas import (

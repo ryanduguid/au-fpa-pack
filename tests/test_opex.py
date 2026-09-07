@@ -1,7 +1,6 @@
-from pyfpa.config.schemas import (Channel, EntityConfig, OpexLine,
-                                  WorkingCapitalConfig)
-from pyfpa.models.revenue import revenue_from_config
+from pyfpa.config.schemas import Channel, EntityConfig, OpexLine, WorkingCapitalConfig
 from pyfpa.models.opex import opex_from_config
+from pyfpa.models.revenue import revenue_from_config
 
 
 def test_fixed_opex_constant(sample_config):

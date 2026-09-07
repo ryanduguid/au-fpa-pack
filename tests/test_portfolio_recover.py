@@ -1,7 +1,8 @@
 import pytest
-from pyfpa.backtest.snapshot import Snapshot, save_snapshot
+
 from pyfpa.backtest.score import ScoreResult
-from pyfpa.portfolio.recover import recover_actuals, best_snapshot
+from pyfpa.backtest.snapshot import Snapshot, save_snapshot
+from pyfpa.portfolio.recover import best_snapshot, recover_actuals
 
 
 def _snap(label, fitness, predicted, per_line):
@@ -35,6 +36,7 @@ def test_best_snapshot_picks_lowest_fitness(tmp_path):
     save_snapshot(_snap("2026-01", 0.20, {"revenue": 1.0}, {"revenue": 0.0}), forecasts / "a.snapshot.yaml")
     save_snapshot(_snap("2026-02", 0.05, {"revenue": 1.0}, {"revenue": 0.0}), forecasts / "b.snapshot.yaml")
     best = best_snapshot(tmp_path)
+    assert best is not None
     assert best.label == "2026-02"
 
 

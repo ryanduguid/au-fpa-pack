@@ -23,6 +23,7 @@ def _cli(*args: str) -> dict:
         capture_output=True,
         text=True,
         cwd=Path(__file__).resolve().parent.parent,
+        check=False,
     )
     payload = json.loads(result.stdout)
     payload["_returncode"] = result.returncode
