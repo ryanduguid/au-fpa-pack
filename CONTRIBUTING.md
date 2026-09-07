@@ -20,6 +20,11 @@ pytest -m network  # the live checks, which fetch RBA CSVs over the internet
 CI runs `ruff check .` and `mypy` before the test matrix, so a lint or typing
 failure stops the run early. `ruff check . --fix` applies the safe fixes.
 
+`mypy` checks against Python 3.11, the floor in `requires-python`, and CI runs it
+on a 3.11 environment. Run it on 3.11 too: on 3.12 or newer, pip resolves numpy
+2.5, whose stubs use syntax mypy will not parse while targeting 3.11, and you get
+an error inside `numpy/__init__.pyi` rather than anything about your change.
+
 `pytest.ini` deselects the `network` marker by default, so a Reserve Bank outage or a
 published layout change cannot fail a branch that did not cause it. Run `pytest -m
 network` when you touch `pyfpa/au/drivers.py` or refresh the RBA fixtures under
