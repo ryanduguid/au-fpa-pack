@@ -1,6 +1,6 @@
-from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.runway import runway_summary
+from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 
 
 def test_runway_identifies_trough_and_first_negative():

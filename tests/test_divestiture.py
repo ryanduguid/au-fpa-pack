@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from pyfpa.analysis.divestiture import Carveout, divest, net_debt_to_ebitda
 
 

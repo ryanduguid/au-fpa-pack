@@ -1,7 +1,8 @@
 import pytest
+
 from pyfpa.backtest.learn import magnitude_cap, persistent_miss, render_scorecard
-from pyfpa.backtest.snapshot import Snapshot
 from pyfpa.backtest.score import ScoreResult
+from pyfpa.backtest.snapshot import Snapshot
 
 
 def test_magnitude_cap_clamps_relative():

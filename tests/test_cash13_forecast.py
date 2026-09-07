@@ -1,7 +1,8 @@
 import pytest
 from pydantic import ValidationError
-from pyfpa.cash13.schemas import WeeklyFlow, Cash13Config
+
 from pyfpa.cash13.forecast import cash13_forecast
+from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 
 
 def test_weeklyflow_defaults():

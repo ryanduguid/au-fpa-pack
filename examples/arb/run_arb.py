@@ -20,6 +20,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import arb_model as am
+
 from pyfpa.analysis.reconcile import reconcile
 from pyfpa.io.reporting import to_briefing_md
 from pyfpa.research import save_epoch, save_research_objective

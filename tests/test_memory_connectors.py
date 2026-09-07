@@ -1,6 +1,7 @@
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -89,14 +90,17 @@ def test_connector_manifest_rejects_unknown_capability_fields(field):
 
 def test_connector_manifest_rejects_unsupported_fixture_adapter():
     with pytest.raises(ValueError, match="account-amount-csv"):
-        ConnectorManifest(**manifest_values(), fixture_adapter="python-command")
+        ConnectorManifest(
+            **manifest_values(),
+            fixture_adapter="python-command",  # type: ignore[arg-type]
+        )
 
 
 def test_connector_manifest_requires_schema_version_two():
     assert ConnectorManifest(**manifest_values()).schema_version == 2
 
     with pytest.raises(ValueError, match="Input should be 2"):
-        ConnectorManifest(**manifest_values(), schema_version=1)
+        ConnectorManifest(**manifest_values(), schema_version=1)  # type: ignore[arg-type]
 
 
 def test_connector_listing_rejects_bundle_without_manifest(tmp_path):
@@ -187,7 +191,7 @@ def test_validation_does_not_execute_bundle_code(tmp_path, monkeypatch):
 
 def test_scaffold_requires_explicit_overwrite(tmp_path):
     source_fixture = fixture(tmp_path / "redacted.csv")
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "name": "quickbooks-pl",
         "source_id": "gl-actuals",
         "description": "Pull and normalize the monthly P&L.",
@@ -214,7 +218,7 @@ def test_scaffold_overwrite_restores_original_bundle_when_swap_fails(
 ):
     source_fixture = fixture(tmp_path / "redacted.csv")
     original_fixture = source_fixture.read_text()
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "name": "quickbooks-pl",
         "source_id": "gl-actuals",
         "description": "Pull and normalize the monthly P&L.",

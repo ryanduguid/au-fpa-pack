@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from types import ModuleType
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -21,14 +22,15 @@ class VerifyReport(BaseModel):
     lines_checked: int
 
 
-def _load_formulas():
+def _load_formulas() -> ModuleType:
     try:
-        import formulas  # noqa: PLC0415 (lazy on purpose: dev-only dependency)
+        import formulas
     except ImportError as exc:
         raise RuntimeError(
             "workbook verification requires the 'formulas' package: pip install formulas"
         ) from exc
-    return formulas
+    module: ModuleType = formulas
+    return module
 
 
 def verify_workbook(

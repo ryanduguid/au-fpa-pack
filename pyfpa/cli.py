@@ -5,12 +5,6 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from pyfpa.cli_helpers import (
-    JsonArgumentParser,
-    _failure,
-    _root,
-    _success,
-)
 from pyfpa.cli_commands.learning import (
     command_context_pack,
     command_correction_list,
@@ -19,7 +13,6 @@ from pyfpa.cli_commands.learning import (
     command_onboarding_render,
     command_scorecard_render,
 )
-from pyfpa.cli_commands.reporting import command_model_export
 from pyfpa.cli_commands.lineage import (
     command_connector_list,
     command_connector_scaffold,
@@ -30,6 +23,13 @@ from pyfpa.cli_commands.lineage import (
     command_source_list,
     command_source_profile,
     command_source_register,
+)
+from pyfpa.cli_commands.reporting import command_model_export
+from pyfpa.cli_helpers import (
+    JsonArgumentParser,
+    _failure,
+    _root,
+    _success,
 )
 from pyfpa.memory.entrypoints import (
     CompanyEntrypoint,

@@ -1,5 +1,11 @@
 import pytest
-from pyfpa.analysis.segments import Segment, segment_pnl, roll_up_segments, segments_to_channels
+
+from pyfpa.analysis.segments import (
+    Segment,
+    roll_up_segments,
+    segment_pnl,
+    segments_to_channels,
+)
 
 
 def _segs():

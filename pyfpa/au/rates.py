@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from importlib import resources
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 import yaml
@@ -49,9 +49,10 @@ class PayrollTaxEntry(BaseModel):
 JURISDICTIONS = ("NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT")
 
 
-def _load_yaml(name: str) -> Any:
+def _load_yaml(name: str) -> dict[str, Any]:
     ref = resources.files("pyfpa.au.data").joinpath(name)
-    return yaml.safe_load(ref.read_text(encoding="utf-8"))
+    loaded: dict[str, Any] = yaml.safe_load(ref.read_text(encoding="utf-8"))
+    return loaded
 
 
 def load_super_guarantee_table() -> list[RateEntry]:
@@ -104,7 +105,7 @@ def payroll_tax_at(
 
 def _as_date(when: date | str | pd.Period) -> date:
     if isinstance(when, pd.Period):
-        return when.to_timestamp(how="start").date()
+        return cast(date, when.to_timestamp(how="start").date())
     if isinstance(when, str):
-        return pd.Timestamp(when).date()
+        return cast(date, pd.Timestamp(when).date())
     return when

@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import pytest
+
 from pyfpa.io.pl_csv import read_pl_csv
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

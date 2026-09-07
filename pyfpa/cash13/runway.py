@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 
 
-def runway_summary(forecast_df: pd.DataFrame) -> dict:
+def runway_summary(forecast_df: pd.DataFrame) -> dict[str, Any]:
     """Summarize a 13-week forecast: cash trough and first negative week.
 
     Returns {"min_cash": float, "min_week": int, "first_negative_week": int | None}.

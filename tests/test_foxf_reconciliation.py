@@ -25,6 +25,7 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize("fy,prior", [("FY2024", "FY2023"), ("FY2025", "FY2024")])
 def test_phase_a_reproduces_actual_driver_mechanics(fy, prior):
     import foxf_model as fm
+
     from pyfpa.analysis.reconcile import reconcile
 
     model = fm.phase_a_model(fy, prior)

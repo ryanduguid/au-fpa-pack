@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from pyfpa.analysis.sku import Sku, sku_profitability, pareto_breakpoint
+
+from pyfpa.analysis.sku import Sku, pareto_breakpoint, sku_profitability
 
 
 def _skus():

@@ -13,7 +13,12 @@ import pandas as pd
 
 from pyfpa.analysis.reconcile import reconcile
 from pyfpa.analysis.segments import Segment, roll_up_segments, segments_to_channels
-from pyfpa.config.schemas import EntityConfig, OpeningBalances, OpexLine, WorkingCapitalConfig
+from pyfpa.config.schemas import (
+    EntityConfig,
+    OpeningBalances,
+    OpexLine,
+    WorkingCapitalConfig,
+)
 from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.models.cashflow import cashflow_from_config
 from pyfpa.models.cogs import cogs_from_config

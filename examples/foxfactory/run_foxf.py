@@ -18,9 +18,9 @@ REPO_ROOT = HERE.parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import foxf_model as fm
 import pandas as pd
 
-import foxf_model as fm
 from pyfpa.analysis.reconcile import reconcile
 from pyfpa.analysis.segments import segment_pnl
 from pyfpa.memory.entrypoints import (
@@ -44,8 +44,12 @@ from pyfpa.memory.lineage import (
 )
 from pyfpa.memory.workspace import initialize_workspace
 from pyfpa.research import (
-    ModelRegistry, ModelVersion, register_challenger, save_epoch,
-    save_model_registry, save_research_objective,
+    ModelRegistry,
+    ModelVersion,
+    register_challenger,
+    save_epoch,
+    save_model_registry,
+    save_research_objective,
 )
 
 OUT = HERE / "output"
@@ -241,13 +245,13 @@ def phase_b() -> str:
         "",
         "## What the loop learned",
         "",
-        f"- **Epoch 1 was discarded.** It improved revenue and gross profit but",
-        f"  over-recovered segment margins, worsening Adjusted EBITDA error from",
+        "- **Epoch 1 was discarded.** It improved revenue and gross profit but",
+        "  over-recovered segment margins, worsening Adjusted EBITDA error from",
         f"  {broad.evaluation.champion_metrics['adjusted_ebitda_error'] * 100:.1f}%",
         f"  to {broad.evaluation.challenger_metrics['adjusted_ebitda_error'] * 100:.1f}%.",
         "- **Epoch 2 separated sales recovery from margin recovery.** Revenue moves",
         "  halfway toward FY2023, but margins recover only 5%. That challenger",
-        f"  improves the weighted holdout objective by",
+        "  improves the weighted holdout objective by",
         f"  {refined.evaluation.objective_gain * 100:.1f}% and passes every hard check.",
         "- The challenger remains **proposed**, not promoted. A human would decide",
         "  whether its recovery logic should become the champion.",
@@ -424,12 +428,14 @@ def phase_d(forecast: pd.DataFrame) -> tuple[str, pd.DataFrame, pd.DataFrame]:
     lines = [
         "# Phase D - Marucci divestiture sensitivity",
         "",
-        f"**Most assumption-heavy part of the exercise - a labeled sensitivity.**",
+        "**Most assumption-heavy part of the exercise - a labeled sensitivity.**",
         "Marucci sits inside SSG and is not reported standalone. Estimates are anchored",
         "to the acquisition disclosures: Fox paid **$567.2M** (Nov 2023), incl. $279M of",
-        f"intangibles. Assumed standalone: ~{_m(fm.MARUCCI['revenue'])} net sales, "
-        f"~{fm.MARUCCI['ebitda_margin'] * 100:.0f}% EBITDA margin "
-        f"(~{_m(fm.MARUCCI['revenue'] * fm.MARUCCI['ebitda_margin'])} EBITDA).",
+        (
+            f"intangibles. Assumed standalone: ~{_m(fm.MARUCCI['revenue'])} net sales, "
+            f"~{fm.MARUCCI['ebitda_margin'] * 100:.0f}% EBITDA margin "
+            f"(~{_m(fm.MARUCCI['revenue'] * fm.MARUCCI['ebitda_margin'])} EBITDA)."
+        ),
         "",
         f"Sale proceeds default to **{_m(fm.DEFAULT_PROCEEDS)}** (a markdown from the",
         "$567M paid - sports-equipment multiples compressed since 2023). Proceeds pay",

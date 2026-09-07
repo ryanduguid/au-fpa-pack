@@ -12,7 +12,7 @@ def test_revenue_flat_seasonality(sample_config):
 
 
 def test_revenue_nonflat_seasonality_respects_calendar_month():
-    from pyfpa.config.schemas import (Channel, EntityConfig, WorkingCapitalConfig)
+    from pyfpa.config.schemas import Channel, EntityConfig, WorkingCapitalConfig
     cfg = EntityConfig(
         name="S", start_month="2026-07", horizon_months=1,
         channels=[Channel(name="C", annual_revenue=780.0,
@@ -25,7 +25,7 @@ def test_revenue_nonflat_seasonality_respects_calendar_month():
 
 
 def test_revenue_growth_compounds_in_year_two():
-    from pyfpa.config.schemas import (Channel, EntityConfig, WorkingCapitalConfig)
+    from pyfpa.config.schemas import Channel, EntityConfig, WorkingCapitalConfig
     cfg = EntityConfig(
         name="G", start_month="2026-01", horizon_months=24,
         channels=[Channel(name="C", annual_revenue=1200.0, growth_rate=0.10,

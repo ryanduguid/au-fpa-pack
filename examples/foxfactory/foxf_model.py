@@ -14,13 +14,17 @@ from pyfpa.analysis.divestiture import Carveout, divest, net_debt_to_ebitda
 from pyfpa.analysis.reconcile import reconcile
 from pyfpa.analysis.segments import Segment, roll_up_segments, segments_to_channels
 from pyfpa.config.schemas import (
-    DebtInstrument, EntityConfig, OpeningBalances, OpexLine, WorkingCapitalConfig,
+    DebtInstrument,
+    EntityConfig,
+    OpeningBalances,
+    OpexLine,
+    WorkingCapitalConfig,
 )
+from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.models.cashflow import cashflow_from_config
 from pyfpa.models.cogs import cogs_from_config
 from pyfpa.models.revenue import revenue_from_config
 from pyfpa.models.working_capital import working_capital_from_config
-from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.research.epochs import ResearchEpoch, evaluate_challenger
 from pyfpa.research.objective import MetricObjective, ResearchObjective
 

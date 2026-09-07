@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, Field
-
 
 FactStatus = Literal["confirmed", "inferred", "conflict"]
 FactSource = Literal["user", "local_file", "external", "inference"]
@@ -114,7 +113,7 @@ _QUESTIONS_BY_KEY = {question.key: question for question in _QUESTION_BANK}
 _REQUIRED_KEYS = frozenset(_QUESTIONS_BY_KEY)
 
 
-def _split_frontmatter(text: str) -> tuple[dict, str]:
+def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     if text.startswith("---"):
         _, frontmatter, body = text.split("---", 2)
         return yaml.safe_load(frontmatter) or {}, body.strip()

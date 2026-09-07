@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from datetime import date
 from enum import Enum
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -98,7 +99,7 @@ def bas_schedule(
     Positive amount = payment to ATO; negative = refund.
     """
     assumptions = assumptions or GstAssumptions()
-    rows: list[dict] = []
+    rows: list[dict[str, Any]] = []
     if assumptions.bas_cycle is BasCycle.MONTHLY:
         for period, amount in net_gst.items():
             rows.append(

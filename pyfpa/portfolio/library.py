@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -19,10 +20,10 @@ def _log(library: Path, line: str) -> None:
         f.write(header + line + "\n")
 
 
-def load_library(library: str | Path) -> dict:
+def load_library(library: str | Path) -> dict[str, Any]:
     """Read the library: {'priors': {type: [prior dicts]}, 'skills': [names]}."""
     library = Path(library)
-    priors: dict[str, list[dict]] = {}
+    priors: dict[str, list[dict[str, Any]]] = {}
     priors_dir = library / "priors"
     if priors_dir.exists():
         for f in sorted(priors_dir.glob("*.yaml")):

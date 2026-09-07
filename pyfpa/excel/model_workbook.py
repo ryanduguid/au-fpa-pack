@@ -10,11 +10,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import NamedTuple
 
+import pandas as pd
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from pyfpa.config.schemas import EntityConfig
+from pyfpa.config.schemas import DebtInstrument, EntityConfig
 from pyfpa.excel.toolkit import (
     add_named_cell,
     add_named_row,
@@ -197,7 +198,7 @@ def _season_cell(sr: _SeasonRef, cal_month_0: int) -> str:
     return f"Assumptions!${sr.col_letters[cal_month_0]}${sr.row}"
 
 
-def _emit_header(ws: Worksheet, idx: list) -> None:
+def _emit_header(ws: Worksheet, idx: pd.PeriodIndex) -> None:
     """Header row 1: month labels."""
     ws.cell(row=1, column=1, value="")
     for m_idx, period in enumerate(idx):
@@ -206,7 +207,7 @@ def _emit_header(ws: Worksheet, idx: list) -> None:
 
 def _build_revenue_block(
     ws: Worksheet, cfg: EntityConfig, channel_refs: list[_ChannelRef],
-    idx: list, alloc: _RowAlloc,
+    idx: pd.PeriodIndex, alloc: _RowAlloc,
 ) -> tuple[list[int], int, int]:
     """Per-channel revenue rows plus revenue and cogs totals."""
     # Bake (weight_cell_ref, year_exponent) per month per channel
@@ -217,7 +218,9 @@ def _build_revenue_block(
             for m_idx, period in enumerate(idx)
         ]
 
-        def make_rev(cref_=cref, baked_=baked):
+        def make_rev(
+            cref_: _ChannelRef = cref, baked_: list[tuple[str, int]] = baked
+        ) -> _RowTemplate:
             def t(m: int, col: str) -> str:
                 wref, yexp = baked_[m - 1]
                 return (
@@ -252,14 +255,14 @@ def _build_opex_block(
     """Opex per line then the opex total row."""
     opex_rows: list[int] = []
     for j, (line, nm) in enumerate(zip(cfg.opex, opex_names)):
-        if line.kind == "fixed":
-            opex_rows.append(alloc.emit_fn(
-                f"opex_{j + 1}", lambda m, col, nm_=nm: f"={nm_}"))
-        else:
-            opex_rows.append(alloc.emit_fn(
-                f"opex_{j + 1}",
-                lambda m, col, nm_=nm, r=r_rev: f"={col}{r}*{nm_}",
-            ))
+        def fixed(m: int, col: str, nm_: str = nm) -> str:
+            return f"={nm_}"
+
+        def pct_of_revenue(m: int, col: str, nm_: str = nm, r: int = r_rev) -> str:
+            return f"={col}{r}*{nm_}"
+
+        template = fixed if line.kind == "fixed" else pct_of_revenue
+        opex_rows.append(alloc.emit_fn(f"opex_{j + 1}", template))
 
     if opex_rows:
         return alloc.emit_fn(
@@ -269,7 +272,9 @@ def _build_opex_block(
     return alloc.emit_fn("opex", lambda m, col: "=0")
 
 
-def _debt_balance_formulas(inst, dref: _DebtRef, bal_row: int, n: int) -> list[str]:
+def _debt_balance_formulas(
+    inst: DebtInstrument, dref: _DebtRef, bal_row: int, n: int
+) -> list[str]:
     """Balance (AFTER payment); references its own prior cell."""
     formulas: list[str] = []
     for m_idx in range(n):
@@ -300,7 +305,9 @@ def _debt_interest_formulas(dref: _DebtRef, bal_row: int, n: int) -> list[str]:
     ]
 
 
-def _debt_principal_formulas(inst, dref: _DebtRef, bal_row: int, n: int) -> list[str]:
+def _debt_principal_formulas(
+    inst: DebtInstrument, dref: _DebtRef, bal_row: int, n: int
+) -> list[str]:
     formulas: list[str] = []
     for m_idx in range(n):
         if inst.kind != "term_loan":
@@ -344,10 +351,10 @@ def _total_or_zero(
     label: str, rows: list[int], alloc: _RowAlloc,
 ) -> int:
     if rows:
-        return alloc.emit_fn(
-            label,
-            lambda m, col, rs=tuple(rows): "=" + "+".join(f"{col}{r}" for r in rs),
-        )
+        def total(m: int, col: str, rs: tuple[int, ...] = tuple(rows)) -> str:
+            return "=" + "+".join(f"{col}{r}" for r in rs)
+
+        return alloc.emit_fn(label, total)
     return alloc.emit_fn(label, lambda m, col: "=0")
 
 

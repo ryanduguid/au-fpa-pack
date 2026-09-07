@@ -32,6 +32,9 @@ dev = [
     "formulas>=1.2.7",
     "coverage==7.16.0",
     "diff-cover==10.5.1",
+    "ruff==0.16.6",
+    "mypy==2.3.1",
+    "types-PyYAML==6.0.12.20260906",
 ]
 
 [project.scripts]
@@ -53,3 +56,58 @@ include = ["pyfpa*"]
 "pyfpa" = ["py.typed"]
 "pyfpa.io" = ["fixtures/*.csv"]
 "pyfpa.au" = ["data/*.yaml"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+# Ruff's default rule set plus import sorting.
+extend-select = ["I"]
+
+[tool.ruff.lint.per-file-ignores]
+# BLE001: the CLI and doctor boundaries deliberately turn any failure into a
+# structured JSON result instead of a traceback, which is what a blind
+# `except Exception` is for. Everywhere else the rule stays on.
+"pyfpa/cli.py" = ["BLE001"]
+"pyfpa/cli_commands/*.py" = ["BLE001"]
+"pyfpa/memory/diagnostics.py" = ["BLE001"]
+
+[tool.mypy]
+files = ["pyfpa", "tests"]
+python_version = "3.11"
+strict = true
+# `tests/` carries no __init__.py, so name its modules from the repo root and
+# the `tests.*` override below can address them.
+mypy_path = "."
+explicit_package_bases = true
+
+# Tests are type-checked, but not held to the annotation rules strict imposes on
+# the kernel: a test body's types come from the package it exercises, and
+# annotating every fixture and assertion helper buys nothing.
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+disallow_any_generics = false
+warn_return_any = false
+
+# Third-party packages that ship no type information.
+[[tool.mypy.overrides]]
+module = ["formulas.*", "openpyxl.*", "pandas.*"]
+ignore_missing_imports = true
+
+# Example and script modules the tests import through sys.path. They sit outside
+# the checked package, so mypy cannot resolve them from `files` above.
+[[tool.mypy.overrides]]
+module = [
+    "arb_model",
+    "au_drivers_snapshot",
+    "foxf_model",
+    "harbour_model",
+    "pull_edgar",
+    "run_arb",
+    "run_harbour",
+]
+ignore_missing_imports = true

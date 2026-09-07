@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from math import isfinite
-from pathlib import Path, PurePosixPath
+import os
 import re
 import shutil
 import stat
 import tempfile
-from typing import Callable, Literal
+from collections.abc import Callable
+from math import isfinite
+from pathlib import Path, PurePosixPath
+from typing import Any, Literal
 from uuid import uuid4
 
 import yaml
@@ -14,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from pyfpa.memory.lineage import MappingRegistry, reconcile_account_table
 from pyfpa.memory.workspace import Workspace
-
 
 ConnectorAuth = Literal["none", "host_environment", "mcp"]
 _CONNECTOR_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -35,14 +36,14 @@ def _connector_name(value: str) -> str:
     return value
 
 
-def _lstat(path: Path):
+def _lstat(path: Path) -> os.stat_result | None:
     try:
         return path.lstat()
     except FileNotFoundError:
         return None
 
 
-def _is_link_or_reparse(path_stat) -> bool:
+def _is_link_or_reparse(path_stat: os.stat_result) -> bool:
     return stat.S_ISLNK(path_stat.st_mode) or bool(
         getattr(path_stat, "st_file_attributes", 0)
         & _FILE_ATTRIBUTE_REPARSE_POINT
@@ -189,7 +190,7 @@ class ConnectorManifest(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_manifest_contract(self):
+    def validate_manifest_contract(self) -> ConnectorManifest:
         if self.source_account_column == self.source_amount_column:
             raise ValueError("source account and amount columns must differ")
         return self
@@ -372,7 +373,7 @@ def scaffold_connector_bundle(
     amount_column: str,
     mappings: MappingRegistry,
     overwrite: bool = False,
-) -> tuple[ConnectorManifest, dict]:
+) -> tuple[ConnectorManifest, dict[str, Any]]:
     workspace = Workspace.open(company_root).require_root()
     bundle = connector_bundle_path(workspace.root, name)
     fixture = Path(fixture)
@@ -434,7 +435,7 @@ def validate_connector_bundle(
     name: str,
     mappings: MappingRegistry,
     timeout: float = 30.0,
-) -> dict:
+) -> dict[str, Any]:
     # Retained for callers of the schema-v1 API. The closed in-process adapter
     # does not start a process whose runtime can be bounded by this value.
     del timeout

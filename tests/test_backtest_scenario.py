@@ -1,5 +1,5 @@
-from pyfpa.backtest.score import score_forecast
 from pyfpa.backtest.learn import persistent_miss
+from pyfpa.backtest.score import score_forecast
 
 
 def test_persistent_cash_overstatement_is_flagged():

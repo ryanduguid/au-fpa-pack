@@ -1,9 +1,10 @@
 from pathlib import Path
+
 import yaml
 
-from pyfpa.cash13.schemas import Cash13Config
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.runway import runway_summary
+from pyfpa.cash13.schemas import Cash13Config
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,7 +27,7 @@ def test_ridgeline_cash13_runs_and_dips():
     )
 
 
-import pyfpa  # noqa: E402
+import pyfpa
 
 
 def test_cash13_public_exports():

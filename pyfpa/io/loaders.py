@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-from pyfpa.cash13.schemas import Cash13Config
 from pyfpa.analysis.sku import Sku
+from pyfpa.cash13.schemas import Cash13Config
 
 
 def load_cash13_config(path: str | Path) -> Cash13Config:

@@ -6,7 +6,6 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
-
 EntrypointKind = Literal[
     "forecast",
     "close",

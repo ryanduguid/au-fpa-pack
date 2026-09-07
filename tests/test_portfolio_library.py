@@ -1,9 +1,12 @@
 from pyfpa.config.schemas import EntityConfig
+from pyfpa.portfolio.library import (
+    load_library,
+    promote_prior,
+    promote_skill,
+    seed_from_library,
+)
 from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
 from pyfpa.portfolio.validate import ValidationResult
-from pyfpa.portfolio.library import (
-    load_library, promote_prior, promote_skill, seed_from_library,
-)
 
 
 def _cfg(dio=30.0):

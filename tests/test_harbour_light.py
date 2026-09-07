@@ -58,6 +58,7 @@ def test_quarterly_bas_dates_match_ato_fy2027_cycle():
 
 def test_fy_summary_labels_harbour_months_as_fy2027():
     import harbour_model as hm
+
     from pyfpa.au import fy_summary
 
     monthly = hm.monthly_forecast()
@@ -73,6 +74,7 @@ def test_fy_summary_labels_harbour_months_as_fy2027():
 
 def test_verified_excel_matches_engine(tmp_path):
     import harbour_model as hm
+
     from pyfpa.excel.model_workbook import model_to_excel
     from pyfpa.excel.verify import verify_workbook
     from pyfpa.models.cashflow import cashflow_from_config

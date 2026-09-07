@@ -17,10 +17,10 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import harbour_model as hm
+
 import pyfpa
 from pyfpa.excel.model_workbook import model_to_excel
 from pyfpa.io.reporting import to_briefing_md
-
 
 _TITLE = "Harbour Light Pty Ltd"
 

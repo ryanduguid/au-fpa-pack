@@ -6,7 +6,6 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
-
 ExperimentStatus = Literal["draft", "proposed", "accepted", "rejected", "reverted"]
 CheckResult = Literal["pass", "fail", "not_run"]
 DecisionOutcome = Literal["accepted", "rejected", "reverted"]
@@ -53,7 +52,7 @@ class Experiment(BaseModel):
     decision: ExperimentDecision | None = None
 
     @model_validator(mode="after")
-    def _validate_ratification(self) -> "Experiment":
+    def _validate_ratification(self) -> Experiment:
         terminal = {"accepted", "rejected", "reverted"}
         if self.status in terminal:
             if self.decision is None:
