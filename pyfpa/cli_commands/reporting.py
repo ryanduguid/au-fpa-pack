@@ -4,7 +4,7 @@ import argparse
 
 from openpyxl import load_workbook
 
-from pyfpa.cli_helpers import _failure, _root, _success
+from pyfpa.cli_helpers import _failure, _require_initialized, _root, _success
 from pyfpa.memory.workspace import Workspace
 
 
@@ -14,13 +14,8 @@ def command_model_export(args: argparse.Namespace) -> int:
 
     opened = Workspace.open(args.path)
     root = opened.root
-    if not opened.initialized:
-        return _failure(
-            "model-export",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before exporting a model workbook",
-        )
+    if (failure := _require_initialized("model-export", args, "exporting a model workbook")) is not None:
+        return failure
     try:
         cfg = load_config(args.config)
     except Exception as exc:

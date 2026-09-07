@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any, NoReturn
 
+from pyfpa.memory.workspace import Workspace
+
 SCHEMA_VERSION = 1
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -66,3 +68,16 @@ def _failure(
 
 def _root(path: str) -> Path:
     return Path(path).expanduser().resolve()
+
+
+def _require_initialized(command: str, args: Any, action: str) -> int | None:
+    """Return a failure result unless the company workspace already exists."""
+    workspace = Workspace.open(args.path)
+    if workspace.initialized:
+        return None
+    return _failure(
+        command,
+        workspace.root,
+        "workspace_not_initialized",
+        f"initialize the company workspace before {action}",
+    )

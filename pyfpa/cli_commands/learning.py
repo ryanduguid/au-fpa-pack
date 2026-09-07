@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from pyfpa.cli_helpers import _failure, _success
+from pyfpa.cli_helpers import _failure, _require_initialized, _success
 from pyfpa.memory.workspace import Workspace
 
 
@@ -12,13 +12,8 @@ def command_correction_record(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "correction-record",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before recording corrections",
-        )
+    if (failure := _require_initialized("correction-record", args, "recording corrections")) is not None:
+        return failure
     try:
         override = None
         if args.override_path is not None:
@@ -56,13 +51,8 @@ def command_correction_list(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "correction-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing corrections",
-        )
+    if (failure := _require_initialized("correction-list", args, "listing corrections")) is not None:
+        return failure
     try:
         corrections = load_corrections(workspace / "corrections")
     except Exception as exc:
@@ -92,13 +82,8 @@ def command_scorecard_render(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "scorecard-render",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before rendering scorecard",
-        )
+    if (failure := _require_initialized("scorecard-render", args, "rendering scorecard")) is not None:
+        return failure
     forecasts_dir = workspace / "forecasts"
     snapshots = []
     parse_errors = []
@@ -140,13 +125,8 @@ def command_experiment_list(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "experiment-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing experiments",
-        )
+    if (failure := _require_initialized("experiment-list", args, "listing experiments")) is not None:
+        return failure
     try:
         experiments = load_experiments(workspace / "experiments")
     except Exception as exc:
@@ -185,13 +165,8 @@ def command_context_pack(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "context-pack",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before building a context pack",
-        )
+    if (failure := _require_initialized("context-pack", args, "building a context pack")) is not None:
+        return failure
     try:
         index = build_memory_index(workspace)
         pack = build_context_pack(
@@ -222,13 +197,8 @@ def command_onboarding_render(args: argparse.Namespace) -> int:
     opened = Workspace.open(args.path)
     root = opened.root
     workspace = opened.memory
-    if not opened.initialized:
-        return _failure(
-            "onboarding-render",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before rendering onboarding outputs",
-        )
+    if (failure := _require_initialized("onboarding-render", args, "rendering onboarding outputs")) is not None:
+        return failure
     try:
         intake = load_intake(workspace / "intake.md")
         proposal = ArchitectureProposal(

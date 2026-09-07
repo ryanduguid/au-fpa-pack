@@ -1,9 +1,9 @@
 ## Why this exists
 
 Traditional FP&A software asks a company to configure itself inside a fixed
-application. openfpa takes the opposite approach. It gives an AI enough finance
-structure, memory, and guardrails to learn the business and build what that CFO
-or FP&A team actually needs.
+application. openfpa gives an AI enough finance structure, memory, and
+guardrails to learn the business and build what that CFO or FP&A team actually
+needs.
 
 A generic AI can write a forecast from scratch, but each run tends to produce a
 new pile of code with no shared accounting logic, durable context, test history,
@@ -23,9 +23,8 @@ or promotion process. openfpa adds:
 - **Visible adaptation.** Company-specific code belongs in generated namespaces,
   where it can be reviewed, tested, and changed.
 
-The goal is not deterministic software that produces the same template for
-every company. The goal is a dependable process that helps the AI produce a
-better company-specific result over time.
+The goal is a dependable process that helps the AI produce a better
+company-specific result over time.
 ## How onboarding works
 
 For broad company work, the agent starts by inspecting local evidence. It does
@@ -82,9 +81,7 @@ Generated connector code belongs in `connectors/generated/`. It should include:
 - failure behavior for missing, duplicate, or unmapped records;
 - tests that do not require production credentials.
 
-The small functions in `pyfpa.io.adapters` are fixture-backed examples, not live
-QuickBooks, NetSuite, or Shopify integrations. Credentials stay with the host
-tool or environment and are never committed.
+Credentials stay with the host tool or environment and are never committed.
 ## The company workspace
 
 ```text
