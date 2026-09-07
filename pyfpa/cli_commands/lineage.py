@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from pyfpa.cli_helpers import _failure, _success
+from pyfpa.cli_helpers import _failure, _require_initialized, _success
 from pyfpa.memory.connectors import (
     connector_bundle_path,
     load_connector_manifests,
@@ -42,13 +42,8 @@ def command_source_register(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.source_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "source-register",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before registering sources",
-        )
+    if (failure := _require_initialized("source-register", args, "registering sources")) is not None:
+        return failure
     try:
         source = SourceRecord(
             source_id=args.source_id,
@@ -84,13 +79,8 @@ def command_source_list(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.source_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "source-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing sources",
-        )
+    if (failure := _require_initialized("source-list", args, "listing sources")) is not None:
+        return failure
     try:
         registry = load_source_registry(registry_path)
     except Exception as exc:
@@ -131,13 +121,8 @@ def command_mapping_register(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.mapping_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "mapping-register",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before registering mappings",
-        )
+    if (failure := _require_initialized("mapping-register", args, "registering mappings")) is not None:
+        return failure
     try:
         sources = load_source_registry(workspace.source_registry_path)
         if not any(source.source_id == args.source_id for source in sources.sources):
@@ -172,13 +157,8 @@ def command_mapping_list(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.mapping_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "mapping-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing mappings",
-        )
+    if (failure := _require_initialized("mapping-list", args, "listing mappings")) is not None:
+        return failure
     try:
         registry = load_mapping_registry(registry_path)
     except Exception as exc:
@@ -203,13 +183,8 @@ def command_mapping_list(args: argparse.Namespace) -> int:
 def command_reconcile_source(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
-    if not workspace.initialized:
-        return _failure(
-            "reconcile-source",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before reconciling sources",
-        )
+    if (failure := _require_initialized("reconcile-source", args, "reconciling sources")) is not None:
+        return failure
     try:
         source_registry = load_source_registry(workspace.source_registry_path)
         source = next(
@@ -256,13 +231,8 @@ def command_reconcile_source(args: argparse.Namespace) -> int:
 def command_connector_scaffold(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
-    if not workspace.initialized:
-        return _failure(
-            "connector-scaffold",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before scaffolding connectors",
-        )
+    if (failure := _require_initialized("connector-scaffold", args, "scaffolding connectors")) is not None:
+        return failure
     fixture = Path(args.fixture).expanduser()
     if not fixture.is_absolute():
         fixture = root / fixture
@@ -307,13 +277,8 @@ def command_connector_scaffold(args: argparse.Namespace) -> int:
 def command_connector_list(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
-    if not workspace.initialized:
-        return _failure(
-            "connector-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing connectors",
-        )
+    if (failure := _require_initialized("connector-list", args, "listing connectors")) is not None:
+        return failure
     try:
         manifests = [
             manifest
@@ -341,13 +306,8 @@ def command_connector_list(args: argparse.Namespace) -> int:
 def command_connector_validate(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
-    if not workspace.initialized:
-        return _failure(
-            "connector-validate",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before validating connectors",
-        )
+    if (failure := _require_initialized("connector-validate", args, "validating connectors")) is not None:
+        return failure
     try:
         result = validate_connector_bundle(
             root,

@@ -7,7 +7,7 @@ import yaml
 from pydantic import BaseModel
 
 from pyfpa.config.schemas import EntityConfig
-from pyfpa.memory.paths import _set_by_path
+from pyfpa.memory.paths import apply_override
 
 CorrectionType = Literal["parametric", "structural", "context"]
 CorrectionStatus = Literal["open", "applied", "superseded"]
@@ -68,5 +68,5 @@ def apply_corrections(cfg: EntityConfig, corrections: list[Correction]) -> Entit
     data = cfg.model_dump()
     for correction in corrections:
         if correction.status == "applied" and correction.type == "parametric" and correction.override:
-            _set_by_path(data, correction.override.path, correction.override.value)
+            apply_override(data, correction.override.path, correction.override.value)
     return EntityConfig.model_validate(data)

@@ -36,7 +36,7 @@ def _set_segments(
         return
     target = node[key]
     if not isinstance(target, list):
-        # _set_by_path re-raises this as the ValueError the public contract promises.
+        # apply_override re-raises this as the ValueError the public contract promises.
         raise TypeError(
             f"override path expects a list at {key!r}, got {type(target).__name__}"
         )
@@ -48,7 +48,7 @@ def _set_segments(
             target[i] = value
 
 
-def _set_by_path(data: dict[str, Any], path: str, value: float) -> None:
+def apply_override(data: dict[str, Any], path: str, value: float) -> None:
     """Set ``value`` at ``path`` in ``data`` (in place).
 
     Supports:
@@ -62,9 +62,3 @@ def _set_by_path(data: dict[str, Any], path: str, value: float) -> None:
         _set_segments(data, _parse_path(path), value)
     except (KeyError, IndexError, TypeError) as exc:
         raise ValueError(f"cannot apply override path {path!r}: {exc}") from exc
-
-
-def apply_override(data: dict[str, Any], path: str, value: float) -> None:
-    """Set ``value`` at dotted ``path`` (supports ``name``, ``name[n]``, ``name[*]``)
-    in ``data``, in place. Public wrapper over the internal path setter."""
-    _set_by_path(data, path, value)

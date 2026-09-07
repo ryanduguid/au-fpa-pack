@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 
 from pyfpa.cli_commands.learning import (
     command_context_pack,
@@ -28,11 +28,13 @@ from pyfpa.cli_commands.reporting import command_model_export
 from pyfpa.cli_helpers import (
     JsonArgumentParser,
     _failure,
+    _require_initialized,
     _root,
     _success,
 )
 from pyfpa.memory.entrypoints import (
     CompanyEntrypoint,
+    EntrypointKind,
     load_entrypoint_registry,
     register_entrypoint,
     save_entrypoint_registry,
@@ -161,13 +163,8 @@ def command_intake_next(args: Any) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     intake_path = workspace.intake_path
-    if not intake_path.exists():
-        return _failure(
-            "intake-next",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before requesting intake questions",
-        )
+    if (failure := _require_initialized("intake-next", args, "requesting intake questions")) is not None:
+        return failure
     try:
         intake = load_intake(intake_path)
         questions = next_intake_questions(intake, limit=args.limit)
@@ -190,13 +187,8 @@ def command_intake_record(args: Any) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     intake_path = workspace.intake_path
-    if not intake_path.exists():
-        return _failure(
-            "intake-record",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before recording intake facts",
-        )
+    if (failure := _require_initialized("intake-record", args, "recording intake facts")) is not None:
+        return failure
     try:
         intake = load_intake(intake_path)
         intake = record_intake_fact(
@@ -242,13 +234,8 @@ def command_entrypoint_register(args: Any) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.entrypoint_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "entrypoint-register",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before registering entrypoints",
-        )
+    if (failure := _require_initialized("entrypoint-register", args, "registering entrypoints")) is not None:
+        return failure
     try:
         entrypoint = CompanyEntrypoint(
             name=args.name,
@@ -287,13 +274,8 @@ def command_entrypoint_list(args: Any) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
     registry_path = workspace.entrypoint_registry_path
-    if not workspace.initialized:
-        return _failure(
-            "entrypoint-list",
-            root,
-            "workspace_not_initialized",
-            "initialize the company workspace before listing entrypoints",
-        )
+    if (failure := _require_initialized("entrypoint-list", args, "listing entrypoints")) is not None:
+        return failure
     try:
         registry = load_entrypoint_registry(registry_path)
     except Exception as exc:
@@ -341,37 +323,37 @@ def build_parser() -> JsonArgumentParser:
         description="Machine-oriented FP&A toolbelt for AI coding agents.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+    common = JsonArgumentParser(add_help=False)
+    common.add_argument("path", nargs="?", default=".")
 
-    init_parser = subparsers.add_parser("init", help="Initialize a company workspace")
-    init_parser.add_argument("path", nargs="?", default=".")
+    init_parser = subparsers.add_parser("init", parents=[common], help="Initialize a company workspace")
     init_parser.add_argument("--business-name")
     init_parser.set_defaults(handler=command_init)
 
     inspect_parser = subparsers.add_parser(
         "inspect-data",
+        parents=[common],
         help="Inventory likely financial and operating data files",
     )
-    inspect_parser.add_argument("path", nargs="?", default=".")
     inspect_parser.add_argument("--max-files", type=int, default=500)
     inspect_parser.set_defaults(handler=command_inspect_data)
 
-    status_parser = subparsers.add_parser("status", help="Report company workspace state")
-    status_parser.add_argument("path", nargs="?", default=".")
+    status_parser = subparsers.add_parser("status", parents=[common], help="Report company workspace state")
     status_parser.set_defaults(handler=command_status)
 
     intake_parser = subparsers.add_parser(
         "intake-next",
+        parents=[common],
         help="Return the next related unresolved intake questions",
     )
-    intake_parser.add_argument("path", nargs="?", default=".")
     intake_parser.add_argument("--limit", type=int, default=3)
     intake_parser.set_defaults(handler=command_intake_next)
 
     record_parser = subparsers.add_parser(
         "intake-record",
+        parents=[common],
         help="Record one sourced intake fact",
     )
-    record_parser.add_argument("path", nargs="?", default=".")
     record_parser.add_argument("--key", required=True)
     record_parser.add_argument("--answer", required=True)
     record_parser.add_argument(
@@ -387,14 +369,14 @@ def build_parser() -> JsonArgumentParser:
 
     register_parser = subparsers.add_parser(
         "entrypoint-register",
+        parents=[common],
         help="Publish a generated company command for agent discovery",
     )
-    register_parser.add_argument("path", nargs="?", default=".")
     register_parser.add_argument("--name", required=True)
     register_parser.add_argument(
         "--kind",
         required=True,
-        choices=("forecast", "close", "cash", "research", "report", "connector", "custom"),
+        choices=get_args(EntrypointKind),
     )
     register_parser.add_argument("--description", required=True)
     register_parser.add_argument("--command-json", required=True)
@@ -406,20 +388,20 @@ def build_parser() -> JsonArgumentParser:
 
     list_parser = subparsers.add_parser(
         "entrypoint-list",
+        parents=[common],
         help="List generated company commands",
     )
-    list_parser.add_argument("path", nargs="?", default=".")
     list_parser.add_argument(
         "--kind",
-        choices=("forecast", "close", "cash", "research", "report", "connector", "custom"),
+        choices=get_args(EntrypointKind),
     )
     list_parser.set_defaults(handler=command_entrypoint_list)
 
     source_register_parser = subparsers.add_parser(
         "source-register",
+        parents=[common],
         help="Register source provenance and coverage",
     )
-    source_register_parser.add_argument("path", nargs="?", default=".")
     source_register_parser.add_argument("--source-id", required=True)
     source_register_parser.add_argument(
         "--kind",
@@ -446,9 +428,9 @@ def build_parser() -> JsonArgumentParser:
 
     source_list_parser = subparsers.add_parser(
         "source-list",
+        parents=[common],
         help="List registered company data sources",
     )
-    source_list_parser.add_argument("path", nargs="?", default=".")
     source_list_parser.add_argument(
         "--kind",
         choices=(
@@ -465,17 +447,17 @@ def build_parser() -> JsonArgumentParser:
 
     profile_parser = subparsers.add_parser(
         "source-profile",
+        parents=[common],
         help="Profile a CSV, TSV, or Excel source without writing",
     )
-    profile_parser.add_argument("path", nargs="?", default=".")
     profile_parser.add_argument("--file", required=True)
     profile_parser.set_defaults(handler=command_source_profile)
 
     mapping_register_parser = subparsers.add_parser(
         "mapping-register",
+        parents=[common],
         help="Register one exact source-to-model mapping",
     )
-    mapping_register_parser.add_argument("path", nargs="?", default=".")
     mapping_register_parser.add_argument("--source-id", required=True)
     mapping_register_parser.add_argument("--source-value", required=True)
     mapping_register_parser.add_argument("--target", default="")
@@ -488,18 +470,18 @@ def build_parser() -> JsonArgumentParser:
 
     mapping_list_parser = subparsers.add_parser(
         "mapping-list",
+        parents=[common],
         help="List exact source-to-model mappings",
     )
-    mapping_list_parser.add_argument("path", nargs="?", default=".")
     mapping_list_parser.add_argument("--source-id")
     mapping_list_parser.add_argument("--status", choices=("mapped", "ignored"))
     mapping_list_parser.set_defaults(handler=command_mapping_list)
 
     reconcile_parser = subparsers.add_parser(
         "reconcile-source",
+        parents=[common],
         help="Reconcile a registered CSV source through exact mappings",
     )
-    reconcile_parser.add_argument("path", nargs="?", default=".")
     reconcile_parser.add_argument("--source-id", required=True)
     reconcile_parser.add_argument("--file")
     reconcile_parser.add_argument("--account-column", default="Account")
@@ -511,9 +493,9 @@ def build_parser() -> JsonArgumentParser:
 
     connector_scaffold_parser = subparsers.add_parser(
         "connector-scaffold",
+        parents=[common],
         help="Generate a fixture-backed company connector bundle",
     )
-    connector_scaffold_parser.add_argument("path", nargs="?", default=".")
     connector_scaffold_parser.add_argument("--name", required=True)
     connector_scaffold_parser.add_argument("--source-id", required=True)
     connector_scaffold_parser.add_argument("--description", required=True)
@@ -530,39 +512,38 @@ def build_parser() -> JsonArgumentParser:
 
     connector_list_parser = subparsers.add_parser(
         "connector-list",
+        parents=[common],
         help="List generated company connector contracts",
     )
-    connector_list_parser.add_argument("path", nargs="?", default=".")
     connector_list_parser.add_argument("--source-id")
     connector_list_parser.set_defaults(handler=command_connector_list)
 
     connector_validate_parser = subparsers.add_parser(
         "connector-validate",
+        parents=[common],
         help="Execute fixture mode and reconcile normalized connector output",
     )
-    connector_validate_parser.add_argument("path", nargs="?", default=".")
     connector_validate_parser.add_argument("--name", required=True)
     connector_validate_parser.add_argument("--timeout", type=float, default=30.0)
     connector_validate_parser.set_defaults(handler=command_connector_validate)
 
     model_export_parser = subparsers.add_parser(
         "model-export",
+        parents=[common],
         help="Generate a live-formula Excel workbook from an EntityConfig YAML",
     )
-    model_export_parser.add_argument("path", nargs="?", default=".")
     model_export_parser.add_argument("--config", required=True)
     model_export_parser.add_argument("--out", required=True)
     model_export_parser.set_defaults(handler=command_model_export)
 
-    doctor_parser = subparsers.add_parser("doctor", help="Validate workspace contracts")
-    doctor_parser.add_argument("path", nargs="?", default=".")
+    doctor_parser = subparsers.add_parser("doctor", parents=[common], help="Validate workspace contracts")
     doctor_parser.set_defaults(handler=command_doctor)
 
     correction_record_parser = subparsers.add_parser(
         "correction-record",
+        parents=[common],
         help="Record one typed human correction into .fpa/corrections/",
     )
-    correction_record_parser.add_argument("path", nargs="?", default=".")
     correction_record_parser.add_argument("--slug", required=True)
     correction_record_parser.add_argument(
         "--type", required=True, choices=("parametric", "structural", "context")
@@ -579,9 +560,9 @@ def build_parser() -> JsonArgumentParser:
 
     correction_list_parser = subparsers.add_parser(
         "correction-list",
+        parents=[common],
         help="List recorded corrections",
     )
-    correction_list_parser.add_argument("path", nargs="?", default=".")
     correction_list_parser.add_argument(
         "--status", choices=("open", "applied", "superseded")
     )
@@ -589,16 +570,16 @@ def build_parser() -> JsonArgumentParser:
 
     scorecard_parser = subparsers.add_parser(
         "scorecard-render",
+        parents=[common],
         help="Load all snapshots, render the scorecard, write .fpa/scorecard.md",
     )
-    scorecard_parser.add_argument("path", nargs="?", default=".")
     scorecard_parser.set_defaults(handler=command_scorecard_render)
 
     experiment_list_parser = subparsers.add_parser(
         "experiment-list",
+        parents=[common],
         help="List experiment records from .fpa/experiments/",
     )
-    experiment_list_parser.add_argument("path", nargs="?", default=".")
     experiment_list_parser.add_argument(
         "--status",
         choices=("draft", "proposed", "accepted", "rejected", "reverted"),
@@ -607,9 +588,9 @@ def build_parser() -> JsonArgumentParser:
 
     context_pack_parser = subparsers.add_parser(
         "context-pack",
+        parents=[common],
         help="Build a bounded task-relevant memory pack from .fpa/ for an agent",
     )
-    context_pack_parser.add_argument("path", nargs="?", default=".")
     context_pack_parser.add_argument("--task", required=True)
     context_pack_parser.add_argument("--category", action="append", default=[])
     context_pack_parser.add_argument("--limit", type=int, default=8)
@@ -617,9 +598,9 @@ def build_parser() -> JsonArgumentParser:
 
     onboarding_render_parser = subparsers.add_parser(
         "onboarding-render",
+        parents=[common],
         help="Write business-profile.md and initial-model-architecture.md from intake",
     )
-    onboarding_render_parser.add_argument("path", nargs="?", default=".")
     onboarding_render_parser.add_argument("--proposal-summary", required=True)
     onboarding_render_parser.add_argument("--connector", action="append", default=[])
     onboarding_render_parser.add_argument("--model-component", action="append", default=[])

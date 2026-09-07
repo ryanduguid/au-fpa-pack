@@ -7,17 +7,9 @@ from openpyxl.workbook import Workbook
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.worksheet import Worksheet
 
-
-def money_format() -> str:
-    return "#,##0"
-
-
-def percent_format() -> str:
-    return "0.0%"
-
-
-def days_format() -> str:
-    return "0.0"
+MONEY_FORMAT = "#,##0"
+PERCENT_FORMAT = "0.0%"
+DAYS_FORMAT = "0.0"
 
 
 def add_named_cell(
@@ -80,7 +72,3 @@ def fill_formula_row(
         cell = ws.cell(row=row, column=start_col + m - 1, value=template(m, col))
         if number_format:
             cell.number_format = number_format
-
-
-def freeze_header(ws: Worksheet, *, first_data_cell: str = "B2") -> None:
-    ws.freeze_panes = first_data_cell

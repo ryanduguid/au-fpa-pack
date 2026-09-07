@@ -16,9 +16,7 @@ Connect the model to real data - from wherever it lives. openfpa is **not marrie
 - **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP aging, or inventory export. `pyfpa.read_pl_csv(path)` reads any two-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR aging, **DIO** from inventory, **DPO** from AP aging.
 - **A live accounting system via MCP** - the cleanest live path. If a **QuickBooks** or **NetSuite** MCP server is connected, pull the trial balance / P&L / balance sheet through it and map the result to `{account: amount}`. openfpa never handles credentials - the MCP server owns auth.
 - **A live system via API** - build a company-specific connector around the
-  source API and its actual report shape. The functions in `pyfpa.io.adapters`
-  are fixture-backed examples only, not live QuickBooks, NetSuite, or Shopify
-  clients.
+  source API and its actual report shape.
 - **Public filings** - a 10-K / 10-Q from SEC EDGAR (curl + a compliant User-Agent), as in the Fox Factory example.
 - **Anything else** - if the source isn't covered, write a small ingestion that returns `{account: amount}` (or parses the richer statement to the drivers the model needs). That is the toolkit working exactly as intended.
 

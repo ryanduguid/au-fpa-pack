@@ -2,11 +2,10 @@
 from openpyxl import Workbook, load_workbook
 
 from pyfpa.excel.toolkit import (
+    PERCENT_FORMAT,
     add_named_cell,
     add_named_row,
     fill_formula_row,
-    money_format,
-    percent_format,
 )
 
 
@@ -14,7 +13,7 @@ def test_add_named_cell_registers_defined_name(tmp_path):
     wb = Workbook()
     ws = wb.active
     ws.title = "Assumptions"
-    add_named_cell(wb, ws, name="tax_rate", row=2, col=2, value=0.21, number_format=percent_format())
+    add_named_cell(wb, ws, name="tax_rate", row=2, col=2, value=0.21, number_format=PERCENT_FORMAT)
     path = tmp_path / "t.xlsx"
     wb.save(path)
     back = load_workbook(path)
@@ -47,8 +46,3 @@ def test_fill_formula_row_writes_formula_strings():
     assert ws.cell(row=5, column=1).value == "gross_profit"
     assert ws.cell(row=5, column=2).value == "=B3-B4"
     assert ws.cell(row=5, column=4).value == "=D3-D4"
-
-
-def test_money_and_percent_formats_are_strings():
-    assert isinstance(money_format(), str)
-    assert isinstance(percent_format(), str)

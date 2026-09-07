@@ -8,8 +8,8 @@ kind; this is a side-of-the-desk project.
 ## Getting set up
 
 ```bash
-git clone https://github.com/JeffBrines/openfpa
-cd openfpa
+git clone https://github.com/ryanduguid/au-fpa-pack
+cd au-fpa-pack
 pip install -e ".[dev]"
 ruff check .       # lint and import order, part of the merge gate
 mypy               # strict type check of pyfpa, part of the merge gate
@@ -44,7 +44,7 @@ The distribution is `au-fpa-pack`; the importable package is `pyfpa` (`import py
 ## What's most useful to contribute
 
 The engine is deliberately lean; the value is in the skillset and how widely it covers
-real businesses. The highest-leverage contributions:
+real businesses. The contributions that help most:
 
 - **Industry packs:** a polished generated skill for a vertical the toolkit doesn't cover
   well yet (SaaS, restaurant, logistics, agency, and so on). The `fpa-learn-business` skill
@@ -69,5 +69,5 @@ real businesses. The highest-leverage contributions:
   the `io/` layer. Match the surrounding style.
 - Open-sourced under MIT. By contributing, you agree your work is offered under the same.
 
-Questions or ideas? Open an [Issue](https://github.com/JeffBrines/openfpa/issues) or a
+Questions or ideas? Open an [Issue](https://github.com/ryanduguid/au-fpa-pack/issues) or a
 Discussion.

@@ -17,13 +17,12 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from pyfpa.config.schemas import DebtInstrument, EntityConfig
 from pyfpa.excel.toolkit import (
+    DAYS_FORMAT,
+    MONEY_FORMAT,
+    PERCENT_FORMAT,
     add_named_cell,
     add_named_row,
-    days_format,
     fill_formula_row,
-    freeze_header,
-    money_format,
-    percent_format,
 )
 from pyfpa.models.periods import month_index
 
@@ -79,15 +78,11 @@ def _build_assumptions(
         row += 1
         return ref
 
-    mfmt = money_format()
-    pfmt = percent_format()
-    dfmt = days_format()
-
     channel_refs: list[_ChannelRef] = []
     for i, ch in enumerate(cfg.channels, start=1):
-        nc(f"rev_annual_ch{i}", ch.annual_revenue, mfmt)
-        nc(f"growth_ch{i}", ch.growth_rate, pfmt)
-        nc(f"cogs_pct_ch{i}", ch.cogs_pct, pfmt)
+        nc(f"rev_annual_ch{i}", ch.annual_revenue, MONEY_FORMAT)
+        nc(f"growth_ch{i}", ch.growth_rate, PERCENT_FORMAT)
+        nc(f"cogs_pct_ch{i}", ch.cogs_pct, PERCENT_FORMAT)
         sr = nr(f"seasonality_ch{i}", list(ch.seasonality))
         channel_refs.append(_ChannelRef(
             name_rev=f"rev_annual_ch{i}",
@@ -100,35 +95,35 @@ def _build_assumptions(
     for j, line in enumerate(cfg.opex, start=1):
         if line.kind == "fixed":
             nm = f"opex_amount_{j}"
-            nc(nm, line.monthly_amount, mfmt)
+            nc(nm, line.monthly_amount, MONEY_FORMAT)
         else:
             nm = f"opex_pct_{j}"
-            nc(nm, line.pct_of_revenue, pfmt)
+            nc(nm, line.pct_of_revenue, PERCENT_FORMAT)
         opex_names.append(nm)
 
     for name, val, fmt in [
-        ("dso_days", cfg.working_capital.dso_days, dfmt),
-        ("dio_days", cfg.working_capital.dio_days, dfmt),
-        ("dpo_days", cfg.working_capital.dpo_days, dfmt),
-        ("tax_rate", cfg.tax_rate, pfmt),
-        ("da_monthly", cfg.da_monthly, mfmt),
-        ("capex_monthly", cfg.capex_monthly, mfmt),
-        ("open_cash", cfg.opening_balances.cash, mfmt),
-        ("open_ar", cfg.opening_balances.ar, mfmt),
-        ("open_ap", cfg.opening_balances.ap, mfmt),
-        ("open_inventory", cfg.opening_balances.inventory, mfmt),
-        ("open_nol", cfg.opening_balances.nol, mfmt),
+        ("dso_days", cfg.working_capital.dso_days, DAYS_FORMAT),
+        ("dio_days", cfg.working_capital.dio_days, DAYS_FORMAT),
+        ("dpo_days", cfg.working_capital.dpo_days, DAYS_FORMAT),
+        ("tax_rate", cfg.tax_rate, PERCENT_FORMAT),
+        ("da_monthly", cfg.da_monthly, MONEY_FORMAT),
+        ("capex_monthly", cfg.capex_monthly, MONEY_FORMAT),
+        ("open_cash", cfg.opening_balances.cash, MONEY_FORMAT),
+        ("open_ar", cfg.opening_balances.ar, MONEY_FORMAT),
+        ("open_ap", cfg.opening_balances.ap, MONEY_FORMAT),
+        ("open_inventory", cfg.opening_balances.inventory, MONEY_FORMAT),
+        ("open_nol", cfg.opening_balances.nol, MONEY_FORMAT),
     ]:
         nc(name, val, fmt)
 
     debt_refs: list[_DebtRef] = []
     for k, inst in enumerate(cfg.debt, start=1):
-        nc(f"debt_open_{k}", inst.opening_balance, mfmt)
-        nc(f"debt_rate_{k}", inst.annual_rate, pfmt)
+        nc(f"debt_open_{k}", inst.opening_balance, MONEY_FORMAT)
+        nc(f"debt_rate_{k}", inst.annual_rate, PERCENT_FORMAT)
         nm_prin = ""
         if inst.kind == "term_loan":
             nm_prin = f"debt_prin_{k}"
-            nc(nm_prin, inst.monthly_principal, mfmt)
+            nc(nm_prin, inst.monthly_principal, MONEY_FORMAT)
         debt_refs.append(_DebtRef(
             name_open=f"debt_open_{k}",
             name_rate=f"debt_rate_{k}",
@@ -322,7 +317,7 @@ def _debt_principal_formulas(
 
 def _build_debt_block(
     ws: Worksheet, cfg: EntityConfig, debt_refs: list[_DebtRef],
-    alloc: _RowAlloc, mfmt: str,
+    alloc: _RowAlloc,
 ) -> tuple[list[int], list[int]]:
     """Per-instrument balance, interest and principal rows."""
     debt_int_rows: list[int] = []
@@ -332,7 +327,7 @@ def _build_debt_block(
         bal_row = alloc.alloc()
         alloc._ws.cell(row=bal_row, column=1, value=f"debt_balance_{k + 1}")
         alloc.write_cells(bal_row, _debt_balance_formulas(inst, dref, bal_row,
-                                                          alloc._n), mfmt)
+                                                          alloc._n), MONEY_FORMAT)
 
         int_row = alloc.emit_cells(f"interest_{k + 1}",
                                    _debt_interest_formulas(dref, bal_row,
@@ -359,7 +354,7 @@ def _total_or_zero(
 
 
 def _build_nol_block(
-    cfg: EntityConfig, n: int, r_pretax: int, alloc: _RowAlloc, mfmt: str,
+    cfg: EntityConfig, n: int, r_pretax: int, alloc: _RowAlloc,
 ) -> tuple[int, int, int]:
     """NOL opening/used/closing rows that cross-reference each other."""
     # Allocate all three rows first, then fill
@@ -376,17 +371,17 @@ def _build_nol_block(
         nol_o = ("=open_nol" if m_idx == 0
                  else f"={get_column_letter(_MODEL_START_COL + m_idx - 1)}{nol_close_row}")
         alloc._ws.cell(row=nol_open_row, column=_MODEL_START_COL + m_idx,
-                       value=nol_o).number_format = mfmt
+                       value=nol_o).number_format = MONEY_FORMAT
         # nol_used
         alloc._ws.cell(
             row=nol_used_row, column=_MODEL_START_COL + m_idx,
             value=f"=MIN({cl}{nol_open_row},MAX(0,{cl}{r_pretax}))",
-        ).number_format = mfmt
+        ).number_format = MONEY_FORMAT
         # nol_closing
         alloc._ws.cell(
             row=nol_close_row, column=_MODEL_START_COL + m_idx,
             value=f"={cl}{nol_open_row}-{cl}{nol_used_row}",
-        ).number_format = mfmt
+        ).number_format = MONEY_FORMAT
     return nol_open_row, nol_used_row, nol_close_row
 
 
@@ -435,9 +430,7 @@ def _build_model(
     ws = wb["Model"]
     idx = month_index(cfg.start_month, cfg.horizon_months)
     n = cfg.horizon_months
-    mfmt = money_format()
-
-    alloc = _RowAlloc(ws, n_cols=n, default_fmt=mfmt)
+    alloc = _RowAlloc(ws, n_cols=n, default_fmt=MONEY_FORMAT)
 
     _emit_header(ws, idx)
 
@@ -455,7 +448,7 @@ def _build_model(
 
     # -- Per-instrument debt rows then totals --
     debt_int_rows, debt_prin_rows = _build_debt_block(
-        ws, cfg, debt_refs, alloc, mfmt)
+        ws, cfg, debt_refs, alloc)
     r_int = _total_or_zero("interest", debt_int_rows, alloc)
     r_prin = _total_or_zero("principal", debt_prin_rows, alloc)
 
@@ -466,7 +459,7 @@ def _build_model(
 
     # -- NOL, tax, net income --
     _nol_open_row, nol_used_row, _nol_close_row = _build_nol_block(
-        cfg, n, r_pretax, alloc, mfmt)
+        cfg, n, r_pretax, alloc)
     r_tax = alloc.emit_fn(
         "tax",
         lambda m, col: f"=(MAX(0,{col}{r_pretax})-{col}{nol_used_row})*tax_rate",
@@ -497,9 +490,9 @@ def _build_model(
 
     end_row = alloc.alloc()
     ws.cell(row=end_row, column=1, value="ending_cash")
-    alloc.write_cells(end_row, _ending_cash_formulas(n, r_chg, end_row), mfmt)
+    alloc.write_cells(end_row, _ending_cash_formulas(n, r_chg, end_row), MONEY_FORMAT)
 
-    freeze_header(ws, first_data_cell="B2")
+    ws.freeze_panes = "B2"
 
 
 def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
