@@ -1,8 +1,8 @@
 # openfpa Agent Operating Contract
 
-openfpa is an agent-native FP&A workbench, not a fixed application. The goal is
-to help an AI build the finance system that fits one company while preserving a
-small, trustworthy accounting kernel.
+openfpa is an agent-native FP&A workbench that an AI reshapes for each company.
+The goal is to help an AI build the finance system that fits one company while
+preserving a small, trustworthy accounting kernel.
 
 ## Architecture
 
