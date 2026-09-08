@@ -11,9 +11,8 @@ structures for the lineage pipeline:
   taken as already signed that way; the report layout Xero exports from
   Reports carries natural balances (expenses and liabilities positive,
   observed 5 September 2026) and is normalised by section;
-- GST-aware: Xero reports are GST-exclusive by default. Detects
-  GST-INCLUSIVE exports by comparing a control total when provided, or
-  by heuristics when not, and refuses to guess silently. Never feed a
+- GST-aware: compares revenue with a supplied GST-exclusive control total.
+  Without a usable control, the GST basis remains undetermined. Never feed a
   GST-inclusive series into ``pyfpa.au.monthly_gst`` as if exclusive.
 
 This module parses report exports only. It holds no credentials and makes
@@ -202,17 +201,16 @@ def detect_gst_inclusive(
 ) -> bool | None:
     """Best-effort check that a revenue series is GST-EXCLUSIVE.
 
-    Returns True when the series looks GST-INCLUSIVE (danger), False
-    when it looks exclusive (safe), None when undetermined. With a
+    Returns True when the series looks GST-INCLUSIVE, False
+    when it looks exclusive, None when undetermined. With a
     `control_total` (the entity's known GST-exclusive revenue for the
     period) the check compares tolerance: within 1% -> exclusive, within
     1% of 1.1x -> inclusive.
 
-    Heuristic without a control: an export whose income-account amounts
-    are all divisible cleanly by 1.1 to 4+ significant figures is
-    probably exclusive already (someone divided by 11); raw trading
-    totals rarely are. Weak signal - used only to force a question,
-    never to auto-tag.
+    Amounts alone cannot establish the GST basis. Without a usable control,
+    return None and obtain the report settings or an independent control.
+    A 1.1 comparison assumes wholly taxable sales at 10%; mixed GST treatments
+    need a separate reconciliation. The result does not establish tax treatment.
     """
     income = [
         r.amount
@@ -232,11 +230,6 @@ def detect_gst_inclusive(
         if abs(total - control_total * 1.1) / (control_total * 1.1) < 0.01:
             return True
         return None
-    clean = sum(
-        1 for a in income if abs(round(a / 1.1, 2) * 1.1 - a) < 0.005
-    )
-    if clean == len(income):
-        return False
     return None
 
 

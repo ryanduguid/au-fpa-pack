@@ -13,14 +13,16 @@ the operating loop.
 
 1. **Request exports** per the recipe: P&L for the period (monthly
    preferred), balance sheet at opening date, both GST-EXCLUSIVE.
-   Confirm the basis explicitly; ask for BAS 1A/1B totals for the same
-   period as an independent control.
+   Confirm the basis explicitly. Obtain BAS G1 total sales and 1A/1B GST
+   amounts for separate reconciliations, following the recipe.
 2. **Load and inspect** with `pyfpa.io.xero_au.read_xero_report`.
    Check `by_tracking()` for `(untracked)` revenue/COGS - surface to
    the user before mapping.
 3. **GST basis check**: `detect_gst_inclusive(report, control_total=...)`
-   when a control exists. Inclusive result = stop; re-export or divide
-   by 11, never proceed silently.
+   with a reconciled GST-exclusive revenue control for the same accounts,
+   period and accounting basis. For `True`, obtain a GST-exclusive re-export;
+   for `None`, establish the basis before modelling. Follow the recipe's
+   treatment of wholly taxable amounts and mixed GST treatments.
 4. **Register + map** via `source-register` / `mapping-register`.
    Standard AU accounts get standard targets: Wages -> opex.wages,
    Superannuation -> opex.super, Payroll Tax -> opex.payroll_tax,
@@ -28,8 +30,9 @@ the operating loop.
    (revenue.gst_free) so `pyfpa.au.monthly_gst` gets the right
    taxable share.
 5. **Reconcile**: `reconcile-source` must pass. Then two AU ties:
-   (a) P&L revenue vs BAS 1A + GST-free sales; (b) wages/super/payroll
-   tax vs `pyfpa.au.payroll_forecast` for a matching month. Record
+   (a) P&L revenue vs BAS G1, reconciling GST basis and timing, with GST
+   on sales tied separately to 1A; (b) wages/super/payroll tax vs
+   `pyfpa.au.payroll_forecast` for a matching month. Record
    differences as corrections, not adjustments in the fixture.
 6. **Connector** only for recurring pulls: `connector-scaffold` from
    the redacted fixture, `connector-validate` as the fixture-mode
