@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import csv
+from math import isfinite
 from pathlib import Path
 
 
 def _parse_amount(raw: str | None) -> float:
     """Parse an accounting-style amount: $, thousands commas, (parens)=negative."""
-    s = (raw or "").strip().replace("$", "").replace(",", "")
+    if raw is None:
+        raise ValueError("missing amount field")
+    s = raw.strip().replace("$", "").replace(",", "")
     if s in ("", "-"):
         return 0.0
     negative = s.startswith("(") and s.endswith(")")
     if negative:
         s = s[1:-1]
     value = float(s)
+    if not isfinite(value):
+        raise ValueError("amount must be finite")
     return -value if negative else value
 
 

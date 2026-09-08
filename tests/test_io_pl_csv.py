@@ -47,3 +47,18 @@ def test_duplicate_accounts_raise(tmp_path):
 
     with pytest.raises(ValueError, match="duplicate account"):
         read_pl_csv(path)
+
+
+@pytest.mark.parametrize("row", ["Sales", "Sales,NaN", "Sales,inf", "Sales,-inf", "Sales,1e309"])
+def test_read_pl_csv_rejects_missing_or_nonfinite_amounts(tmp_path, row):
+    path = tmp_path / "invalid.csv"
+    path.write_text(f"Account,Amount\n{row}\n")
+    with pytest.raises(ValueError, match="amount"):
+        read_pl_csv(path)
+
+
+@pytest.mark.parametrize("amount", ["0", "-", "", "  "])
+def test_read_pl_csv_preserves_supported_zero_notation(tmp_path, amount):
+    path = tmp_path / "zero.csv"
+    path.write_text(f"Account,Amount\nSales,{amount}\n")
+    assert read_pl_csv(path) == {"Sales": 0.0}

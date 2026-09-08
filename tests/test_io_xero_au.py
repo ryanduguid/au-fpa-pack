@@ -92,8 +92,25 @@ def test_gst_detector_with_control_total():
 
 def test_gst_detector_undetermined_without_control():
     report = read_xero_report(FIXTURE_PL)
-    # Fixture amounts are ordinary trading totals; no strong signal either way.
-    assert detect_gst_inclusive(report) in (False, None)
+    assert detect_gst_inclusive(report) is None
+
+
+@pytest.mark.parametrize("control", [None, 0.0, -1.0, float("nan"), float("inf")])
+def test_gst_detector_does_not_infer_basis_from_round_amounts(tmp_path, control):
+    path = tmp_path / "sales.csv"
+    path.write_text("Code,Account,Amount\n200,Sales,1100\n")
+    report = read_xero_report(path)
+    assert detect_gst_inclusive(report, control_total=control) is None
+    assert detect_gst_inclusive(report, control_total=1000.0) is True
+    assert detect_gst_inclusive(report, control_total=1100.0) is False
+
+
+@pytest.mark.parametrize("row", ["Sales", "Sales,NaN", "Sales,inf", "Sales,-inf", "Sales,1e309"])
+def test_xero_flat_report_rejects_missing_or_nonfinite_amounts(tmp_path, row):
+    path = tmp_path / "invalid.csv"
+    path.write_text(f"Account,Amount\n{row}\n")
+    with pytest.raises(ValueError, match="amount"):
+        read_xero_report(path)
 
 
 def test_empty_file_rejected(tmp_path):

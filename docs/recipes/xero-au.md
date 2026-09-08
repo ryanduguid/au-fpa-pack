@@ -20,8 +20,11 @@ From Xero, Accounting > Reports, one CSV each:
 Ask whether reports were run GST-inclusive or GST-exclusive. Xero
 defaults to exclusive; BAS-cash modelling breaks if an inclusive
 export is treated as exclusive. If the client doesn't know, get the
-period's total revenue independently (BAS 1A, bank deposits) and use
-`detect_gst_inclusive` with that control.
+report settings or an independently reconciled GST-exclusive revenue total
+for the same accounts, period and accounting basis. Use that total with
+`detect_gst_inclusive`. Without a usable control, it returns `None`.
+BAS 1A is GST on sales, not total revenue. Bank deposits also need reconciliation
+for timing and non-revenue receipts before they can support a revenue control.
 
 ## Load and inspect
 
@@ -32,8 +35,16 @@ pl = read_xero_report("data/xero_pl_jul2026.csv")
 pl.by_account()        # {account: amount} summed across tracking
 pl.by_tracking()       # {"North": {...}, "South": {...}, "(untracked)": {...}}
 flag = detect_gst_inclusive(pl, control_total=111000.00)
-# False -> exclusive (safe); True -> inclusive (STOP, divide by 11 or re-export)
+# False -> consistent with exclusive; True -> consistent with inclusive.
+# None -> undetermined. Confirm the report basis before modelling.
 ```
+
+An inclusive result calls for a GST-exclusive re-export. For a wholly taxable
+amount at 10%, divide by 1.1 to obtain the exclusive amount; dividing by 11
+extracts only the GST component. For example, $1,100 comprises $1,000 exclusive
+and $100 GST. Mixed GST treatments need account-level reconciliation, so the
+detector's 1.1 comparison cannot establish their basis.
+See the [Moneysmart GST calculator](https://moneysmart.gov.au/work-and-tax/gst-calculator).
 
 The raw export loads as it comes from Reports (observed on the Demo
 Company (AU) Excel exports of the Profit and Loss and Balance Sheet,
@@ -106,9 +117,12 @@ python3 -m pyfpa.cli reconcile-source <company-root> --source-id xero-au \
   account with `report.by_account()` before reconciling (or export
   per-option columns). Keep the split file for department mapping; keep
   the aggregated file as the registered source.
-- Tie P&L revenue to BAS 1A + GST-free sales for the same period.
-  Difference should equal output GST within rounding; record a
-  correction note if not.
+- Reconcile P&L revenue with BAS G1 total sales for the same period, accounting
+  for the declared GST basis, cash/accrual timing and classification differences.
+  Reconcile GST on sales separately to 1A. G1 already includes GST-free sales;
+  do not add them again. Record the reconciliation and explain differences.
+  The [ATO BAS labels](https://softwaredevelopers.ato.gov.au/SimplerBAS) distinguish
+  G1 total sales, 1A GST on sales and 1B GST on purchases.
 - Payroll actuals vs `pyfpa.au.payroll_forecast`: wages, super and
   payroll tax lines each reconcile to the model's gross_wages,
   super_guarantee and payroll_tax columns for the same month.
@@ -131,8 +145,8 @@ tested recurring command with `entrypoint-register`.
 
 ## Australian specifics to check every time
 
-- **GST-inclusive exports**: the single most common silent error. Run
-  the detector or get a control total.
+- **GST-inclusive exports**: confirm the report basis and use a reconciled
+  control total. Treat `None` from the detector as unresolved.
 - **Clearing accounts**: `GST`, `GST Clearing`, `PAYG Withholdings
   Payable` balances reconcile to the last lodged BAS and the next
   expected settlement in the 13-week model.
