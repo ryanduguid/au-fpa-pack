@@ -14,6 +14,7 @@ without input tax credits.
 
 from __future__ import annotations
 
+import math
 from datetime import date
 from enum import Enum
 from typing import Any
@@ -45,6 +46,22 @@ class GstAssumptions(BaseModel):
         return float(load_gst_bas_data()["gst_rate"])
 
 
+def _validate_monthly_series(series: pd.Series) -> None:
+    index = series.index
+    if not isinstance(index, pd.PeriodIndex) or index.freqstr != "M":
+        raise ValueError("expected a monthly PeriodIndex")
+    if index.hasnans or not index.is_unique:
+        raise ValueError("monthly periods must be unique and contain no missing dates")
+    if len(index) and len(index) != index.max().ordinal - index.min().ordinal + 1:
+        raise ValueError("monthly index has missing periods")
+    try:
+        finite = all(math.isfinite(value) for value in series)
+    except TypeError:
+        finite = False
+    if not finite:
+        raise ValueError("monthly amounts must be finite numbers, with no missing values")
+
+
 def monthly_gst(
     revenue: pd.Series,
     purchases: pd.Series,
@@ -59,6 +76,8 @@ def monthly_gst(
     rate = assumptions.resolved_rate()
     if not revenue.index.equals(purchases.index):
         raise ValueError("revenue and purchases must share the same monthly index")
+    _validate_monthly_series(revenue)
+    _validate_monthly_series(purchases)
     output_gst = revenue * assumptions.taxable_sales_pct * rate
     input_gst = purchases * assumptions.creditable_purchases_pct * rate
     frame = pd.DataFrame(
@@ -97,8 +116,10 @@ def bas_schedule(
     Quarterly cycles sum months into Sep/Dec/Mar/Jun quarters; partial
     trailing quarters are excluded (their BAS falls beyond the series).
     Positive amount = payment to ATO; negative = refund.
+    Missing values, duplicate months and non-monthly indexes are rejected.
     """
     assumptions = assumptions or GstAssumptions()
+    _validate_monthly_series(net_gst)
     rows: list[dict[str, Any]] = []
     if assumptions.bas_cycle is BasCycle.MONTHLY:
         for period, amount in net_gst.items():
@@ -110,19 +131,15 @@ def bas_schedule(
                 }
             )
     else:
-        quarters = net_gst.groupby(net_gst.index.asfreq("Q-JUN")).sum()
-        for quarter, amount in quarters.items():
-            months_in_series = sum(
-                1 for p in net_gst.index if p.asfreq("Q-JUN") == quarter
-            )
-            if months_in_series < 3:
+        for quarter, amounts in net_gst.groupby(net_gst.index.asfreq("Q-JUN")):
+            if len(amounts) < 3:
                 continue  # incomplete quarter; BAS not yet determinable
             quarter_end = quarter.asfreq("M", how="end")
             rows.append(
                 {
                     "period_label": str(quarter),
                     "due_date": _quarter_due_date(quarter_end),
-                    "amount": float(amount),
+                    "amount": float(amounts.sum()),
                 }
             )
     return pd.DataFrame(rows, columns=["period_label", "due_date", "amount"])

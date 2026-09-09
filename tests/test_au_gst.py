@@ -104,3 +104,37 @@ def test_gst_weekly_flows_drops_out_of_window(net_gst):
         schedule, window_start=date(2026, 8, 1), weeks=4
     )
     assert receipts == [] and disbursements == []
+
+
+@pytest.mark.parametrize("values", [
+    [6000.0, float("nan"), 6000.0],
+    [float("nan")] * 3,
+    [6000.0, float("inf"), 6000.0],
+])
+def test_bas_rejects_missing_or_non_finite_amounts(values):
+    series = pd.Series(values, index=pd.period_range("2026-07", periods=3, freq="M"))
+    with pytest.raises(ValueError, match="finite"):
+        bas_schedule(series)
+
+
+@pytest.mark.parametrize("index", [
+    pd.PeriodIndex(["2026-07"] * 3, freq="M"),
+    pd.PeriodIndex(["2026-07", None, "2026-09"], freq="M"),
+    pd.period_range("2026Q1", periods=3, freq="Q"),
+    pd.date_range("2026-07-01", periods=3),
+    pd.PeriodIndex(["2026-07", "2026-09", "2026-10"], freq="M"),
+])
+def test_bas_rejects_invalid_monthly_index(index):
+    with pytest.raises(ValueError, match="monthly|unique|missing"):
+        bas_schedule(pd.Series([6000.0] * 3, index=index))
+
+
+def test_monthly_gst_rejects_missing_purchases():
+    index = pd.period_range("2026-07", periods=3, freq="M")
+    with pytest.raises(ValueError, match="finite"):
+        monthly_gst(pd.Series(100.0, index=index), pd.Series([10.0, None, 10.0], index=index))
+
+
+def test_zero_quarter_is_valid():
+    index = pd.period_range("2026-07", periods=3, freq="M")
+    assert bas_schedule(pd.Series(0.0, index=index))["amount"].tolist() == [0.0]

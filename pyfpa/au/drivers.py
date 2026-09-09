@@ -64,6 +64,7 @@ class DriverSeries(BaseModel):
     retrieved: date  # UTC fetch date, so provenance does not vary by machine
     units: str = ""
     frequency: str = ""
+    dimensions: dict[str, str] = Field(default_factory=dict)
     data: dict[str, float] = Field(default_factory=dict)  # {period: value}
 
     def to_series(self) -> pd.Series:
@@ -133,11 +134,15 @@ def fetch_rba_series(name: str) -> DriverSeries:
     )
 
 
-def fetch_abs_series(name: str, api_key: str | None = None) -> DriverSeries:
+def fetch_abs_series(
+    name: str, api_key: str | None = None, *, dimensions: dict[str, str] | None = None,
+) -> DriverSeries:
     """Fetch one ABS Indicator API dataflow as a DriverSeries.
 
     Key resolution: explicit `api_key` argument, else ``ABS_API_KEY``
     environment variable. Raises RuntimeError when neither exists.
+    Filter dimension columns explicitly when a dataflow contains multiple
+    series. Duplicate periods are rejected, never resolved by row order.
     """
     if name not in ABS_DATAFLOWS:
         raise ValueError(f"unknown ABS dataflow {name!r}; expected one of {sorted(ABS_DATAFLOWS)}")
@@ -160,6 +165,15 @@ def fetch_abs_series(name: str, api_key: str | None = None) -> DriverSeries:
         raise ValueError(
             f"unexpected SDMX-CSV shape for {dataflow}: columns {list(frame.columns)}"
         )
+    selection = dict(dimensions or {})
+    for column, dimension_value in selection.items():
+        if column not in frame.columns or column in (time_col, obs_col):
+            raise ValueError(f"unknown ABS dimension {column!r}")
+        frame = frame.loc[frame[column] == dimension_value]
+    unit_col = next((c for c in frame.columns if c.upper() in ("UNIT_MEASURE", "UNIT")), None)
+    units = frame[unit_col].dropna().unique().tolist() if unit_col else []
+    if len(units) > 1:
+        raise ValueError("ambiguous ABS units; select a single series with dimensions")
     data: dict[str, float] = {}
     for _, row in frame.iterrows():
         period_raw = str(row[time_col]).strip()
@@ -168,9 +182,15 @@ def fetch_abs_series(name: str, api_key: str | None = None) -> DriverSeries:
             continue
         try:
             freq = "Q" if "Q" in period_raw else "M"
-            data[str(pd.Period(period_raw, freq=freq))] = float(value_raw)
+            period = str(pd.Period(period_raw, freq=freq))
+            value = float(value_raw)
         except (ValueError, TypeError):
             continue
+        if period in data:
+            raise ValueError(f"duplicate ABS period {period}: select a single series with dimensions")
+        data[period] = value
+    if not data:
+        raise ValueError("no ABS observations match the selected dimensions")
     frequency = "Q" if any("Q" in k for k in data) else "M"
 
     return DriverSeries(
@@ -179,6 +199,8 @@ def fetch_abs_series(name: str, api_key: str | None = None) -> DriverSeries:
         source_url=url,
         series_id=dataflow,
         retrieved=datetime.now(tz=UTC).date(),
+        units=str(units[0]) if units else "",
+        dimensions=selection,
         frequency=frequency,
         data=data,
     )

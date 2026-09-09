@@ -19,7 +19,7 @@ if str(HERE) not in sys.path:
 import harbour_model as hm
 
 import pyfpa
-from pyfpa.excel.model_workbook import model_to_excel
+from pyfpa.excel.verify import verify_workbook
 from pyfpa.io.reporting import to_briefing_md
 
 _TITLE = "Harbour Light Pty Ltd"
@@ -33,8 +33,11 @@ def run_harbour(output_dir: str | Path) -> dict:
     cash13 = pyfpa.cash13_forecast(hm.cash13_config())
     runway = pyfpa.runway_summary(cash13)
     briefing = to_briefing_md(monthly, title=_TITLE, runway=runway)
-    (out / "briefing.md").write_text(briefing)
-    model_to_excel(hm.entity_config(), out / "model.xlsx")
+    hm.export_workbook(out / "model.xlsx")
+    report = verify_workbook(out / "model.xlsx", monthly)
+    if not report.passed or report.lines_checked != len(monthly.columns):
+        raise ValueError(f"Harbour Light workbook verification failed: {report.failures}")
+    (out / "briefing.md").write_text(briefing, encoding="utf-8")
     return {
         "revenue_total": round(monthly["revenue"].sum()),
         "ebitda_total": round(monthly["ebitda"].sum()),
