@@ -1,4 +1,5 @@
 import os
+import runpy
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -7,6 +8,7 @@ import pytest
 
 from pyfpa.memory.connectors import (
     ConnectorManifest,
+    _connector_module,
     connector_bundle_path,
     load_connector_manifest,
     load_connector_manifests,
@@ -14,6 +16,45 @@ from pyfpa.memory.connectors import (
     validate_connector_bundle,
 )
 from pyfpa.memory.lineage import MappingRegistry, MappingRule
+
+
+@pytest.fixture
+def generated_connector(tmp_path):
+    module = tmp_path / "connector.py"
+    module.write_text(
+        _connector_module(account_column="Account", amount_column="Amount"),
+        encoding="utf-8",
+    )
+    return runpy.run_path(str(module))
+
+
+@pytest.mark.parametrize("row", ["Sales", "Sales,NaN", "Sales,inf", "Sales,-inf", "Sales,1e309"])
+def test_generated_connector_rejects_missing_or_nonfinite_amounts(
+    tmp_path, generated_connector, row,
+):
+    path = tmp_path / "invalid.csv"
+    path.write_text(f"Account,Amount\n{row}\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="amount"):
+        generated_connector["normalize_fixture"](path)
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_generated_connector_preserves_amounts_and_utf8_round_trip(
+    tmp_path, generated_connector, encoding,
+):
+    from pyfpa.io.pl_csv import read_pl_csv
+
+    path = tmp_path / "source.csv"
+    path.write_text(
+        'Account,Amount\nCafé,"($1,234.50)"\nZero,0\nBlank,\nDash,-\n',
+        encoding=encoding,
+    )
+    values = generated_connector["normalize_fixture"](path)
+    expected = {"Café": -1234.5, "Zero": 0.0, "Blank": 0.0, "Dash": 0.0}
+    assert values == expected
+    output = tmp_path / "normalised.csv"
+    generated_connector["write_normalized"](values, output)
+    assert read_pl_csv(output) == expected
 
 
 def mappings() -> MappingRegistry:

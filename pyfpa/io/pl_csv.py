@@ -27,7 +27,7 @@ def read_pl_csv(path: str | Path) -> dict[str, float]:
     if not p.exists():
         raise FileNotFoundError(f"P&L CSV not found: {p}")
     result: dict[str, float] = {}
-    with p.open(newline="") as f:
+    with p.open(encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         fields = reader.fieldnames or []
         if "Account" not in fields or "Amount" not in fields:
