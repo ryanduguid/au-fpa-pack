@@ -138,3 +138,37 @@ def test_monthly_gst_rejects_missing_purchases():
 def test_zero_quarter_is_valid():
     index = pd.period_range("2026-07", periods=3, freq="M")
     assert bas_schedule(pd.Series(0.0, index=index))["amount"].tolist() == [0.0]
+
+
+@pytest.mark.parametrize("rate", [-0.1, float("nan"), float("inf"), -float("inf")])
+def test_invalid_rate_cannot_enter_gst_forecast(rate):
+    with pytest.raises(ValueError, match="gst_rate"):
+        GstAssumptions(gst_rate=rate)
+
+
+@pytest.mark.parametrize(("taxable", "creditable", "output", "inputs", "net"), [
+    (1.0, 1.0, 1200.0, 400.0, 800.0),
+    (0.0, 1.0, 0.0, 400.0, -400.0),
+    (0.0, 0.0, 0.0, 0.0, 0.0),
+    (0.5, 0.75, 600.0, 300.0, 300.0),
+])
+def test_sales_and_purchase_credit_shares_are_independent(taxable, creditable, output, inputs, net):
+    index = pd.period_range("2026-07", periods=3, freq="M")
+    frame = monthly_gst(
+        pd.Series(12000.0, index=index),
+        pd.Series(4000.0, index=index),
+        GstAssumptions(taxable_sales_pct=taxable, creditable_purchases_pct=creditable),
+    )
+    assert frame["output_gst"].tolist() == pytest.approx([output] * 3)
+    assert frame["input_gst"].tolist() == pytest.approx([inputs] * 3)
+    assert frame["net_gst"].tolist() == pytest.approx([net] * 3)
+    assert bas_schedule(frame["net_gst"])["amount"].tolist() == pytest.approx([net * 3])
+
+
+def test_explicit_zero_rate_remains_a_valid_scenario():
+    index = pd.period_range("2026-07", periods=1, freq="M")
+    frame = monthly_gst(
+        pd.Series(12000.0, index=index), pd.Series(4000.0, index=index),
+        GstAssumptions(gst_rate=0.0),
+    )
+    assert frame.iloc[0].tolist() == [0.0, 0.0, 0.0]
