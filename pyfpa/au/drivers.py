@@ -174,6 +174,13 @@ def fetch_abs_series(
     units = frame[unit_col].dropna().unique().tolist() if unit_col else []
     if len(units) > 1:
         raise ValueError("ambiguous ABS units; select a single series with dimensions")
+    # Observation attributes may change over time within one series.
+    dimension_columns = [
+        column for column in frame.columns
+        if column != time_col and not column.upper().startswith("OBS_")
+    ]
+    if dimension_columns and len(frame[dimension_columns].drop_duplicates()) > 1:
+        raise ValueError("ambiguous ABS dimensions; select a single series with dimensions")
     data: dict[str, float] = {}
     for _, row in frame.iterrows():
         period_raw = str(row[time_col]).strip()

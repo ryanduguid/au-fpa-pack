@@ -54,7 +54,10 @@ save_snapshot(series, "data/drivers")
 ```
 
 The snapshot preserves the selection and reported units. Duplicate periods,
-mixed units and selections with no observations raise an error. The batch
+mixed units, multiple dimension combinations and selections with no
+observations raise an error. Different series are rejected even when their
+periods do not overlap. Observation attributes such as `OBS_STATUS` may
+change within a series. The batch
 script reports ambiguous dataflows as errors; use the Python function with
 an explicit selection for those dataflows. It never picks the last row.
 

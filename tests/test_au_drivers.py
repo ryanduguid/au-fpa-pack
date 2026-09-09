@@ -103,6 +103,26 @@ def test_abs_rejects_ambiguous_periods_in_either_order(monkeypatch):
             fetch_abs_series("wpi", api_key="synthetic-unused")
 
 
+def test_abs_rejects_disjoint_series_even_with_partial_selection(monkeypatch):
+    raw = (
+        b"TIME_PERIOD,REGION,INDUSTRY,OBS_VALUE,UNIT_MEASURE\n"
+        b"2026-Q1,AUS,MINING,4.0,Percent\n2026-Q2,AUS,RETAIL,3.0,Percent\n"
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    for selection in (None, {"REGION": "AUS"}):
+        with pytest.raises(ValueError, match="ambiguous"):
+            fetch_abs_series("wpi", api_key="synthetic-unused", dimensions=selection)
+
+
+def test_abs_allows_observation_status_changes_within_one_series(monkeypatch):
+    raw = (
+        b"TIME_PERIOD,REGION,OBS_VALUE,OBS_STATUS\n"
+        b"2026-Q1,AUS,4.0,F\n2026-Q2,AUS,3.0,P\n"
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    assert fetch_abs_series("wpi", api_key="synthetic-unused").data == {"2026Q1": 4.0, "2026Q2": 3.0}
+
+
 def test_abs_explicit_selection_preserves_units_and_dimensions(tmp_path, monkeypatch):
     raw = (
         "TIME_PERIOD,REGION,OBS_VALUE,UNIT_MEASURE\n"

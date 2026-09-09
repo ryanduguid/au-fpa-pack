@@ -14,3 +14,16 @@ entrypoints:
   outputs:
   - output/briefing.md
   - output/model.xlsx
+- name: harbour-light-workbook
+  kind: report
+  description: Export the Harbour Light workbook after every forecast line verifies.
+  command:
+  - python3
+  - -m
+  - models.generated.harbour_excel
+  working_directory: .
+  inputs:
+  - data/xero_pl_tracking.csv
+  - data/xero_bs.csv
+  outputs:
+  - output/model.xlsx

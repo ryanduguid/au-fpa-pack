@@ -16,6 +16,8 @@ sys.path.insert(0, str(EXAMPLE))
 
 pytest.importorskip("formulas")
 
+from models.generated.harbour_excel import export_workbook
+
 
 def test_xero_mapping_annualises_tracking_channels():
     import harbour_model as hm
@@ -79,7 +81,7 @@ def test_verified_excel_matches_engine(tmp_path):
     from pyfpa.excel.verify import verify_workbook
 
     path = tmp_path / "harbour-model.xlsx"
-    hm.export_workbook(path)
+    export_workbook(path)
     monthly = hm.monthly_forecast()
     report = verify_workbook(path, monthly)
     assert report.passed, report.failures
@@ -136,7 +138,7 @@ def test_workbook_cash_recalculates_after_opening_gst_edit(tmp_path):
     from pyfpa.excel.verify import verify_workbook
 
     path = tmp_path / "edited.xlsx"
-    hm.export_workbook(path)
+    export_workbook(path)
     wb = load_workbook(path)
     sheet, address = next(wb.defined_names["opening_gst"].destinations)
     wb[sheet][address] = 4_850.0
@@ -150,12 +152,26 @@ def test_workbook_cash_recalculates_after_opening_gst_edit(tmp_path):
     assert report.passed, report.failures
 
 
-def test_runner_rejects_corrupted_workbook_before_writing_briefing(tmp_path, monkeypatch):
+def test_export_verification_failure_preserves_existing_delivery(tmp_path, monkeypatch):
     import harbour_model as hm
+
+    path = tmp_path / "model.xlsx"
+    path.write_bytes(b"previous verified delivery")
+    wrong_expected = hm.monthly_forecast()
+    wrong_expected["ending_cash"] += 1_000.0
+    monkeypatch.setattr(hm, "monthly_forecast", lambda: wrong_expected)
+    with pytest.raises(ValueError, match="verification failed"):
+        export_workbook(path)
+    assert path.read_bytes() == b"previous verified delivery"
+    assert list(tmp_path.iterdir()) == [path]
+
+
+def test_runner_rejects_corrupted_workbook_before_writing_briefing(tmp_path, monkeypatch):
     import run_harbour as runner
+    from models.generated import harbour_excel
     from openpyxl import load_workbook
 
-    export = hm.export_workbook
+    export = harbour_excel._build_workbook
 
     def corrupt(path):
         export(path)
@@ -165,10 +181,11 @@ def test_runner_rejects_corrupted_workbook_before_writing_briefing(tmp_path, mon
         ws.cell(row, 2, "=0")
         wb.save(path)
 
-    monkeypatch.setattr(hm, "export_workbook", corrupt)
+    monkeypatch.setattr(harbour_excel, "_build_workbook", corrupt)
     with pytest.raises(ValueError, match="verification failed"):
         runner.run_harbour(tmp_path)
     assert not (tmp_path / "briefing.md").exists()
+    assert not (tmp_path / "model.xlsx").exists()
 
 
 def test_harbour_pipeline_is_registered_for_agent_discovery():
@@ -212,3 +229,17 @@ def test_harbour_workspace_passes_agent_toolbelt_diagnostics():
         check=False,
     )
     assert result.returncode == 0, result.stdout
+
+
+def test_registered_report_exports_verified_workbook(tmp_path):
+    from pyfpa.memory.entrypoints import load_entrypoint_registry
+
+    registry = load_entrypoint_registry(EXAMPLE / ".fpa" / "models" / "entrypoints.yaml")
+    entrypoint = next(item for item in registry.entrypoints if item.kind == "report")
+    path = tmp_path / "model.xlsx"
+    result = subprocess.run(
+        [sys.executable, *entrypoint.command[1:], "--output", str(path)],
+        cwd=EXAMPLE, text=True, capture_output=True, check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert path.exists()

@@ -20,7 +20,8 @@ python3 examples/harbour-light/run_harbour.py
 - GST collections, creditable purchases and BAS settlements reconcile in the
   monthly and 13-week models (September quarter due 28 October 2026).
 - The example extends the standard workbook with leave and GST reconciliation
-  rows. The runner verifies every monthly output column before writing the briefing.
+  rows. The exporter verifies every monthly output column before replacing
+  the workbook; the runner then writes the briefing.
 
 ## Cash assumptions and reconciliation
 
@@ -58,4 +59,6 @@ the weekly and monthly closing balances differ with pay dates.
   the configured flows; positive cash does not establish funds available to spend.
 
 See `.fpa/` for lineage, intake, and the registered `harbour-light-pipeline`
-entrypoint.
+entrypoint. The separate `harbour-light-workbook` report runs
+`python3 -m models.generated.harbour_excel` from this directory and uses the
+same verification before delivery.
