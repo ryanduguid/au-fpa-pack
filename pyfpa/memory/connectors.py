@@ -251,6 +251,7 @@ def _connector_module(
     return f'''from __future__ import annotations
 
 import csv
+from math import isfinite
 from pathlib import Path
 
 
@@ -259,20 +260,24 @@ SOURCE_AMOUNT_COLUMN = {amount_column!r}
 
 
 def _parse_amount(raw: str | None) -> float:
-    value = (raw or "").strip().replace("$", "").replace(",", "")
+    if raw is None:
+        raise ValueError("missing amount field")
+    value = raw.strip().replace("$", "").replace(",", "")
     if value in ("", "-"):
         return 0.0
     negative = value.startswith("(") and value.endswith(")")
     if negative:
         value = value[1:-1]
     amount = float(value)
+    if not isfinite(amount):
+        raise ValueError("amount must be finite")
     return -amount if negative else amount
 
 
 def normalize_fixture(path: str | Path) -> dict[str, float]:
     path = Path(path)
     result: dict[str, float] = {{}}
-    with path.open(newline="") as handle:
+    with path.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         fields = reader.fieldnames or []
         required = {{SOURCE_ACCOUNT_COLUMN, SOURCE_AMOUNT_COLUMN}}
@@ -299,7 +304,7 @@ def extract_live() -> dict[str, float]:
 def write_normalized(values: dict[str, float], path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as handle:
+    with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["Account", "Amount"])
         writer.writerows(sorted(values.items()))

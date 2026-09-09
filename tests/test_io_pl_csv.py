@@ -62,3 +62,10 @@ def test_read_pl_csv_preserves_supported_zero_notation(tmp_path, amount):
     path = tmp_path / "zero.csv"
     path.write_text(f"Account,Amount\nSales,{amount}\n")
     assert read_pl_csv(path) == {"Sales": 0.0}
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_read_pl_csv_accepts_utf8_with_or_without_bom(tmp_path, encoding):
+    path = tmp_path / "utf8.csv"
+    path.write_text("Account,Amount\nCafé,100\n", encoding=encoding)
+    assert read_pl_csv(path) == {"Café": 100.0}

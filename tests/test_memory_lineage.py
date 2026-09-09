@@ -161,3 +161,18 @@ def test_ignored_mapping_does_not_count_as_unmapped(tmp_path):
     assert result["passed"] is True
     assert result["ignored"] == ["Subtotal"]
     assert result["unmapped"] == []
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_reconciliation_accepts_utf8_with_or_without_bom(tmp_path, encoding):
+    path = tmp_path / "actuals.csv"
+    path.write_text("Account,Amount\nCafé,100\n", encoding=encoding)
+    registry = MappingRegistry(mappings=[
+        MappingRule(source_id="gl-actuals", source_value="Café", target="revenue"),
+    ])
+    result = reconcile_account_table(
+        path, source_id="gl-actuals", mappings=registry,
+        account_column="Account", amount_column="Amount", expected={"revenue": 100},
+    )
+    assert result["passed"] is True
+    assert result["mapped_totals"] == {"revenue": 100.0}

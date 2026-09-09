@@ -232,7 +232,7 @@ def reconcile_account_table(
     if path.suffix.casefold() != ".csv":
         raise ValueError("reconcile-source currently supports CSV files")
     rows: list[tuple[str, float]] = []
-    with path.open(newline="") as handle:
+    with path.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         fields = reader.fieldnames or []
         if account_column not in fields or amount_column not in fields:
