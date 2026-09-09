@@ -106,6 +106,7 @@ module = [
     "au_drivers_snapshot",
     "foxf_model",
     "harbour_model",
+    "models.generated.*",
     "pull_edgar",
     "run_arb",
     "run_harbour",

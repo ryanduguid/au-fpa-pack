@@ -41,6 +41,26 @@ retrieval date. Re-running never overwrites an existing file; a
 revision by the RBA creates a new dated snapshot, and which one a
 forecast used stays auditable.
 
+ABS observations must represent one series. Select dimensions explicitly
+when a dataflow contains multiple series, using the exact column names and
+codes from its export:
+
+```python
+from pyfpa.au.drivers import fetch_abs_series
+
+# Supply the dimension columns and codes from the selected ABS series.
+series = fetch_abs_series("wpi", dimensions=selected_dimensions)
+save_snapshot(series, "data/drivers")
+```
+
+The snapshot preserves the selection and reported units. Duplicate periods,
+mixed units, multiple dimension combinations and selections with no
+observations raise an error. Different series are rejected even when their
+periods do not overlap. Observation attributes such as `OBS_STATUS` may
+change within a series. The batch
+script reports ambiguous dataflows as errors; use the Python function with
+an explicit selection for those dataflows. It never picks the last row.
+
 ## Use in a model
 
 ```python
@@ -77,6 +97,5 @@ python3 -m pyfpa.cli source-register <company-root> \
 - The J1 table is market economists' FORECASTS, not actuals. Useful for
   consensus scenarios; label it as such and never mix into an actuals
   series.
-- ABS dataflows return full history per dataflow; parse dimensions in
-  a generated company skill when you need a specific sub-series
-  (e.g. retail by industry group).
+- ABS dataflows can contain multiple series. Confirm the dimension selection
+  before using a snapshot, including region, industry and adjustment basis.

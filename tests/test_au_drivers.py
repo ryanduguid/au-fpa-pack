@@ -94,6 +94,57 @@ def test_fetch_abs_unknown_dataflow_rejected(monkeypatch):
         fetch_abs_series("made_up")
 
 
+def test_abs_rejects_ambiguous_periods_in_either_order(monkeypatch):
+    rows = ["2026-Q1,AUS,4.0,Percent", "2026-Q1,NSW,3.0,Percent"]
+    for ordered in (rows, rows[::-1]):
+        raw = "TIME_PERIOD,REGION,OBS_VALUE,UNIT_MEASURE\n" + "\n".join(ordered)
+        monkeypatch.setattr(drivers, "_fetch", lambda *args, raw=raw, **kwargs: raw.encode())
+        with pytest.raises(ValueError, match="ambiguous|duplicate"):
+            fetch_abs_series("wpi", api_key="synthetic-unused")
+
+
+def test_abs_rejects_disjoint_series_even_with_partial_selection(monkeypatch):
+    raw = (
+        b"TIME_PERIOD,REGION,INDUSTRY,OBS_VALUE,UNIT_MEASURE\n"
+        b"2026-Q1,AUS,MINING,4.0,Percent\n2026-Q2,AUS,RETAIL,3.0,Percent\n"
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    for selection in (None, {"REGION": "AUS"}):
+        with pytest.raises(ValueError, match="ambiguous"):
+            fetch_abs_series("wpi", api_key="synthetic-unused", dimensions=selection)
+
+
+def test_abs_allows_observation_status_changes_within_one_series(monkeypatch):
+    raw = (
+        b"TIME_PERIOD,REGION,OBS_VALUE,OBS_STATUS\n"
+        b"2026-Q1,AUS,4.0,F\n2026-Q2,AUS,3.0,P\n"
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    assert fetch_abs_series("wpi", api_key="synthetic-unused").data == {"2026Q1": 4.0, "2026Q2": 3.0}
+
+
+def test_abs_explicit_selection_preserves_units_and_dimensions(tmp_path, monkeypatch):
+    raw = (
+        "TIME_PERIOD,REGION,OBS_VALUE,UNIT_MEASURE\n"
+        "2026-Q1,AUS,4.0,Percent\n2026-Q1,NSW,3.0,Percent\n"
+        "2026-Q2,AUS,4.1,Percent\n"
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw.encode())
+    series = fetch_abs_series("wpi", api_key="synthetic-unused", dimensions={"REGION": "AUS"})
+    assert series.data == {"2026Q1": 4.0, "2026Q2": 4.1}
+    assert series.units == "Percent"
+    assert series.dimensions == {"REGION": "AUS"}
+    assert load_snapshot(save_snapshot(series, tmp_path)) == series
+
+
+@pytest.mark.parametrize("dimensions", [{"REGION": "VIC"}, {"UNKNOWN": "AUS"}])
+def test_abs_rejects_selection_without_observations(monkeypatch, dimensions):
+    raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="dimension|observations"):
+        fetch_abs_series("wpi", api_key="synthetic-unused", dimensions=dimensions)
+
+
 def test_fetch_rba_parses_the_committed_f1_sample(monkeypatch):
     monkeypatch.setattr(drivers, "_fetch", _sample)
     series = fetch_rba_series("cash_rate_target")

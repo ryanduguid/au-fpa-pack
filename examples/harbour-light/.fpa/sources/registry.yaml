@@ -1,17 +1,77 @@
 schema_version: 1
 sources:
-- source_id: xero-pl
-  kind: accounting_system
-  location: data/xero_pl.csv
+- source_id: rates-gst-bas
+  kind: local_file
+  location: ../../pyfpa/au/data/gst_bas.yaml
   entity: Harbour Light Pty Ltd
   currency: AUD
   periods:
   - 2026-07
-  extraction_method: Aggregated Xero Australia GST-exclusive P&L CSV. Tracking splits
-    live in data/xero_pl_tracking.csv; this file is one row per account so
-    reconcile-source can run.
+  - 2026-08
+  - 2026-09
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  - 2027-01
+  - 2027-02
+  - 2027-03
+  - 2027-04
+  - 2027-05
+  - 2027-06
+  extraction_method: GST rate and BAS timing from bundled YAML, loaded through pyfpa.au.rates
+    using importlib.resources.
   refreshed_at: ''
-  notes: Kernel fixture copy. Not a client export.
+  notes: Location is relative to this company in the source checkout. The YAML contains
+    its official source references. Periods identify forecast use, not a fresh verification
+    of statutory rates.
+- source_id: rates-payroll-tax
+  kind: local_file
+  location: ../../pyfpa/au/data/payroll_tax.yaml
+  entity: Harbour Light Pty Ltd
+  currency: AUD
+  periods:
+  - 2026-07
+  - 2026-08
+  - 2026-09
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  - 2027-01
+  - 2027-02
+  - 2027-03
+  - 2027-04
+  - 2027-05
+  - 2027-06
+  extraction_method: Victorian payroll tax rate and threshold from bundled YAML, loaded
+    through pyfpa.au.rates using importlib.resources.
+  refreshed_at: ''
+  notes: Location is relative to this company in the source checkout. The YAML contains
+    its official source references. Periods identify forecast use, not a fresh verification
+    of statutory rates.
+- source_id: rates-super-guarantee
+  kind: local_file
+  location: ../../pyfpa/au/data/super_guarantee.yaml
+  entity: Harbour Light Pty Ltd
+  currency: AUD
+  periods:
+  - 2026-07
+  - 2026-08
+  - 2026-09
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  - 2027-01
+  - 2027-02
+  - 2027-03
+  - 2027-04
+  - 2027-05
+  - 2027-06
+  extraction_method: Superannuation guarantee schedule from bundled YAML, loaded through
+    pyfpa.au.rates using importlib.resources.
+  refreshed_at: ''
+  notes: Location is relative to this company in the source checkout. The YAML contains
+    its official source references. Periods identify forecast use, not a fresh verification
+    of statutory rates.
 - source_id: xero-bs
   kind: accounting_system
   location: data/xero_bs.csv
@@ -22,6 +82,18 @@ sources:
   extraction_method: Xero Australia GST-exclusive balance sheet CSV fixture.
   refreshed_at: ''
   notes: Opening cash, AR, inventory, and AP for the FY2027 model.
+- source_id: xero-pl
+  kind: accounting_system
+  location: data/xero_pl.csv
+  entity: Harbour Light Pty Ltd
+  currency: AUD
+  periods:
+  - 2026-07
+  extraction_method: Aggregated Xero Australia GST-exclusive P&L CSV. Tracking splits
+    live in data/xero_pl_tracking.csv; this file is one row per account so reconcile-source
+    can run.
+  refreshed_at: ''
+  notes: Kernel fixture copy. Not a client export.
 - source_id: xero-pl-tracking
   kind: accounting_system
   location: data/xero_pl_tracking.csv
@@ -29,7 +101,7 @@ sources:
   currency: AUD
   periods:
   - 2026-07
-  extraction_method: Xero P&L with Tracking Option (North/South). Not used for
-    reconcile-source because Sales - Domestic repeats.
+  extraction_method: Xero P&L with Tracking Option (North/South). Not used for reconcile-source
+    because Sales - Domestic repeats.
   refreshed_at: ''
   notes: Channel split source for harbour_model.channels_from_xero.

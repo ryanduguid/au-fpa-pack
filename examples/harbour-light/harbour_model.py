@@ -33,6 +33,8 @@ from pyfpa.models.cashflow import cashflow_from_config
 
 DATA = Path(__file__).parent / "data"
 CASH13_START = date(2026, 10, 1)
+# Synthetic assumption: both opening GST accounts settle with the June BAS.
+OPENING_GST_DUE = date(2026, 7, 28)
 _DAYS_PER_YEAR = 360.0
 _NON_PAYROLL_OPEX = (
     "Advertising",
@@ -145,7 +147,30 @@ def entity_config() -> EntityConfig:
 
 
 def monthly_forecast() -> pd.DataFrame:
-    return cashflow_from_config(entity_config())
+    cfg = entity_config()
+    frame = cashflow_from_config(cfg)
+    frame["leave_provisions"] = payroll_frame()["leave_provisions"]
+    revenue, purchases = _gst_inputs()
+    frame["gst_accrued"] = monthly_gst(
+        revenue, purchases, GstAssumptions(taxable_sales_pct=taxable_sales_pct()),
+    )["net_gst"]
+    frame["gst_settled"] = 0.0
+    for settlement in bas_settlement().itertuples(index=False):
+        month = pd.Period(settlement.due_date, freq="M")
+        if month in frame.index:
+            frame.loc[month, "gst_settled"] += settlement.amount
+    frame["gst_cash_impact"] = frame["gst_accrued"] - frame["gst_settled"]
+    frame["gst_payable"] = opening_gst() + frame["gst_cash_impact"].cumsum()
+    frame["operating_cash_flow"] += frame["leave_provisions"] + frame["gst_cash_impact"]
+    frame["free_cash_flow"] = frame["operating_cash_flow"] - frame["capex"]
+    frame["change_in_cash"] = frame["free_cash_flow"] - frame["principal"]
+    frame["ending_cash"] = cfg.opening_balances.cash + frame["change_in_cash"].cumsum()
+    return frame
+
+
+def opening_gst() -> float:
+    accounts = balance_sheet().by_account()
+    return -(accounts["GST"] + accounts["GST Clearing"])
 
 
 def _gst_inputs() -> tuple[pd.Series, pd.Series]:
@@ -170,7 +195,11 @@ def bas_settlement() -> pd.DataFrame:
             taxable_sales_pct=taxable_sales_pct(),
         ),
     )
-    return bas_schedule(gst["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
+    schedule = bas_schedule(gst["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
+    opening = pd.DataFrame([{
+        "period_label": "Opening GST", "due_date": OPENING_GST_DUE, "amount": opening_gst(),
+    }])
+    return pd.concat([opening, schedule], ignore_index=True)
 
 
 def gst_cash13_flows() -> tuple[list[WeeklyFlow], list[WeeklyFlow]]:
@@ -186,6 +215,10 @@ def cash13_config() -> Cash13Config:
     weekly_collections = (accounts["Sales - Domestic"] + accounts["Sales - GST Free"]) * 12.0 / 52.0
     weekly_opex = sum(abs(accounts[name]) for name in _NON_PAYROLL_OPEX) * 12.0 / 52.0
     weekly_cogs = abs(accounts["Cost of Goods Sold"]) * 12.0 / 52.0
+    gst_rate = GstAssumptions().resolved_rate()
+    weekly_collections += accounts["Sales - Domestic"] * gst_rate * 12.0 / 52.0
+    weekly_opex *= 1.0 + gst_rate
+    weekly_cogs *= 1.0 + gst_rate
     return Cash13Config(
         opening_cash=opening,
         weeks=13,

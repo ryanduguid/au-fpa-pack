@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 
 import pandas as pd
@@ -33,19 +34,35 @@ def aggregate_periods(
     period_dicts: Sequence[Mapping[str, float]], score_lines: Sequence[str]
 ) -> dict[str, float]:
     """Aggregate a chronological list of per-period actual dicts the same way
-    `extract_lines` aggregates a forecast (flow=sum, stock=last, ratio=ΣGP/Σrev)."""
+    `extract_lines` aggregates a forecast (flow=sum, stock=last, ratio=ΣGP/Σrev).
+
+    Every flow and ratio input must be present and finite in every period;
+    stocks require the final period's value. Missing evidence is never zero.
+    """
     if not period_dicts:
-        return {line: 0.0 for line in score_lines}
-    revenue = sum(float(d.get("revenue", 0.0)) for d in period_dicts)
+        raise ValueError("at least one actual period is required")
+    required = set(score_lines) - {"ending_cash", "gross_margin"}
+    if "gross_margin" in score_lines:
+        required.update(("revenue", "gross_profit"))
+    for index, period in enumerate(period_dicts):
+        fields = required.copy()
+        if "ending_cash" in score_lines and index == len(period_dicts) - 1:
+            fields.add("ending_cash")
+        for field in fields:
+            if field not in period:
+                raise ValueError(f"actual period {index + 1} is missing {field!r}")
+            if not math.isfinite(period[field]):
+                raise ValueError(f"actual period {index + 1} {field!r} must be finite")
     out: dict[str, float] = {}
     for line in score_lines:
         if line == "ending_cash":
-            out[line] = float(period_dicts[-1].get("ending_cash", 0.0))
+            out[line] = float(period_dicts[-1]["ending_cash"])
         elif line == "gross_margin":
-            gp = sum(float(d.get("gross_profit", 0.0)) for d in period_dicts)
+            revenue = sum(float(d["revenue"]) for d in period_dicts)
+            gp = sum(float(d["gross_profit"]) for d in period_dicts)
             out[line] = (gp / revenue) if revenue else 0.0
         else:
-            out[line] = sum(float(d.get(line, 0.0)) for d in period_dicts)
+            out[line] = sum(float(d[line]) for d in period_dicts)
     return out
 
 

@@ -40,9 +40,26 @@ def test_aggregate_periods_matches_extract():
     assert out["gross_margin"] == pytest.approx(0.4)
 
 
-def test_aggregate_periods_empty_is_zero_filled():
-    out = aggregate_periods([], DEFAULT_SCORE_LINES)
-    assert out == {line: 0.0 for line in DEFAULT_SCORE_LINES}
+def test_aggregate_periods_rejects_empty_evidence():
+    with pytest.raises(ValueError, match="period"):
+        aggregate_periods([], DEFAULT_SCORE_LINES)
+
+
+@pytest.mark.parametrize("periods,lines", [
+    ([{"revenue": 100.0}, {}], ["revenue"]),
+    ([{"revenue": 100.0, "gross_profit": 40.0}, {"revenue": 100.0}], ["gross_margin"]),
+    ([{"ending_cash": 100.0}, {}], ["ending_cash"]),
+    ([{"revenue": 100.0}, {"revenue": float("nan")}], ["revenue"]),
+    ([{"revenue": float("inf")}], ["revenue"]),
+])
+def test_aggregate_periods_rejects_incomplete_or_non_finite_evidence(periods, lines):
+    with pytest.raises(ValueError, match="missing|finite"):
+        aggregate_periods(periods, lines)
+
+
+def test_aggregate_periods_preserves_explicit_zero_and_final_stock():
+    assert aggregate_periods([{"revenue": 100.0}, {"revenue": 0.0}], ["revenue"]) == {"revenue": 100.0}
+    assert aggregate_periods([{}, {"ending_cash": 0.0}], ["ending_cash"]) == {"ending_cash": 0.0}
 
 
 def test_score_forecast_weighted_mape():
