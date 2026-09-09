@@ -11,6 +11,7 @@ entrypoints:
   - data/xero_pl_tracking.csv
   - data/xero_pl.csv
   - data/xero_bs.csv
+  - .fpa/sources/registry.yaml
   outputs:
   - output/briefing.md
   - output/model.xlsx
@@ -25,5 +26,6 @@ entrypoints:
   inputs:
   - data/xero_pl_tracking.csv
   - data/xero_bs.csv
+  - .fpa/sources/registry.yaml
   outputs:
   - output/model.xlsx

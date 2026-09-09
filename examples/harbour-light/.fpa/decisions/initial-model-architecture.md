@@ -54,7 +54,7 @@ roles and statutory tables; this correction does not refresh those tables.
 
 The changed company files are `harbour_model.py`, `run_harbour.py`,
 `models/generated/harbour_excel.py`, `.fpa/models/entrypoints.yaml`,
-`.fpa/business-profile.md`, this decision, `README.md` and `output/briefing.md`.
+`.fpa/business-profile.md`, `.fpa/sources/registry.yaml`, this decision, `README.md` and `output/briefing.md`.
 Repository-level evidence is in `tests/test_harbour_light.py` and the updated
 root README. Leave and GST assumptions are stated in the company README.
 The report command uses the existing Excel toolkit and verifier.
@@ -84,3 +84,9 @@ those please" and subsequently authorised integration with "merge them
 please" on 10 September 2026 in Sydney. Acceptance covers the reported cash
 and evidence defects and their verification; it does not establish that this
 synthetic forecast is suitable for a real company.
+
+The source registry also records the bundled GST, superannuation and payroll-tax
+YAML files and the twelve forecast periods that use them. Both commands declare
+the local registry as an input manifest because entrypoint paths cannot traverse
+outside the company directory. The registry locations point to the existing
+package tables in the source checkout; no rate values were copied or changed.
