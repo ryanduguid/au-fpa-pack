@@ -36,6 +36,52 @@ frame = payroll_forecast(
 
 Skills: `fpa-au-payroll`, `fpa-au-gst-bas`, `fpa-au-xero`, `fpa-au-drivers`.
 
+### Worked GST assumptions
+
+GST-free sales and input-taxed sales both exclude output GST, but their
+purchase-credit treatment can differ. Set `taxable_sales_pct` and
+`creditable_purchases_pct` independently from reviewed transaction evidence.
+A sales percentage does not establish a purchase-credit percentage.
+
+These fabricated scenarios use monthly revenue of $12,000 and purchases of
+$4,000, excluding GST, with the bundled 10% rate. The creditable share is an
+explicit scenario assumption, with all other credit conditions assumed met.
+
+| Scenario | Taxable sales share | Creditable purchases share | Output GST | Input GST | Net GST |
+|---|---:|---:|---:|---:|---:|
+| Taxable sales, fully creditable purchases | 100% | 100% | $1,200 | $400 | $800 |
+| GST-free sales, fully creditable purchases | 0% | 100% | $0 | $400 | -$400 |
+| Input-taxed sales, no credit entitlement | 0% | 0% | $0 | $0 | $0 |
+| Mixed sales and independently reviewed purchases | 50% | 75% | $600 | $300 | $300 |
+
+```python
+import pandas as pd
+from pyfpa.au.gst import GstAssumptions, bas_schedule, monthly_gst
+
+months = pd.period_range("2026-07", periods=3, freq="M")
+gst = monthly_gst(
+    pd.Series(12000.0, index=months),
+    pd.Series(4000.0, index=months),
+    GstAssumptions(taxable_sales_pct=0.5, creditable_purchases_pct=0.75),
+)
+assert gst["net_gst"].tolist() == [300.0, 300.0, 300.0]
+assert bas_schedule(gst["net_gst"])["amount"].tolist() == [900.0]
+```
+
+The Library's *GST / Claiming Input Tax Credits · Tax Invoices*, creditable-purpose
+discussion, and *Accounting Basis · Tax Periods*, paragraph 7-000, prompted
+these examples. Authority checked on 10 September 2026: [GST Act, compilation
+dated 1 January 2026](https://www.legislation.gov.au/C2004A00446/2026-01-01/2026-01-01/text/original/epub/OEBPS/document_1/document_1.html),
+ss 9-70, 11-5, 11-15, 11-25 and 11-30. Financial-supply exceptions and reduced
+credits require separate assessment; the zero-credit example does not decide them.
+
+`monthly_gst` applies supplied proportions; it does not classify transactions or
+attribute invoices and payments to tax periods. Reconcile cash-basis inputs before
+using them. The schedule uses original BAS due dates, without weekend, holiday or
+agent extensions; a refund on that date is a forecast assumption, not a receipt
+promise. Explicit rate overrides must be finite and non-negative. Zero remains
+available for scenario modelling; it does not establish a GST exemption.
+
 Worked examples on this fork:
 
 - [`examples/harbour-light/`](../examples/harbour-light/) - synthetic VIC
