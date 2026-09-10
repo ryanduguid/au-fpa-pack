@@ -1,0 +1,27 @@
+date,category,amount
+2026-10-07,Materials,13200
+2026-10-15,Loan principal,1000
+2026-10-15,Interest,200
+2026-10-20,Overhead,6600
+2026-10-20,Workers compensation,480
+2026-10-21,PAYG withholding,5000
+2026-10-28,Net wages,19000
+2026-10-28,Super,2880
+2026-11-06,Materials,13200
+2026-11-13,Loan principal,1000
+2026-11-13,Interest,200
+2026-11-20,Overhead,6600
+2026-11-20,Workers compensation,480
+2026-11-20,PAYG withholding,5000
+2026-11-27,Net wages,19000
+2026-11-27,Super,2880
+2026-12-07,Materials,13200
+2026-12-15,Loan principal,1000
+2026-12-15,Interest,200
+2026-12-18,Overhead,6600
+2026-12-18,Workers compensation,480
+2026-12-21,PAYG withholding,5000
+2026-12-24,Net wages,19000
+2026-12-24,Super,2880
+2026-10-28,GST settlement,12600
+2026-10-28,Income tax instalment,3000

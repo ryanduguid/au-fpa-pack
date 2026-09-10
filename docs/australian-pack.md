@@ -94,6 +94,10 @@ available for scenario modelling; it does not establish a GST exemption.
 
 Worked examples on this fork:
 
+- [`examples/lumbridge-services/`](../examples/lumbridge-services/) - synthetic
+  NSW maintenance business: dated receipts, PAYG, super and GST cash, monthly
+  commentary and a verified Excel receipt-delay scenario with OSRS references.
+
 - [`examples/harbour-light/`](../examples/harbour-light/) - synthetic VIC
   wholesaler: Xero mapping, statutory payroll, quarterly BAS into 13-week cash,
   verified Excel.

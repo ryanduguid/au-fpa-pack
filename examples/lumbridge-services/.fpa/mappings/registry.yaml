@@ -1,0 +1,110 @@
+schema_version: 1
+mappings:
+- source_id: xero-bs
+  source_value: Accounts Payable
+  target: Accounts Payable
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: Accounts Receivable
+  target: Accounts Receivable
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: Business Bank Account
+  target: Business Bank Account
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: Business Loan
+  target: Business Loan
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: Equipment net book value
+  target: Equipment net book value
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: Equity
+  target: Equity
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: GST
+  target: GST
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-bs
+  source_value: PAYG Withholdings Payable
+  target: PAYG Withholdings Payable
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Depreciation
+  target: Depreciation
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Interest expense
+  target: Interest expense
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Leave provision expense
+  target: Leave provision expense
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Materials
+  target: Materials
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Operating overhead
+  target: Operating overhead
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Sales - Falador repairs
+  target: Sales - Falador repairs
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Sales - Varrock maintenance
+  target: Sales - Varrock maintenance
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Superannuation
+  target: Superannuation
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Wages and Salaries
+  target: Wages and Salaries
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.
+- source_id: xero-pl
+  source_value: Workers Compensation
+  target: Workers Compensation
+  status: mapped
+  rationale: Exact account consumed or checked by the company forecast; opening equity
+    and equipment participate in the balance-sheet check.

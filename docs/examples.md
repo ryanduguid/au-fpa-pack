@@ -1,5 +1,20 @@
 ## Runnable examples
 
+### Lumbridge Services
+
+[`examples/lumbridge-services/`](../examples/lumbridge-services/) is a synthetic
+Newcastle NSW maintenance business with OSRS references. It reconciles source
+accounts, monthly pre-tax profit and thirteen weeks of dated bank cash. A
+45-day receipt delay changes cash and receivables without changing profit.
+
+```bash
+uv run --locked --extra dev python examples/lumbridge-services/models/generated/lumbridge.py
+```
+
+The output includes a verified Excel workbook, management briefing and CSVs.
+The [trial guide](../examples/lumbridge-services/TRIAL.md) separates technical
+verification from the independent accountant trial, which remains pending.
+
 ### Ridgeline Chair Co.
 
 [`examples/ridgeline/`](../examples/ridgeline/) is a synthetic product-company
