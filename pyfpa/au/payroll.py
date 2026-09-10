@@ -18,7 +18,7 @@ Forecast-grade simplifications, stated openly:
   the rate using each month's wages multiplied by 12. This assumes an
   ungrouped, SA-only employer with a steady full-year wage run rate; it
   does not calculate an annual reconciliation or a statutory monthly return.
-  Mixed SA/interstate taxable wages are refused because deduction
+  Mixed SA/interstate taxable wages anywhere in the forecast are refused because deduction
   apportionment is not modelled.
 - Leave provisions are accrual percentages of gross wages, not cash.
   The cash view excludes them; the P&L view includes them.
@@ -123,6 +123,7 @@ def payroll_forecast(
         "total_cash",
     ]
     frame = pd.DataFrame(0.0, index=months, columns=columns)
+    taxable_jurisdictions: set[str] = set()
 
     for period in months:
         sg_rate = rate_at(sg_table, period)
@@ -154,9 +155,10 @@ def payroll_forecast(
 
         payroll_tax = 0.0
         if assumptions.payroll_tax_registered:
-            if taxable_by_jurisdiction.get("SA", 0) > 0 and any(
-                amount > 0 for key, amount in taxable_by_jurisdiction.items() if key != "SA"
-            ):
+            taxable_jurisdictions.update(
+                key for key, amount in taxable_by_jurisdiction.items() if amount > 0
+            )
+            if "SA" in taxable_jurisdictions and len(taxable_jurisdictions) > 1:
                 raise ValueError(
                     "SA interstate payroll tax requires deduction apportionment; "
                     "use an entity-specific calculator"

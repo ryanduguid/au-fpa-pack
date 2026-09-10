@@ -88,6 +88,21 @@ def test_sa_interstate_payroll_requires_apportionment(months):
     assert frame["super_guarantee"].sum() > 0.0
 
 
+@pytest.mark.parametrize("first, second", [("SA", "NSW"), ("NSW", "SA")])
+def test_staggered_sa_interstate_payroll_requires_apportionment(months, first, second):
+    roles = [
+        Role(name="First half", annual_salary=2000000, jurisdiction=first,
+             end_month="2026-12"),
+        Role(name="Second half", annual_salary=2000000, jurisdiction=second,
+             start_month="2027-01"),
+    ]
+    with pytest.raises(ValueError, match="SA interstate payroll tax"):
+        payroll_forecast(roles, months)
+    frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
+    assert frame["payroll_tax"].sum() == 0.0
+    assert frame["gross_wages"].sum() == pytest.approx(2000000)
+
+
 def test_above_threshold_pays_payroll_tax(months):
     # 40 x 150k in NSW: ~6.17m taxable wages incl super, well above threshold.
     roles = [
