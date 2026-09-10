@@ -1,8 +1,21 @@
-# openfpa Agent Operating Contract
+# au-fpa-pack agent instructions
 
-openfpa is an agent-native FP&A workbench that an AI reshapes for each company.
-The goal is to help an AI build the finance system that fits one company while
-preserving a small, trustworthy accounting kernel.
+This repository adds Australian accounting workflows to the openfpa workbench.
+The distribution is `au-fpa-pack`; `pyfpa` and `openfpa` remain the import and CLI names.
+
+## Repository maintenance
+
+Before changing repository code or documentation, read
+[CONTRIBUTING.md](CONTRIBUTING.md) for setup, fixture rules and exact checks.
+For Australian functionality, also read [docs/australian-pack.md](docs/australian-pack.md).
+Use the Python version specified for mypy there; the runtime test matrix alone
+does not establish that the type-checking environment is compatible.
+
+The company workflow below applies when the user asks to onboard, model,
+forecast or adapt a company workspace. Repository maintenance alone does not
+trigger onboarding or company architecture approval. Before handoff, run the
+affected checks in [ci.yml](.github/workflows/ci.yml) and report any checks not run.
+The live RBA tests are separate from the default offline suite, as CONTRIBUTING.md explains.
 
 ## Architecture
 
