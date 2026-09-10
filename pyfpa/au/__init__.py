@@ -6,8 +6,8 @@ workers compensation, leave provisions, bonuses) and GST/BAS cash-timing
 for the monthly model and the 13-week cash forecast.
 
 Scope: forecast-grade cash and P&L modelling. Not tax-return software.
-Payroll tax grouping provisions, per-state threshold apportionment
-subtleties and contractor deeming rules are documented simplifications.
+Payroll tax grouping and per-state threshold apportionment are documented
+simplifications. Contractor SG eligibility must be established by the caller.
 """
 
 from pyfpa.au.calendar import (

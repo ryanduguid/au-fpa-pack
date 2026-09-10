@@ -13,7 +13,10 @@ provisions.
 
 1. Confirm jurisdictions. Ask which state(s)/territory(ies) employees
    work in; payroll tax is per-jurisdiction. Record in intake.
-2. Build roles from the staffing plan, effective-dated:
+2. Build roles from the staffing plan, effective-dated. For each contractor,
+   establish SG eligibility, including contracts wholly or principally for
+   the person's labour, and set `sg_eligible` explicitly. Contractor status
+   removes leave provisions; it does not establish an SG exemption.
 
    ```python
    from pyfpa.au import PayrollAssumptions, Role, payroll_forecast
@@ -23,7 +26,8 @@ provisions.
        Role(name="MD", annual_salary=220000, jurisdiction="VIC"),
        Role(name="Senior 2", annual_salary=140000, jurisdiction="VIC",
             start_month="2026-10", bonus_pct=0.10),
-       Role(name="Offshore dev", annual_salary=90000, contractor=True),
+       Role(name="Eligible labour contractor", annual_salary=90000,
+            contractor=True, sg_eligible=True),
    ]
    frame = payroll_forecast(roles, fy_month_range(2027), PayrollAssumptions())
    ```
