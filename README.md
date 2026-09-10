@@ -24,6 +24,11 @@ python examples/harbour-light/run_harbour.py
 
 The model retains leave provisions in profit and adds them back in cash. It includes GST collections, purchases and settlements, including the opening liability. The [example's assumptions and limits](examples/harbour-light/README.md) explain what remains outside the cash forecast.
 
+For a Newcastle service-business case, try [Lumbridge Services](examples/lumbridge-services/README.md).
+Its OSRS-inspired example traces a delayed $44,000 customer receipt into a
+$25,160 cash shortfall while quarterly profit stays unchanged. It includes a
+formula workbook, management briefing and [independent trial guide](examples/lumbridge-services/TRIAL.md).
+
 <details>
 <summary>Setup, Australian scope, upstream workbench and reference</summary>
 

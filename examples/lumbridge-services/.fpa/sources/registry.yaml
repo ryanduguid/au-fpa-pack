@@ -1,0 +1,107 @@
+schema_version: 1
+sources:
+- source_id: assumptions
+  kind: local_file
+  location: data/assumptions.json
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  extraction_method: Author-declared synthetic scenario assumptions.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: invoices
+  kind: local_file
+  location: data/invoices.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-09
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  - 2027-01
+  extraction_method: Fabricated source and forecast invoices with collection dates.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: payments
+  kind: local_file
+  location: data/payments.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  extraction_method: Explicit assumed future bank payments, not a bank export.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: payroll
+  kind: local_file
+  location: data/payroll.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  extraction_method: Synthetic NSW employee roles; no employee records.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: payroll-tax-rates
+  kind: local_file
+  location: ../../pyfpa/au/data/payroll_tax.yaml
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  extraction_method: Existing NSW payroll-tax table, checked against Revenue NSW references
+    in README.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: super-rates
+  kind: local_file
+  location: ../../pyfpa/au/data/super_guarantee.yaml
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  extraction_method: Existing payroll kernel rate table, checked against ATO references
+    in README.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: xero-bs
+  kind: local_file
+  location: data/xero_bs.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-09
+  extraction_method: Fabricated signed closing balance-sheet fixture.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.
+- source_id: xero-pl
+  kind: local_file
+  location: data/xero_pl.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-09
+  extraction_method: Fabricated normalised GST-exclusive P&L fixture; not a live Xero
+    export.
+  refreshed_at: ''
+  notes: Synthetic case. No live system or client data. Locations are relative to
+    the example.

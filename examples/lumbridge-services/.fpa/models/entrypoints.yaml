@@ -1,0 +1,42 @@
+schema_version: 1
+entrypoints:
+- name: lumbridge-forecast
+  kind: forecast
+  description: Reconcile sources and generate monthly, weekly and daily cash with
+    a management briefing.
+  command:
+  - python
+  - models/generated/lumbridge.py
+  working_directory: .
+  inputs:
+  - README.md
+  - .fpa/sources/registry.yaml
+  - data/xero_pl.csv
+  - data/xero_bs.csv
+  - data/payroll.csv
+  - data/invoices.csv
+  - data/payments.csv
+  - data/assumptions.json
+  outputs:
+  - output/lumbridge.xlsx
+  - output/briefing.md
+- name: lumbridge-workbook
+  kind: report
+  description: Generate the same verified workbook and matching reports; only receipt
+    delay is interactive.
+  command:
+  - python
+  - models/generated/lumbridge.py
+  working_directory: .
+  inputs:
+  - README.md
+  - .fpa/sources/registry.yaml
+  - data/xero_pl.csv
+  - data/xero_bs.csv
+  - data/payroll.csv
+  - data/invoices.csv
+  - data/payments.csv
+  - data/assumptions.json
+  outputs:
+  - output/lumbridge.xlsx
+  - output/briefing.md

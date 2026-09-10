@@ -1,0 +1,21 @@
+{
+  "entity": "Lumbridge Services",
+  "location": "Newcastle NSW",
+  "currency": "AUD",
+  "source_period": "2026-09",
+  "forecast_start": "2026-10-01",
+  "forecast_end": "2026-12-31",
+  "weekly_start": "2026-10-02",
+  "gst_rate": 0.1,
+  "workers_comp_rate": 0.02,
+  "annual_leave_weeks": 4,
+  "lsl_accrual_pct": 0.017,
+  "monthly_payg_withheld": 5000,
+  "monthly_loan_principal": 1000,
+  "quarterly_tax_instalment": 3000,
+  "minimum_cash_buffer": 15000,
+  "delay_invoice": "OPEN-V",
+  "delay_days": 0,
+  "basis": "Synthetic GST-exclusive accrual P&L; invoice-basis GST; gross receivables and payables.",
+  "cash_assumptions": "No bank flows on 1 October. Monthly net payroll and SG paid on 28 October, 27 November and 24 December. No planned capex, dividends, new loans or inventory. No employee leave taken in quarter. PAYG and workers compensation amounts are scenario inputs, not calculated statutory assessments."
+}
