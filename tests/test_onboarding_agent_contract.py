@@ -15,6 +15,9 @@ def test_codex_and_claude_share_onboarding_contract():
         assert "approval" in text.lower()
     assert "narrow" in agents.lower()
     assert "narrow" in skill.lower()
+    assert "before broad company work, run `openfpa context-pack" in " ".join(
+        agents.lower().split()
+    )
 
 
 def test_research_contract_allows_autonomous_epochs_but_not_promotion():
@@ -26,3 +29,6 @@ def test_research_contract_allows_autonomous_epochs_but_not_promotion():
         assert "promotion" in text
         assert "approval" in text
     assert "five challengers" in skill
+    assert "after scoring closed periods, run `openfpa scorecard-render" in " ".join(
+        agents.split()
+    )

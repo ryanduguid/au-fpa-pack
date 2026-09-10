@@ -21,6 +21,8 @@ preserving a small, trustworthy accounting kernel.
 - Trigger onboarding when `.fpa/intake.md` is incomplete and the user asks to
   build, configure, forecast, analyze, or learn the business.
 - Do not force onboarding for a narrow task that can be completed independently.
+- Before broad company work, run `openfpa context-pack <company-root> --task "<task>"`
+  once the company workspace is initialised.
 - Use the machine-oriented CLI as the default workspace control surface:
   - `openfpa status <company-root>`
   - `openfpa init <company-root> --business-name "<name>"` when uninitialized
@@ -86,6 +88,9 @@ preserving a small, trustworthy accounting kernel.
 ## Adaptation Loop
 
 After architecture approval, use `fpa-research-loop` for bounded autonomous improvement.
+
+After scoring closed periods, run `openfpa scorecard-render <company-root>` and
+review past hypotheses with `openfpa experiment-list <company-root>`.
 
 1. Run `openfpa status` and `openfpa doctor`, then read `.fpa/MEMORY.md`, intake,
    the business profile, corrections, prior
