@@ -43,11 +43,16 @@ a generated model; load the table.
 
 ## Known simplifications (state these to the user)
 
-- Payroll tax: marginal rate above annual threshold / 12 per month.
+- Payroll tax outside SA: marginal rate above annual threshold / 12 per month.
   Grouping provisions, interstate apportionment, QLD deduction taper,
   WA diminishing threshold, VIC surcharge tiers are NOT modelled. For
   a grouped or multi-state employer, generate a company-specific
   calculator and register it as an entrypoint.
+- SA: the forecast separates the liability threshold from the deduction and
+  ramps the rate using each month's wages multiplied by 12. Use it for an
+  ungrouped SA-only employer with a steady full-year wage run rate. Mixed
+  SA/interstate wages are refused. Use an entity-specific calculator for
+  grouping, apportionment, part-year adjustments and annual reconciliation.
 - SG quarterly maximum contribution base not modelled (only matters
   for salaries above ~$260k).
 - PAYG withholding timing is not split out; `total_cash` assumes wages

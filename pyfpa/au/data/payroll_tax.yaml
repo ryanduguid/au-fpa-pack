@@ -1,5 +1,8 @@
 # State and territory payroll tax rates and annual thresholds.
 # Every figure verified against the named official source on 2026-08-20.
+# SA deduction and rate formula rechecked on 2026-09-10 against Payroll
+# Tax Act 2009, Schedule 1 clauses 2 and 5, and Schedule 2 clause 5:
+# https://www.legislation.sa.gov.au/_legislation-documents/lz/c/a/payroll-tax-act-2009/current/2009.22.auth.pdf
 # Simplifications documented in pyfpa/au/payroll.py: grouping, interstate
 # apportionment, QLD deduction taper, WA diminishing threshold, VIC/QLD
 # surcharge tiers and ACT rate tiers are NOT modelled beyond the base
@@ -52,12 +55,17 @@ jurisdictions:
     from: 2024-07-01
     rate: 0.0495
     annual_threshold: 1500000
+    annual_deduction: 600000
+    annual_rate_ramp_width: 200000
     notes: >-
       Since 1 Jan 2019, confirmed unchanged through 2026-27: nil below
       $1.5m; variable rate 0-4.95% between $1.5m and $1.7m Australia-wide
       payroll; 4.95% at $1.7m+. Maximum annual deduction $600,000.
-      Modelled at top rate above $1.5m threshold (conservative in the
-      $1.5m-$1.7m band).
+      Modelled for an ungrouped SA-only employer by annualising each
+      month's wages. The rate is 4.95% times the share of the $200,000
+      band above $1.5m, capped at 4.95%; the deduction is separate.
+      Mixed SA/interstate wages are refused. Annual reconciliation
+      and part-year deduction adjustments are not modelled.
     source_url: https://www.revenuesa.sa.gov.au/payrolltax/rates-and-thresholds
   - jurisdiction: TAS
     from: 2024-07-01

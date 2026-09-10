@@ -8,12 +8,18 @@ Forecast-grade simplifications, stated openly:
 
 - SG is applied to gross wages + bonuses as a proxy for ordinary time
   earnings; the quarterly maximum contribution base is not modelled.
-- Payroll tax applies the jurisdiction's marginal rate to taxable wages
+- Outside SA, payroll tax applies the jurisdiction's marginal rate to taxable wages
   (gross + super, which is how the Acts define taxable wages) above the
   annual threshold, apportioned monthly. Grouping provisions, interstate
   apportionment, QLD's deduction taper and WA's diminishing threshold
   are not modelled beyond the threshold itself; encode entity-specific
   treatment in a generated skill when it matters.
+- SA separates the registration threshold from the deduction and ramps
+  the rate using each month's wages multiplied by 12. This assumes an
+  ungrouped, SA-only employer with a steady full-year wage run rate; it
+  does not calculate an annual reconciliation or a statutory monthly return.
+  Mixed SA/interstate taxable wages anywhere in the forecast are refused because deduction
+  apportionment is not modelled.
 - Leave provisions are accrual percentages of gross wages, not cash.
   The cash view excludes them; the P&L view includes them.
 """
@@ -117,6 +123,7 @@ def payroll_forecast(
         "total_cash",
     ]
     frame = pd.DataFrame(0.0, index=months, columns=columns)
+    taxable_jurisdictions: set[str] = set()
 
     for period in months:
         sg_rate = rate_at(sg_table, period)
@@ -148,10 +155,30 @@ def payroll_forecast(
 
         payroll_tax = 0.0
         if assumptions.payroll_tax_registered:
+            taxable_jurisdictions.update(
+                key for key, amount in taxable_by_jurisdiction.items() if amount > 0
+            )
+            if "SA" in taxable_jurisdictions and len(taxable_jurisdictions) > 1:
+                raise ValueError(
+                    "SA interstate payroll tax requires deduction apportionment; "
+                    "use an entity-specific calculator"
+                )
             for jurisdiction, taxable in taxable_by_jurisdiction.items():
                 entry = payroll_tax_at(payroll_tax_table, jurisdiction, period)
-                monthly_threshold = entry.annual_threshold / _MONTHS_PER_YEAR
-                payroll_tax += max(0.0, taxable - monthly_threshold) * entry.rate
+                annualised_wages = taxable * _MONTHS_PER_YEAR
+                if annualised_wages <= entry.annual_threshold:
+                    continue
+                deduction = (
+                    entry.annual_threshold
+                    if entry.annual_deduction is None else entry.annual_deduction
+                )
+                rate = entry.rate
+                if entry.annual_rate_ramp_width:
+                    rate *= min(
+                        1.0,
+                        (annualised_wages - entry.annual_threshold) / entry.annual_rate_ramp_width,
+                    )
+                payroll_tax += max(0.0, taxable - deduction / _MONTHS_PER_YEAR) * rate
 
         workers_comp = gross * assumptions.workers_comp_rate
         frame.loc[period, "gross_wages"] = gross

@@ -49,6 +49,60 @@ def test_below_threshold_pays_no_payroll_tax(months):
     assert frame["payroll_tax"].sum() == 0.0
 
 
+@pytest.mark.parametrize(
+    "annual_taxable_wages, annual_tax",
+    [
+        (600000, 0),
+        (1500000, 0),
+        (1501000, 222.9975),
+        (1550000, 11756.25),
+        (1600000, 24750),
+        (1650000, 38981.25),
+        (1700000, 54450),
+        (2000000, 69300),
+    ],
+)
+def test_sa_threshold_deduction_and_variable_rate(months, annual_taxable_wages, annual_tax):
+    # SA Payroll Tax Act 2009, Schedule 1 clauses 2 and 5: a full-year,
+    # ungrouped SA employer. Ten employees keep each salary below the SG cap.
+    roles = [
+        Role(name=f"Role {i}", annual_salary=annual_taxable_wages / 10 / 1.12,
+             jurisdiction="SA")
+        for i in range(10)
+    ]
+    frame = payroll_forecast(roles, months)
+    assert frame["payroll_tax"].sum() == pytest.approx(annual_tax, abs=0.01)
+    assert frame["payroll_tax"].iloc[0] == pytest.approx(annual_tax / 12, abs=0.01)
+
+
+def test_sa_interstate_payroll_requires_apportionment(months):
+    roles = [
+        Role(name="Adelaide", annual_salary=150000, jurisdiction="SA"),
+        Role(name="Sydney", annual_salary=150000, jurisdiction="NSW"),
+    ]
+    with pytest.raises(ValueError, match="SA interstate payroll tax"):
+        payroll_forecast(roles, months)
+    # An explicit no-payroll-tax forecast still supplies the other on-costs.
+    frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
+    assert frame["payroll_tax"].sum() == 0.0
+    assert frame["super_guarantee"].sum() > 0.0
+
+
+@pytest.mark.parametrize("first, second", [("SA", "NSW"), ("NSW", "SA")])
+def test_staggered_sa_interstate_payroll_requires_apportionment(months, first, second):
+    roles = [
+        Role(name="First half", annual_salary=2000000, jurisdiction=first,
+             end_month="2026-12"),
+        Role(name="Second half", annual_salary=2000000, jurisdiction=second,
+             start_month="2027-01"),
+    ]
+    with pytest.raises(ValueError, match="SA interstate payroll tax"):
+        payroll_forecast(roles, months)
+    frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
+    assert frame["payroll_tax"].sum() == 0.0
+    assert frame["gross_wages"].sum() == pytest.approx(2000000)
+
+
 def test_above_threshold_pays_payroll_tax(months):
     # 40 x 150k in NSW: ~6.17m taxable wages incl super, well above threshold.
     roles = [
