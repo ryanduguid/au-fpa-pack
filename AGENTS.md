@@ -21,6 +21,8 @@ preserving a small, trustworthy accounting kernel.
 - Trigger onboarding when `.fpa/intake.md` is incomplete and the user asks to
   build, configure, forecast, analyze, or learn the business.
 - Do not force onboarding for a narrow task that can be completed independently.
+- Before broad company work, run `openfpa context-pack <company-root> --task "<task>"`
+  once the company workspace is initialised.
 - Use the machine-oriented CLI as the default workspace control surface:
   - `openfpa status <company-root>`
   - `openfpa init <company-root> --business-name "<name>"` when uninitialized
@@ -59,8 +61,9 @@ preserving a small, trustworthy accounting kernel.
 - Run `openfpa reconcile-source` for compatible account-amount CSV sources.
   For richer sources, build an equivalent tested reconciliation and register
   its command as an entrypoint.
-- Generate a connector only when recurring access is useful and the architecture
-  is approved. One-time local files do not need connector code.
+- Generate a connector only after source registration, mapping, reconciliation
+  and architecture approval, when recurring access is useful. One-time local
+  files do not need connector code.
 - Scaffold connectors from explicit redacted fixtures only. Never copy a
   production export into `connectors/generated/` without confirming it is safe
   to commit.
@@ -84,6 +87,11 @@ preserving a small, trustworthy accounting kernel.
 
 ## Adaptation Loop
 
+After architecture approval, use `fpa-research-loop` for bounded autonomous improvement.
+
+After scoring closed periods, run `openfpa scorecard-render <company-root>` and
+review past hypotheses with `openfpa experiment-list <company-root>`.
+
 1. Run `openfpa status` and `openfpa doctor`, then read `.fpa/MEMORY.md`, intake,
    the business profile, corrections, prior
    experiments, and source notes before changing a model.
@@ -100,10 +108,10 @@ preserving a small, trustworthy accounting kernel.
 
 ## Excel Output
 
-When the user wants Excel output with working formulas, use `model_to_excel` for
-the standard monthly model. For any other cadence or layout, generate a
-company-specific exporter from `pyfpa.excel.toolkit` in the generated namespace
-and register it as a report entrypoint. Install `formulas` and run
+When the user wants Excel output with working formulas, use `openfpa model-export`
+or `pyfpa.model_to_excel` for the standard monthly model. For any other cadence or
+layout, generate a company-specific exporter from `pyfpa.excel.toolkit` in the
+generated namespace and register it as a report entrypoint. Install `formulas` and run
 `verify_workbook` before delivering. No workbook ships unverified.
 
 ## Kernel Guardrails
