@@ -35,6 +35,8 @@ class PayrollTaxEntry(BaseModel):
     effective_from: date = Field(alias="from")
     rate: float = Field(ge=0, le=1)
     annual_threshold: float = Field(ge=0)
+    annual_deduction: float | None = Field(default=None, ge=0)
+    annual_rate_ramp_width: float = Field(default=0, ge=0)
     notes: str = ""
     source_url: str = ""
 
