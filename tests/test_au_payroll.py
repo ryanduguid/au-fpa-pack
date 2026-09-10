@@ -18,12 +18,33 @@ def test_single_role_gross_and_super(months):
     assert frame.loc[months[0], "super_guarantee"] == pytest.approx(1200.0)
 
 
-def test_contractor_gets_no_super_or_leave(months):
-    roles = [Role(name="Contractor", annual_salary=120000, contractor=True)]
+def test_ineligible_contractor_gets_no_super_or_leave(months):
+    roles = [Role(name="Contractor", annual_salary=120000, contractor=True, sg_eligible=False)]
     frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
     assert frame["super_guarantee"].sum() == 0.0
     assert frame["leave_provisions"].sum() == 0.0
     assert frame.loc[months[0], "gross_wages"] == pytest.approx(10000.0)
+
+
+def test_labour_contractor_gets_super_without_leave(months):
+    roles = [Role(name="Labour contractor", annual_salary=120000,
+                  contractor=True, sg_eligible=True)]
+    frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
+    assert frame.loc[months[0], "super_guarantee"] == pytest.approx(1200.0)
+    assert frame["leave_provisions"].sum() == 0.0
+    assert frame.loc[months[0], "total_cash"] == pytest.approx(11400.0)
+
+
+def test_contractor_requires_established_sg_eligibility():
+    with pytest.raises(ValueError, match="sg_eligible"):
+        Role(name="Unclassified contractor", annual_salary=120000, contractor=True)
+
+
+def test_established_employee_exemption_omits_sg_but_keeps_leave(months):
+    roles = [Role(name="Exempt employee", annual_salary=12000, sg_eligible=False)]
+    frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))
+    assert frame["super_guarantee"].sum() == 0.0
+    assert frame.loc[months[0], "leave_provisions"] == pytest.approx(93.9230769231)
 
 
 def test_start_month_vacancy(months):

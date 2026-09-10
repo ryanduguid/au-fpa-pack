@@ -8,6 +8,8 @@ Forecast-grade simplifications, stated openly:
 
 - SG is applied to gross wages + bonuses as a proxy for ordinary time
   earnings; the quarterly maximum contribution base is not modelled.
+- Contractor status determines leave provisions, not SG eligibility.
+  Establish SG eligibility separately, including the labour-contract rules.
 - Outside SA, payroll tax applies the jurisdiction's marginal rate to taxable wages
   (gross + super, which is how the Acts define taxable wages) above the
   annual threshold, apportioned monthly. Grouping provisions, interstate
@@ -27,7 +29,7 @@ Forecast-grade simplifications, stated openly:
 from __future__ import annotations
 
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from pyfpa.au.rates import (
     PayrollTaxEntry,
@@ -51,7 +53,14 @@ class Role(BaseModel):
     start_month: str | None = None  # YYYY-MM; None = employed from horizon start
     end_month: str | None = None    # YYYY-MM inclusive; None = employed to horizon end
     bonus_pct: float = Field(default=0.0, ge=0)   # annual bonus as pct of salary
-    contractor: bool = False  # True: no SG, no leave provisions; payroll tax still applies
+    contractor: bool = False  # True: no leave provisions; payroll tax still applies
+    sg_eligible: bool | None = None  # Established eligibility; required for contractors
+
+    @model_validator(mode="after")
+    def _require_contractor_sg_status(self) -> Role:
+        if self.contractor and self.sg_eligible is None:
+            raise ValueError("Set sg_eligible after assessing the contractor's SG eligibility")
+        return self
 
     @field_validator("name")
     @classmethod
@@ -139,7 +148,7 @@ def payroll_forecast(
             monthly_bonus = monthly_salary * role.bonus_pct
             gross += monthly_salary
             bonuses += monthly_bonus
-            role_sg = 0.0 if role.contractor else (monthly_salary + monthly_bonus) * sg_rate
+            role_sg = 0.0 if role.sg_eligible is False else (monthly_salary + monthly_bonus) * sg_rate
             sg += role_sg
             if not role.contractor:
                 leave += monthly_salary * (
