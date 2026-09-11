@@ -2,32 +2,34 @@
 
 Synthetic example. Forecasting aid, not tax advice; a human approves the assumptions and funding decision.
 
-**Input:** [Harbour Light's fabricated Xero exports](examples/harbour-light/data/), Victorian payroll assumptions and quarterly BAS cash timing for FY2027.
+**Input:** [Lumbridge Services' fabricated records](examples/lumbridge-services/data/), NSW payroll assumptions and dated customer receipts and payments for October to December 2026.
 
-From a clone in a Python 3.11+ virtual environment, install: `python -m pip install -e ".[dev]"`. The example uses the formula verifier included in the development dependencies.
+Lumbridge Services is a fictional Newcastle maintenance business. Its Varrock and Falador service lines are Old School RuneScape references; no game knowledge is needed. All amounts are AUD.
+
+From a clone, use Python 3.11 and the locked development environment:
 
 ```bash
-python examples/harbour-light/run_harbour.py
+uv sync --locked --extra dev
+uv run --locked --extra dev python examples/lumbridge-services/models/generated/lumbridge.py
 ```
 
-**Output:** a briefing and model workbook in `examples/harbour-light/output/`.
+**Output:** `briefing.md`, `lumbridge.xlsx`, monthly and cash schedules in `examples/lumbridge-services/output/`.
 
-| Forecast measure | Reproduced result |
-| --- | ---: |
-| FY2027 revenue | $1,332,000 |
-| FY2027 net loss | -$86,774 |
-| Cash at June 2027 year-end | $51,312 |
-| GST payable at June 2027 year-end | $9,630 |
-| Minimum cash in the 13-week forecast | $60,312, in week 13 |
+| Forecast measure | Receipt on time | Receipt 45 days late |
+| --- | ---: | ---: |
+| Quarter revenue | $180,000.00 | $180,000.00 |
+| Quarter profit before income tax | $35,957.55 | $35,957.55 |
+| October closing cash | $32,040.00 | ($11,960.00) |
+| Lowest daily closing cash | $16,800.00 | ($25,160.00) |
+| December closing cash | $67,320.00 | $67,320.00 |
 
-**Human decision:** Which sales or cost assumptions need to change to address the forecast loss, and how much cash must be reserved for unpaid BAS and other obligations?
+**Human decision:** Can the business meet its next payments if a customer pays late, and should the owner defer discretionary equipment spending?
 
-The model retains leave provisions in profit and adds them back in cash. It includes GST collections, purchases and settlements, including the opening liability. The [example's assumptions and limits](examples/harbour-light/README.md) explain what remains outside the cash forecast.
+In desktop Excel, change `Assumptions!B2` from 0 to 45. This delays one $44,000 receipt and creates a $25,160 cash shortfall on 6 November without changing profit. Restore 0 after use. The workbook supports only whole-day receipt delays from 0 to 120; CSVs and briefing text are fixed exports.
 
-For a Newcastle service-business case, try [Lumbridge Services](examples/lumbridge-services/README.md).
-Its OSRS-inspired example traces a delayed $44,000 customer receipt into a
-$25,160 cash shortfall while quarterly profit stays unchanged. It includes a
-formula workbook, management briefing and [independent trial guide](examples/lumbridge-services/TRIAL.md).
+Read the [assumptions and limits](examples/lumbridge-services/README.md), then use the [independent trial guide](examples/lumbridge-services/TRIAL.md) to record a review. The independent accountant trial remains pending. This synthetic case does not establish client outcomes or forecast accuracy.
+
+[Harbour Light](examples/harbour-light/README.md) provides a separate Victorian wholesale example with FY2027 reporting and quarterly BAS cash timing.
 
 <details>
 <summary>Setup, Australian scope, upstream workbench and reference</summary>
@@ -41,6 +43,7 @@ An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by 
 ## Reproduce and inspect
 
 - [Setup](docs/installation.md)
+- [Lumbridge inputs, method and limits](examples/lumbridge-services/README.md)
 - [Harbour Light inputs, method and limits](examples/harbour-light/README.md)
 - [Australian scope and source dates](docs/australian-pack.md)
 - [Other synthetic and public-data examples](docs/examples.md)
