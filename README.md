@@ -1,4 +1,4 @@
-# au-fpa-pack: reconcile Australian profit and cash
+# Australian financial planning and analysis with openfpa
 
 Synthetic example. Forecasting aid, not tax advice; a human approves the assumptions and funding decision.
 
