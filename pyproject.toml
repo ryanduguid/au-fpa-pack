@@ -61,10 +61,24 @@ include = ["pyfpa*"]
 target-version = "py311"
 
 [tool.ruff.lint]
-# Ruff's default rule set plus import sorting.
-extend-select = ["I"]
+# Pin the selection instead of inheriting it: pycodestyle errors, Pyflakes and
+# import sorting. Today this is ruff's default set plus "I", but stating it
+# means a ruff release cannot quietly add or drop a rule from the merge gate.
+select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
+# E402: these runners and their tests put the example or repository directory on
+# sys.path before importing the modules underneath it, so the imports cannot
+# move above that bootstrap. The kernel in pyfpa/ has no E402 exemption.
+"examples/*/run_*.py" = ["E402"]
+"examples/ridgeline/run_demo.py" = ["E402"]
+"scripts/au_drivers_snapshot.py" = ["E402"]
+"tests/test_au_drivers.py" = ["E402"]
+"tests/test_harbour_light.py" = ["E402"]
+# E731: the generated Lumbridge exporter binds three short formula builders per
+# month, each capturing the loop variables as default arguments. Named
+# functions would move that capture away from where it is read.
+"examples/lumbridge-services/models/generated/lumbridge.py" = ["E731"]
 # BLE001: the CLI and doctor boundaries deliberately turn any failure into a
 # structured JSON result instead of a traceback, which is what a blind
 # `except Exception` is for. Everywhere else the rule stays on.

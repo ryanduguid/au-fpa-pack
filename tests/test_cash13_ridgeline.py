@@ -2,6 +2,7 @@ from pathlib import Path
 
 import yaml
 
+import pyfpa
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.runway import runway_summary
 from pyfpa.cash13.schemas import Cash13Config
@@ -25,9 +26,6 @@ def test_ridgeline_cash13_runs_and_dips():
     assert round(df["ending_cash"].iloc[-1], 2) == round(
         cfg.opening_cash + df["net_cash"].sum(), 2
     )
-
-
-import pyfpa
 
 
 def test_cash13_public_exports():
