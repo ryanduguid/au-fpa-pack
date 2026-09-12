@@ -46,7 +46,7 @@ The example has four distinct phases:
    challenger.
 3. **Forward forecast.** A FY2026-FY2027 segment forecast is anchored to the
    reported Q1 FY2026 result.
-4. **Capital allocation sensitivity.** A labeled Marucci divestiture scenario
+4. **Capital allocation sensitivity.** A labelled Marucci divestiture scenario
    shows the tradeoff between free cash flow and leverage.
 
 The full proof runs in CI across Python 3.11, 3.12, and 3.13. See

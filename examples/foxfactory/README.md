@@ -54,7 +54,7 @@ This is the honest part - surfaced, not hidden.
    engine's positive-income tax model doesn't replicate - bridged, not reconciled.
 4. **Marucci is not disclosed standalone.** It sits inside SSG, so Phase D rests on
    estimates anchored to the acquisition disclosures (Fox paid $567M). It is
-   presented as a **labeled sensitivity**, not as precision.
+   presented as a **labelled sensitivity**, not as precision.
 5. **Monthly engine vs quarterly reporting.** Forecast runs at annual resolution
    (anchored to Q1); intra-year quarterly phasing is a deferred extension.
 6. **Limited holdout history.** Three annual observations are enough to
@@ -75,7 +75,7 @@ This is the honest part - surfaced, not hidden.
 | `.fpa/models/registry.yaml` | Flat champion + unpromoted recovery challenger |
 | `.fpa/models/entrypoints.yaml` | Registered command for the complete Fox pipeline |
 | `.fpa/sources/registry.yaml` | SEC extract provenance, entities, currencies, and period coverage |
-| `.fpa/mappings/registry.yaml` | Explicit source-field to normalized-model mappings |
+| `.fpa/mappings/registry.yaml` | Explicit source-field to normalised-model mappings |
 | `skills/generated/segment-rollup/` | The bespoke self-extension skill |
 | `data/` | Committed actuals + source trail |
 | `output/` | Generated reproduction, holdout, forecast, sensitivity, and Excel artifacts |

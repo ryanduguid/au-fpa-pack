@@ -58,7 +58,7 @@ is a modelling choice, not a filing line.
 
 - PDF transcription, not an XBRL pull. Re-check the PDF before treating a
   figure as authoritative.
-- Thai Baht and US auto/steel/aluminium tariffs are a **labeled sensitivity**
+- Thai Baht and US auto/steel/aluminium tariffs are a **labelled sensitivity**
   (+150bps COGS), not a kernel FX/tariff engine.
 - Franking credits ($112,022k) and special/final dividends are documented in
   the filing and not modelled.

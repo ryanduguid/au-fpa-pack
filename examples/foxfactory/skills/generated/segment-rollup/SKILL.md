@@ -1,6 +1,6 @@
 ---
 name: segment-rollup
-description: Use when modeling a multi-segment company that discloses segment net sales and segment Adjusted EBITDA (ASU 2023-07) but not segment COGS or operating income - rolls segment P&Ls into a consolidated forecast and reconciles total segment Adjusted EBITDA to the disclosed total. Generated for Fox Factory (PVG/AAG/SSG).
+description: Use when modelling a multi-segment company that discloses segment net sales and segment Adjusted EBITDA (ASU 2023-07) but not segment COGS or operating income - rolls segment P&Ls into a consolidated forecast and reconciles total segment Adjusted EBITDA to the disclosed total. Generated for Fox Factory (PVG/AAG/SSG).
 ---
 
 # Segment Roll-Up (generated for Fox Factory)

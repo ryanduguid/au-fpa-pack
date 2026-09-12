@@ -5,7 +5,7 @@
 ## Objective
 
 Demonstrate a source-traced ASX workflow with separate accounting
-reproduction, historical holdout, forward forecast, and a labeled cost-pressure
+reproduction, historical holdout, forward forecast, and a labelled cost-pressure
 sensitivity.
 
 ## Data Access

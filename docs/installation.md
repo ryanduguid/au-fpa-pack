@@ -18,5 +18,5 @@ The financial files are in ./company-data.
 Inspect them first, then ask me only what you cannot determine.
 ```
 
-The repository instructions tell the agent to initialize `.fpa/`, inspect local
+The repository instructions tell the agent to initialise `.fpa/`, inspect local
 evidence, conduct the intake, and stop for architecture approval.
