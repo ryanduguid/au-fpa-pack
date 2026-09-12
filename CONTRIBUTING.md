@@ -2,7 +2,7 @@
 
 openfpa is an open-source experiment from [Guiderail](https://www.guiderail.io). It's
 early, and help is genuinely welcome, whether that's a bug report, a sharper piece of
-CFO judgment, or a whole new industry pack. No promises on response time, and please be
+CFO judgement, or a whole new industry pack. No promises on response time, and please be
 kind; this is a side-of-the-desk project.
 
 ## Getting set up
@@ -35,7 +35,7 @@ The distribution is `au-fpa-pack`; the importable package is `pyfpa` (`import py
 ## The workflow
 
 1. Fork, branch, and make your change.
-2. **Add tests for new behavior.** The project is test-first, and CI runs the suite on
+2. **Add tests for new behaviour.** The project is test-first, and CI runs the suite on
    Python 3.11, 3.12, and 3.13. A green suite is required to merge, as are clean
    `ruff check .` and `mypy` runs.
 3. Open a PR describing what you changed and why. For anything non-trivial, open an Issue
@@ -48,14 +48,14 @@ real businesses. The contributions that help most:
 
 - **Industry packs:** a polished generated skill for a vertical the toolkit doesn't cover
   well yet (SaaS, restaurant, logistics, agency, and so on). The `fpa-learn-business` skill
-  spins these up per business; a generalized, well-documented one helps everyone. See the
+  spins these up per business; a generalised, well-documented one helps everyone. See the
   `segment-rollup` skill in the Fox Factory example for the shape.
 - **Data-access recipes:** teach the agent how to identify, request, map, test,
   and reconcile a source such as QuickBooks, Xero, NetSuite, Stripe, a bank
   export, or a local reporting folder. Reusable primitives are welcome, but live
   company connectors should remain generated for that company. See
   `examples/foxfactory/pull_edgar.py` for the pattern.
-- **CFO-judgment rules:** a real-world gotcha worth encoding into `fpa-cfo-judgment`.
+- **CFO judgement rules:** a real-world gotcha worth encoding into `fpa-cfo-judgment`.
 - **Public-company proofs:** apply the workflow to another source-traced public
   company with honest accounting reproduction, a historical holdout, and clear
   forecast limitations.

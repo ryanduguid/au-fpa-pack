@@ -9,7 +9,7 @@ description: Use when building a new openfpa forecast model from a company's fin
 
 Turn a company's financials into a runnable `pyfpa` config. Read the business profile first (see **fpa-learn-business**), infer the chart-of-accounts → model-line mapping, and write a validated `EntityConfig` YAML following openfpa conventions. Output a runnable skeleton plus an explicit list of assumptions to confirm.
 
-**Core principle:** Convention over invention. Map the real numbers onto the existing engine shape; don't design a new one.
+Map the real numbers onto the existing engine structure.
 
 ## When to use
 
@@ -42,7 +42,7 @@ Turn a company's financials into a runnable `pyfpa` config. Read the business pr
 
 - For a config-backed generated model, keep assumptions in validated YAML rather
   than scattering company numbers through code.
-- Set `opening_balances` AR/AP/inventory to the **first forecast month's** DSO/DPO/DIO-implied balances - the engine diffs each month against the prior, seeding month 1 against opening, so use month-1 projected revenue/COGS, NOT the annual average. Get this wrong and month-1 cash swings on a one-time artifact (see **fpa-cfo-judgment** working-capital seam).
+- Set `opening_balances` AR/AP/inventory to the **first forecast month's** DSO/DPO/DIO-implied balances - the engine diffs each month against the prior, seeding month 1 against opening, so use month-1 projected revenue/COGS, NOT the annual average. Get this wrong and month-1 cash swings on a one-time artefact (see **fpa-cfo-judgment** working-capital seam).
 - `"total"` is a reserved channel/opex name (the engine adds a `total` column).
 
 A live-formula Excel edition of the model is available via **fpa-excel-model**.

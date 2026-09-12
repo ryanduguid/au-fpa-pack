@@ -32,19 +32,19 @@ The live RBA tests are separate from the default offline suite, as CONTRIBUTING.
 ## Company Onboarding
 
 - Trigger onboarding when `.fpa/intake.md` is incomplete and the user asks to
-  build, configure, forecast, analyze, or learn the business.
+  build, configure, forecast, analyse, or learn the business.
 - Do not force onboarding for a narrow task that can be completed independently.
 - Before broad company work, run `openfpa context-pack <company-root> --task "<task>"`
   once the company workspace is initialised.
 - Use the machine-oriented CLI as the default workspace control surface:
   - `openfpa status <company-root>`
-  - `openfpa init <company-root> --business-name "<name>"` when uninitialized
+  - `openfpa init <company-root> --business-name "<name>"` when uninitialised
   - `openfpa inspect-data <data-root>` for each user-supplied data location
   - `openfpa source-profile <company-root> --file <source-file>` before mapping
   - `openfpa source-register <company-root> ...` for each relied-on source
   - `openfpa source-list <company-root>` before source-dependent work
   - `openfpa mapping-register <company-root> ...` for each exact mapping
-  - `openfpa mapping-list <company-root> --source-id <source-id>` before modeling
+  - `openfpa mapping-list <company-root> --source-id <source-id>` before modelling
   - `openfpa reconcile-source <company-root> ...` before using mapped totals
   - `openfpa connector-list <company-root>` before generating recurring access
   - `openfpa connector-scaffold <company-root> ...` from a redacted fixture
@@ -139,7 +139,7 @@ generated namespace and register it as a report entrypoint. Install `formulas` a
   a failed experiment.
 - Complexity is a cost. Prefer the smallest model that clears the company's
   objective and hard checks.
-- Promote company-specific behavior into `pyfpa/` only after it is demonstrably
+- Promote company-specific behaviour into `pyfpa/` only after it is demonstrably
   reusable across businesses.
 
 ## Required Evidence

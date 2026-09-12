@@ -1,8 +1,8 @@
 # Agent-Native Company Workspace
 
-openfpa provides a stable financial kernel and a repeatable process for an AI to
-build a bespoke FP&A system for one company. The company workspace is the
-product. It should become more specific as the AI learns the business.
+openfpa provides a shared financial kernel and a process for an AI to build an
+FP&A workspace for one company. The workspace should reflect what the AI learns
+about that business.
 
 ## Workspace Shape
 
@@ -38,7 +38,7 @@ The registry is discovery metadata. Registering a command never executes it.
 
 `sources/registry.yaml` records provenance, entity, currency, period coverage,
 location, and extraction method for every source used by the company model.
-`mappings/registry.yaml` records exact normalized mappings and deliberate
+`mappings/registry.yaml` records exact normalised mappings and deliberate
 ignores. Agents should profile, register, map, and reconcile sources before
 using their totals. Richer tables may use a tested company-specific
 reconciliation command registered as an entrypoint.
@@ -63,8 +63,8 @@ authentication.
 
 ## Onboarding
 
-Onboarding is task-gated. It begins when company memory is incomplete and the
-user requests broad FP&A work such as setup, modeling, forecasting, or analysis.
+Onboarding begins when company memory is incomplete and the
+user requests broad FP&A work such as setup, modelling, forecasting, or analysis.
 A narrow request should proceed without forcing a company interview.
 
 The agent inspects supplied local evidence first, records cited facts in
@@ -101,7 +101,7 @@ requires a human approval record in the model registry.
 
 ## Stable Versus Adaptive
 
-The stable kernel owns behavior that must be dependable across companies:
+The stable kernel owns behaviour that must be dependable across companies:
 
 - accounting identities and model primitives;
 - schema validation;
@@ -113,11 +113,11 @@ The adaptive company layer may own anything specific to the business:
 
 - source connectors and chart-of-accounts mappings;
 - revenue, cohort, segment, project, fleet, or SKU models;
-- close procedures and judgment rules;
+- close procedures and judgement rules;
 - scenarios, decision analyses, and board reporting;
 - generated skills and agents.
 
-`EntityConfig` is one useful model shape, not a universal ontology.
+`EntityConfig` provides one model structure; some businesses need a different one.
 
 ## Experiment Contract
 
@@ -140,7 +140,7 @@ and reverted experiments remain in the workspace as institutional memory.
 1. Read memory and prior experiments before editing.
 2. Profile and register sources, persist mappings, and surface unknowns.
 3. Prefer company-specific changes over expanding the kernel.
-4. Test the hypothesis against history, a holdout, or a labeled scenario.
+4. Test the hypothesis against history, a holdout, or a labelled scenario.
 5. Fail loudly when evidence is insufficient.
 6. Keep source provenance and human decisions in plain files.
-7. Promote behavior into the kernel only after it generalizes.
+7. Promote behaviour into the kernel only after it applies across businesses.

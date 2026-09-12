@@ -23,8 +23,6 @@ or promotion process. openfpa adds:
 - **Visible adaptation.** Company-specific code belongs in generated namespaces,
   where it can be reviewed, tested, and changed.
 
-The goal is a dependable process that helps the AI produce a better
-company-specific result over time.
 ## How onboarding works
 
 For broad company work, the agent starts by inspecting local evidence. It does
@@ -36,7 +34,7 @@ only unresolved questions in short rounds. Typical questions cover:
 - business model, products, customers, segments, and revenue drivers;
 - seasonality, pricing, unit economics, and major operating constraints;
 - legal entities, reporting periods, currencies, and consolidation needs;
-- debt, liquidity, capital spending, and working-capital behavior;
+- debt, liquidity, capital spending, and working-capital behaviour;
 - the decisions the CFO needs the model to support;
 - available systems, exports, folders, and credentials.
 
@@ -60,7 +58,7 @@ The agent should first ask where the relevant evidence lives:
 - local CSV, Excel, or Google Sheets files;
 - a shared folder containing monthly financial packages;
 - P&L and balance-sheet exports;
-- AR and AP aging reports;
+- AR and AP ageing reports;
 - inventory balances, item detail, or purchasing data;
 - payroll, CRM, billing, bank, or operational systems;
 - public filings when the company is public.
@@ -78,7 +76,7 @@ Generated connector code belongs in `connectors/generated/`. It should include:
 - a fixture or redacted sample;
 - explicit field and account mappings;
 - source totals and reconciliation checks;
-- failure behavior for missing, duplicate, or unmapped records;
+- failure behaviour for missing, duplicate, or unmapped records;
 - tests that do not require production credentials.
 
 Credentials stay with the host tool or environment and are never committed.
@@ -148,7 +146,7 @@ The repository includes skills for:
 - running monthly close and cash runway analysis;
 - producing board briefings;
 - capturing human corrections;
-- applying CFO judgment;
+- applying CFO judgement;
 - running company research epochs;
 - learning cautiously across a portfolio.
 
