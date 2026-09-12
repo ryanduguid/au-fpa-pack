@@ -1,3 +1,8 @@
+# v0.1.1
+
+- Publishes the attested wheel and source distribution to PyPI as `au-fpa-pack` through trusted publishing.
+- No functional change since v0.1.0.
+
 # v0.1.0
 
 First release of the Australian FP&A pack for openfpa: 30 June financial years,
