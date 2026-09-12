@@ -1,53 +1,30 @@
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import stat
 import tempfile
 from collections.abc import Callable
 from math import isfinite
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from pyfpa.memory.entrypoints import _relative_path
 from pyfpa.memory.lineage import MappingRegistry, reconcile_account_table
-from pyfpa.memory.workspace import Workspace
+from pyfpa.memory.workspace import Workspace, _is_link_or_reparse, _lstat
 
 ConnectorAuth = Literal["none", "host_environment", "mcp"]
 _CONNECTOR_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
-_FILE_ATTRIBUTE_REPARSE_POINT = 0x400
-
-
-def _relative_path(value: str) -> str:
-    value = value.strip()
-    path = PurePosixPath(value)
-    if not value or path.is_absolute() or ".." in path.parts:
-        raise ValueError("path must be a non-empty relative path without '..'")
-    return path.as_posix()
 
 
 def _connector_name(value: str) -> str:
     if not _CONNECTOR_NAME.fullmatch(value):
         raise ValueError("connector name must use lowercase letters, numbers, and hyphens")
     return value
-
-
-def _lstat(path: Path) -> os.stat_result | None:
-    try:
-        return path.lstat()
-    except FileNotFoundError:
-        return None
-
-
-def _is_link_or_reparse(path_stat: os.stat_result) -> bool:
-    return stat.S_ISLNK(path_stat.st_mode) or bool(
-        getattr(path_stat, "st_file_attributes", 0)
-        & _FILE_ATTRIBUTE_REPARSE_POINT
-    )
 
 
 def _ensure_plain_directory(root: Path, directory: Path) -> None:
