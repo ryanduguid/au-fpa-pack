@@ -3,9 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import yaml
 from pydantic import BaseModel, Field
 
+from pyfpa.io.loaders import read_yaml, write_yaml
 from pyfpa.research.epochs import ResearchEpoch, evaluate_challenger
 
 if TYPE_CHECKING:
@@ -40,14 +40,14 @@ class ModelRegistry(BaseModel):
 def save_model_registry(registry: ModelRegistry, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False))
+    write_yaml(path, registry.model_dump())
 
 
 def load_model_registry(path: str | Path) -> ModelRegistry:
     path = Path(path)
     if not path.exists():
         return ModelRegistry()
-    return ModelRegistry.model_validate(yaml.safe_load(path.read_text()))
+    return ModelRegistry.model_validate(read_yaml(path))
 
 
 def register_challenger(
