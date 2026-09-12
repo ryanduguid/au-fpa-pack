@@ -16,13 +16,14 @@ ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / "examples" / "foxfactory"
 sys.path.insert(0, str(EXAMPLE))
 
-pytestmark = pytest.mark.skipif(
+requires_foxf_data = pytest.mark.skipif(
     not (EXAMPLE / "data" / "income_statement.csv").exists(),
     reason="Fox Factory EDGAR data not pulled (run examples/foxfactory/pull_edgar.py)",
 )
 
 
 @pytest.mark.parametrize("fy,prior", [("FY2024", "FY2023"), ("FY2025", "FY2024")])
+@requires_foxf_data
 def test_phase_a_reproduces_actual_driver_mechanics(fy, prior):
     import foxf_model as fm
 
@@ -37,6 +38,7 @@ def test_phase_a_reproduces_actual_driver_mechanics(fy, prior):
     assert abs(rec.loc["operating_cash_flow_before_tax", "variance_pct"]) < 1e-6
 
 
+@requires_foxf_data
 def test_historical_holdout_rejects_broad_recovery_via_regression_guard():
     """Verify the research loop's verdicts are principled, not numerical artifacts.
 
@@ -65,6 +67,7 @@ def test_historical_holdout_rejects_broad_recovery_via_regression_guard():
         assert refined.evaluation.challenger_metrics[metric] < champion
 
 
+@requires_foxf_data
 def test_forecast_is_coherent():
     import foxf_model as fm
 
@@ -80,6 +83,7 @@ def test_forecast_is_coherent():
     assert seg_sales == pytest.approx(float(fy26["revenue"]), rel=1e-9)
 
 
+@requires_foxf_data
 def test_forecast_year_boundary_uses_modeled_closing_working_capital():
     import foxf_model as fm
 
@@ -142,6 +146,7 @@ def test_foxf_sources_and_mappings_are_registered():
     )
 
 
+@requires_foxf_data
 def test_foxf_income_statement_mapping_covers_every_source_row():
     result = subprocess.run(
         [
@@ -170,6 +175,7 @@ def test_foxf_income_statement_mapping_covers_every_source_row():
     assert evidence["expected_provided"] is False
 
 
+@requires_foxf_data
 def test_foxf_workspace_passes_agent_toolbelt_diagnostics():
     result = subprocess.run(
         [sys.executable, "-m", "pyfpa.cli", "doctor", str(EXAMPLE)],
@@ -233,6 +239,7 @@ def test_a_throttled_concept_raises_instead_of_blanking_the_row(monkeypatch):
         pe.pull_balance_sheet()
 
 
+@requires_foxf_data
 def test_main_leaves_committed_csvs_untouched_when_a_late_pull_fails(monkeypatch, tmp_path):
     import pull_edgar as pe
 
@@ -283,6 +290,7 @@ def test_incomplete_segment_table_is_refused(monkeypatch):
         pe.pull_segments()
 
 
+@requires_foxf_data
 def test_phase_a_checks_engine_ebitda(monkeypatch):
     import foxf_model as fm
 
@@ -300,6 +308,7 @@ def test_phase_a_checks_engine_ebitda(monkeypatch):
     assert not result.loc["adjusted_ebitda", "within_tolerance"]
 
 
+@requires_foxf_data
 def test_static_workbook_verification_preserves_previous_export(tmp_path, monkeypatch):
     import foxf_model as fm
     import pandas as pd
@@ -324,6 +333,7 @@ def test_static_workbook_verification_preserves_previous_export(tmp_path, monkey
     assert destination.read_bytes() == before
 
 
+@requires_foxf_data
 def test_historical_candidate_does_not_read_holdout_actuals(monkeypatch):
     import foxf_model as fm
 
@@ -341,6 +351,7 @@ def test_historical_candidate_does_not_read_holdout_actuals(monkeypatch):
     assert fm.historical_candidate(revenue_reversion=0.5, margin_reversion=0.05) == expected
 
 
+@requires_foxf_data
 def test_historical_checks_detect_broken_rollup(monkeypatch):
     import foxf_model as fm
 

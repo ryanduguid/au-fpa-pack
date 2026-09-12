@@ -38,7 +38,10 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
         value = client_driver_value(c, driver)
         if snap is not None and snap.score is not None and value is not None:
             recorded_lines = set(snap.score.per_line)
-            recovered = recover_actuals(snap)
+            try:
+                recovered = recover_actuals(snap)
+            except ValueError:
+                continue
             if recorded_lines and recorded_lines == set(snap.score.weights) and all(
                 line in recovered and recovered[line] != 0 for line in recorded_lines
             ):

@@ -33,6 +33,7 @@ def test_module_entrypoint_runs_in_a_fresh_interpreter(tmp_path):
         text=True,
         capture_output=True,
         check=False,
+        timeout=60,
     )
 
     assert result.returncode == 0, result.stderr
@@ -57,6 +58,7 @@ def test_installed_console_script_runs(tmp_path):
         text=True,
         capture_output=True,
         check=False,
+        timeout=60,
     )
 
     assert result.returncode == 0, result.stderr

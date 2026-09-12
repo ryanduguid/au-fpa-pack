@@ -3,9 +3,9 @@ import pytest
 from pyfpa.portfolio.manifest import ClientRef, clients_of_type, load_portfolio
 
 
-def test_load_portfolio_missing_raises():
+def test_load_portfolio_missing_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
-        load_portfolio("/nonexistent/portfolio.yaml")
+        load_portfolio(tmp_path / "portfolio.yaml")
 
 
 def test_load_portfolio_and_filter(tmp_path):
