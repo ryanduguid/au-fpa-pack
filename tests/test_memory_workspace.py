@@ -13,7 +13,7 @@ from pyfpa.memory.intake import (
 )
 from pyfpa.memory.lineage import load_mapping_registry, load_source_registry
 from pyfpa.memory.onboarding import PROFILE_HEADINGS, render_business_profile
-from pyfpa.memory.workspace import Workspace, initialize_workspace, workspace_path
+from pyfpa.memory.workspace import Workspace, initialize_workspace
 from pyfpa.research.objective import load_research_objective
 from pyfpa.research.registry import load_model_registry
 
@@ -26,8 +26,6 @@ def test_workspace_open_returns_a_canonical_immutable_value(tmp_path):
 
     assert workspace.root == company.resolve()
     assert workspace.memory == company.resolve() / ".fpa"
-    legacy_root = Path("relative") / ".." / "company"
-    assert workspace_path(legacy_root) == legacy_root / ".fpa"
     with pytest.raises(FrozenInstanceError):
         workspace.root = tmp_path  # type: ignore[misc]
 
@@ -138,7 +136,7 @@ def test_workspace_is_the_only_internal_location_seam():
 def test_initialize_workspace_creates_memory_contract(tmp_path):
     workspace = initialize_workspace(tmp_path, business_name="Acme")
 
-    assert workspace == workspace_path(tmp_path)
+    assert workspace == Workspace.open(tmp_path).memory
     assert (workspace / "MEMORY.md").exists()
     assert (workspace / "intake.md").exists()
     assert (workspace / "business-profile.md").exists()

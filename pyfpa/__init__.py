@@ -100,7 +100,6 @@ from pyfpa.memory import (
     scaffold_connector_bundle,
     search_memory,
     validate_connector_bundle,
-    workspace_path,
     write_onboarding_outputs,
 )
 from pyfpa.models.cashflow import cashflow_from_config
@@ -273,6 +272,5 @@ __all__ = [
     "validate_prior",
     "verify_workbook",
     "working_capital_from_config",
-    "workspace_path",
     "write_onboarding_outputs",
 ]

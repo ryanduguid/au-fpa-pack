@@ -75,7 +75,7 @@ from pyfpa.memory.retrieval import (
     save_memory_index,
     search_memory,
 )
-from pyfpa.memory.workspace import Workspace, initialize_workspace, workspace_path
+from pyfpa.memory.workspace import Workspace, initialize_workspace
 
 __all__ = [
     "ArchitectureProposal",
@@ -140,6 +140,5 @@ __all__ = [
     "scaffold_connector_bundle",
     "search_memory",
     "validate_connector_bundle",
-    "workspace_path",
     "write_onboarding_outputs",
 ]

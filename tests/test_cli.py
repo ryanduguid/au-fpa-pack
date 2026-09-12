@@ -664,10 +664,10 @@ def test_onboarding_render_writes_profile_and_proposal(tmp_path):
         record_intake_fact,
         save_intake,
     )
-    from pyfpa.memory.workspace import workspace_path
+    from pyfpa.memory.workspace import Workspace
 
     assert run_cli("init", str(tmp_path), "--business-name", "Acme").returncode == 0
-    workspace = workspace_path(tmp_path)
+    workspace = Workspace.open(tmp_path).memory
     intake_path = workspace / "intake.md"
     intake = load_intake(intake_path)
     while questions := next_intake_questions(intake):
