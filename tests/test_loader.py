@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
+from pyfpa.config.loader import load_config
 from pyfpa.config.schemas import (
     Channel,
     EntityConfig,
@@ -40,11 +43,6 @@ def test_bad_start_month_rejected():
     with pytest.raises(ValidationError):
         EntityConfig(**kwargs)
 
-
-# --- append to tests/test_loader.py ---
-from pathlib import Path
-
-from pyfpa.config.loader import load_config
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

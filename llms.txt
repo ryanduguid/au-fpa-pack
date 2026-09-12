@@ -1,0 +1,27 @@
+# au-fpa-pack - Australian FP&A pack for openfpa
+> An Australian extension of the openfpa workbench: 30 June financial years, Xero AU mapping, GST and BAS cash timing, and payroll on-cost assumptions. Source-only, with an agent-facing CLI, a Python kernel and 17 skills.
+
+## Package overview
+- **Repository**: https://github.com/ryanduguid/au-fpa-pack
+- **Names**: the distribution is `au-fpa-pack`, the import is `pyfpa`, the console script is `openfpa`.
+- **Upstream**: openfpa by Jeff Brines / Guiderail (https://github.com/JeffBrines/openfpa). MIT licensed; both attributions are retained in LICENSE.
+- **Install**: `uv sync --locked --extra dev` from a clone. Not published to PyPI, and no release is tagged yet.
+- **Python**: tested on 3.11, 3.12 and 3.13.
+
+## What is here
+- **Kernel (`pyfpa/`)**: forecast schemas and accounting mechanics (`models/`, `cash13/`, `analysis/`, `config/`, `io/`), verified Excel export (`excel/`), Australian rules (`au/`), forecast scoring and holdouts (`backtest/`), company memory (`memory/`), the champion and challenger loop (`research/`) and cross-client learning (`portfolio/`).
+- **CLI (`openfpa`)**: JSON-emitting workspace commands for intake, source registration, mappings, reconciliation, connector scaffolding, corrections, scorecards, context packs and Excel export. Documented in docs/cli-reference.md.
+- **Skills (`skills/`)**: 17 skills. Sixteen `fpa-` skills cover Australian drivers, GST and BAS, payroll, Xero onboarding, model scaffolding, actuals wiring, Excel export, monthly close, cash runway, board briefings, CFO judgement, corrections, backtesting, the research loop and portfolio learning. `generated/sku-profitability` is the worked example of a company-specific generated skill.
+- **Plugin manifest**: `.claude-plugin/plugin.json` declares the repository as the `openfpa` Claude Code plugin.
+- **Examples (`examples/`)**: Lumbridge Services (synthetic NSW maintenance business, the README headline case), Harbour Light (synthetic Victorian lighting wholesaler, FY2027 Xero, payroll and GST), Ridgeline Chair Co. (synthetic product company), ARB Corporation (ASX: ARB, source-traced to the FY2025 Appendix 4E) and Fox Factory Holding Corp. (public SEC data).
+
+## Australian scope
+1. **Calendar**: 30 June financial years with `FY2027`, `Q1 FY2027` and `1H FY2027` labels and dd/mm/yyyy dates.
+2. **Payroll**: super guarantee, state payroll tax across all eight jurisdictions with effective dates, workers compensation, leave provisions and contractors.
+3. **GST and BAS**: net GST from GST-exclusive series, with monthly and quarterly settlement timing fed into the 13-week cash model.
+4. **Rates and dates**: recorded with their sources in docs/australian-pack.md. They are modelling assumptions, not a tax engine.
+
+## Limits
+1. **Not advice**: these are forecasting aids. A competent human approves the assumptions and any funding decision. See DISCLAIMER.md.
+2. **Synthetic headline**: the Lumbridge figures in README.md come from fabricated records. They do not establish client outcomes or forecast accuracy, and the independent accountant trial is still pending.
+3. **Public-company examples**: the ARB and Fox Factory examples reproduce published filings and label their sensitivities. Reproducing reported mechanics is not forecast skill.

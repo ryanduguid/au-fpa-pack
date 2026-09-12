@@ -46,6 +46,7 @@ from pyfpa.memory.intake import (
     record_intake_fact,
     save_intake,
 )
+from pyfpa.memory.lineage import SourceKind
 from pyfpa.memory.workspace import WORKSPACE_DIRS, Workspace, initialize_workspace
 from pyfpa.research.registry import load_model_registry
 
@@ -406,15 +407,7 @@ def build_parser() -> JsonArgumentParser:
     source_register_parser.add_argument(
         "--kind",
         required=True,
-        choices=(
-            "local_file",
-            "shared_folder",
-            "accounting_system",
-            "operating_system",
-            "api",
-            "public_filing",
-            "manual",
-        ),
+        choices=get_args(SourceKind),
     )
     source_register_parser.add_argument("--location", required=True)
     source_register_parser.add_argument("--entity", required=True)
@@ -433,15 +426,7 @@ def build_parser() -> JsonArgumentParser:
     )
     source_list_parser.add_argument(
         "--kind",
-        choices=(
-            "local_file",
-            "shared_folder",
-            "accounting_system",
-            "operating_system",
-            "api",
-            "public_filing",
-            "manual",
-        ),
+        choices=get_args(SourceKind),
     )
     source_list_parser.set_defaults(handler=command_source_list)
 

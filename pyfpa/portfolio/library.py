@@ -4,9 +4,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from pyfpa.config.schemas import EntityConfig
+from pyfpa.io.loaders import read_yaml, write_yaml
 from pyfpa.memory.paths import apply_override
 from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
 from pyfpa.portfolio.validate import ValidationResult
@@ -16,7 +15,7 @@ def _log(library: Path, line: str) -> None:
     library.mkdir(parents=True, exist_ok=True)
     log = library / "library-log.md"
     header = "" if log.exists() else "# Library Log\n\n"
-    with log.open("a") as f:
+    with log.open("a", encoding="utf-8") as f:
         f.write(header + line + "\n")
 
 
@@ -27,7 +26,7 @@ def load_library(library: str | Path) -> dict[str, Any]:
     priors_dir = library / "priors"
     if priors_dir.exists():
         for f in sorted(priors_dir.glob("*.yaml")):
-            doc = yaml.safe_load(f.read_text()) or {}
+            doc = read_yaml(f) or {}
             priors[doc.get("type", f.stem)] = doc.get("priors", [])
     skills = sorted(p.name for p in (library / "skills").glob("*")) if (library / "skills").exists() else []
     return {"priors": priors, "skills": skills}
@@ -41,13 +40,13 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     priors_dir = library / "priors"
     priors_dir.mkdir(parents=True, exist_ok=True)
     path = priors_dir / f"{candidate.business_type}.yaml"
-    doc = yaml.safe_load(path.read_text()) if path.exists() else None
+    doc = read_yaml(path) if path.exists() else None
     doc = doc or {"type": candidate.business_type, "priors": []}
     doc["priors"].append({
         "driver": candidate.driver, "value": candidate.value, "support": candidate.support,
         "cross_client_holdout_delta": validation.mean_delta, "n_folds": validation.n_folds,
     })
-    path.write_text(yaml.safe_dump(doc, sort_keys=False))
+    write_yaml(path, doc)
     _log(library, f"- prior `{candidate.driver}` = {candidate.value} for {candidate.business_type} "
                   f"(support {len(candidate.support)}, delta {validation.mean_delta:+.4f})")
 

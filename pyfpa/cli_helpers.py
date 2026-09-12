@@ -28,7 +28,12 @@ class JsonArgumentParser(argparse.ArgumentParser):
         raise SystemExit(EXIT_USAGE)
 
 
-def _write_json(payload: dict[str, Any], *, stream: Any = sys.stdout) -> None:
+def _write_json(payload: dict[str, Any], *, stream: Any = None) -> None:
+    # Resolve sys.stdout on each call. Binding it as a default captures whatever
+    # stream existed at import time, which is the wrong one once a caller or a
+    # test has redirected stdout.
+    if stream is None:
+        stream = sys.stdout
     stream.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 

@@ -135,11 +135,6 @@ class Workspace:
         return _validate_workspace(self)
 
 
-def workspace_path(company_root: str | Path) -> Path:
-    """Return the legacy, non-canonical `.fpa` path for compatibility."""
-    return Path(company_root) / ".fpa"
-
-
 def _seed_source_registry(target: Path, business_name: str) -> None:
     from pyfpa.memory.lineage import SourceRegistry, save_source_registry
 

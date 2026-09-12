@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-import yaml
 from pydantic import BaseModel, Field, model_validator
+
+from pyfpa.io.loaders import read_yaml, write_yaml
 
 MetricDirection = Literal["lower", "higher"]
 
@@ -45,11 +46,11 @@ def save_research_objective(
 ) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(objective.model_dump(), sort_keys=False))
+    write_yaml(path, objective.model_dump())
 
 
 def load_research_objective(path: str | Path) -> ResearchObjective:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"research objective not found: {path}")
-    return ResearchObjective.model_validate(yaml.safe_load(path.read_text()))
+    return ResearchObjective.model_validate(read_yaml(path))

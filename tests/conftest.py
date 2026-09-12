@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 import pytest
 
+from pyfpa.cli import main
 from pyfpa.config.schemas import (
     Channel,
     DebtInstrument,
@@ -8,6 +11,37 @@ from pyfpa.config.schemas import (
     OpexLine,
     WorkingCapitalConfig,
 )
+
+
+@dataclass(frozen=True)
+class CliResult:
+    """What one in-process `openfpa` invocation produced."""
+
+    returncode: int
+    stdout: str
+    stderr: str
+
+
+@pytest.fixture
+def run_cli(capsys):
+    """Call `pyfpa.cli.main(argv)` in this process and capture its JSON.
+
+    Shelling out to a fresh interpreter hid the CLI from coverage. The console
+    script contract is what a subprocess establishes, so tests/test_cli.py keeps
+    two subprocess tests for that and nothing else.
+    """
+
+    def _run(*args: str) -> CliResult:
+        capsys.readouterr()
+        try:
+            returncode = main([*args])
+        except SystemExit as exc:
+            # JsonArgumentParser.error writes JSON to stderr and exits.
+            returncode = 0 if exc.code is None else int(exc.code)
+        captured = capsys.readouterr()
+        return CliResult(returncode, captured.out, captured.err)
+
+    return _run
 
 
 @pytest.fixture

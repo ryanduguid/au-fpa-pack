@@ -21,11 +21,14 @@ def test_changed_line_coverage_is_scoped_and_fail_closed() -> None:
     assert re.search(r'"coverage==\d+\.\d+\.\d+"', pyproject)
     assert re.search(r'"diff-cover==\d+\.\d+\.\d+"', pyproject)
     assert "fetch-depth: 0" in workflow
-    assert "--source=pyfpa/memory" in workflow
+    assert "--source=pyfpa" in workflow
     assert '--include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py"' in workflow
     assert "--compare-branch=origin/main" in workflow
     assert "--branch-coverage" in workflow
     assert "--fail-under=100" in workflow
+    # The whole-package floor sits beside the changed-line gate. It is the
+    # measured figure rounded down, so it must stay a concrete number.
+    assert re.search(r"coverage report --fail-under=\d+", workflow)
 
 
 def test_no_tracked_file_is_covered_by_an_ignore_rule() -> None:

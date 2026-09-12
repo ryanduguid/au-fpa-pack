@@ -21,7 +21,7 @@ not promoted.
 
 **Phase C** forecasts FY2026–FY2027 from the August 2025 4E view.
 
-**Phase D** is a labeled Thai Baht / US-tariff sensitivity (+150bps COGS). It is
+**Phase D** is a labelled Thai Baht / US-tariff sensitivity (+150bps COGS). It is
 not a kernel FX engine.
 
 ## Where the engine strains

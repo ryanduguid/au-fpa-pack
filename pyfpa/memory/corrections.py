@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel
 
 from pyfpa.config.schemas import EntityConfig
+from pyfpa.memory.intake import _split_frontmatter
 from pyfpa.memory.paths import apply_override
 
 CorrectionType = Literal["parametric", "structural", "context"]
@@ -28,19 +29,6 @@ class Correction(BaseModel):
     date: str
     override: Override | None = None
     notes: str = ""
-
-
-def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if text.startswith("---"):
-        parts = text.split("---", 2)
-        if len(parts) != 3:
-            raise ValueError("missing closing frontmatter delimiter")
-        _, frontmatter, body = parts
-        data = yaml.safe_load(frontmatter) or {}
-        if not isinstance(data, dict):
-            raise ValueError("frontmatter must be a mapping")
-        return data, body.strip()
-    return {}, text.strip()
 
 
 def save_correction(correction: Correction, directory: str | Path, *, overwrite: bool = False) -> None:

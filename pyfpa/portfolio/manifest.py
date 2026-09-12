@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
 from pydantic import BaseModel
+
+from pyfpa.io.loaders import read_yaml
 
 
 class ClientRef(BaseModel):
@@ -20,7 +21,7 @@ def load_portfolio(path: str | Path) -> Portfolio:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"portfolio manifest not found: {p}")
-    return Portfolio.model_validate(yaml.safe_load(p.read_text()))
+    return Portfolio.model_validate(read_yaml(p))
 
 
 def clients_of_type(portfolio: Portfolio, business_type: str) -> list[ClientRef]:

@@ -14,7 +14,7 @@ Turn forecast output into a board/investor-grade briefing: the headline numbers,
 ## When to use
 
 - Board decks, investor updates, lender packages
-- "Summarize the forecast for leadership"
+- "Summarise the forecast for leadership"
 
 ## Workflow
 
