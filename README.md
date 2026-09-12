@@ -1,6 +1,7 @@
 # Australian financial planning and analysis with openfpa
 
 [![tests](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=5C2D91&labelColor=04001F)](https://pypi.org/project/au-fpa-pack/)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-5C2D91.svg?labelColor=04001F)](LICENSE)
 [![python](https://img.shields.io/badge/python-3.11%2B-5C2D91.svg?labelColor=04001F)](https://www.python.org/)
 
