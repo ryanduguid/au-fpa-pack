@@ -40,9 +40,10 @@ def snapshot_forecast(
     )
 
 
-def save_snapshot(snapshot: Snapshot, path: str | Path) -> None:
+def save_snapshot(snapshot: Snapshot, path: str | Path, *, overwrite: bool = False) -> None:
     """Serialize a Snapshot to YAML at the given path."""
-    Path(path).write_text(yaml.safe_dump(snapshot.model_dump(), sort_keys=False))
+    with Path(path).open("w" if overwrite else "x", encoding="utf-8") as output:
+        output.write(yaml.safe_dump(snapshot.model_dump(), sort_keys=False))
 
 
 def load_snapshot(path: str | Path) -> Snapshot:
@@ -50,4 +51,4 @@ def load_snapshot(path: str | Path) -> Snapshot:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"snapshot not found: {p}")
-    return Snapshot.model_validate(yaml.safe_load(p.read_text()))
+    return Snapshot.model_validate(yaml.safe_load(p.read_text(encoding="utf-8")))

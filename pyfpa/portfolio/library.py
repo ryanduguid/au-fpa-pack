@@ -35,6 +35,8 @@ def load_library(library: str | Path) -> dict[str, Any]:
 
 def promote_prior(library: str | Path, candidate: PriorCandidate, validation: ValidationResult) -> None:
     """Append a ratified prior to priors/<type>.yaml and log it."""
+    if not validation.validated or validation.n_folds < 2:
+        raise ValueError("prior requires successful validation across at least two folds")
     library = Path(library)
     priors_dir = library / "priors"
     priors_dir.mkdir(parents=True, exist_ok=True)
@@ -54,8 +56,8 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
     """Copy a recurring generated skill into the library and log it."""
     library = Path(library)
     dest = library / "skills" / candidate.name
-    dest.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(candidate.source, dest, dirs_exist_ok=True)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(candidate.source, dest)
     _log(library, f"- skill `{candidate.name}` for {candidate.business_type} "
                   f"(support {len(candidate.support)})")
 

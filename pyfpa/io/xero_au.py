@@ -87,6 +87,12 @@ _DERIVED_ROWS = {"gross profit", "net profit", "net loss", "net assets", "total"
 # cost of sales, liabilities, equity): its rows are negated so the report
 # lands in this module's convention, income and assets positive.
 _NEGATE_SECTION = re.compile(r"expense|cost|liabilit|equity", re.IGNORECASE)
+_SECTION_LABELS = {
+    "trading income", "income", "other income", "revenue", "cost of sales",
+    "operating expenses", "expenses", "other expenses", "assets", "bank",
+    "current assets", "non-current assets", "fixed assets", "liabilities",
+    "current liabilities", "non-current liabilities", "equity",
+}
 # "Sales (200)": the shape Xero uses when a report shows account codes. A
 # code is alphanumeric, at most 10 characters and carries a digit, so
 # "Rent (Sydney)" keeps its parenthetical as part of the name.
@@ -159,7 +165,8 @@ def _read_report_layout(rows: list[list[str]], path: Path) -> list[XeroRow]:
         if not label:
             continue
         if all(cell == "" for cell in cells[amount_idx:]):
-            sign = -1.0 if _NEGATE_SECTION.search(label) else 1.0
+            if label.casefold() in _SECTION_LABELS and sum(bool(cell) for cell in cells[:amount_idx]) == 1:
+                sign = -1.0 if _NEGATE_SECTION.search(label) else 1.0
             continue
         if label.startswith("Total ") or label.lower() in _DERIVED_ROWS:
             continue

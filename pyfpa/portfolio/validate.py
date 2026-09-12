@@ -37,7 +37,12 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
         snap = best_snapshot(c.path)
         value = client_driver_value(c, driver)
         if snap is not None and snap.score is not None and value is not None:
-            usable.append((value, snap, snap.score))
+            recorded_lines = set(snap.score.per_line)
+            recovered = recover_actuals(snap)
+            if recorded_lines and recorded_lines == set(snap.score.weights) and all(
+                line in recovered and recovered[line] != 0 for line in recorded_lines
+            ):
+                usable.append((value, snap, snap.score))
     n = len(usable)
     if n < 2:
         return ValidationResult(mean_delta=0.0, n_folds=n, validated=False)

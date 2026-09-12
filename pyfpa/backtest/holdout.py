@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
+import pandas as pd
+
 from pyfpa.backtest.score import (
     DEFAULT_SCORE_LINES,
+    DEFAULT_WEIGHTS,
     ScoreResult,
     aggregate_periods,
     extract_lines,
@@ -28,7 +31,9 @@ def holdout_backtest(
     (fit actuals -> a config that forecasts the holdout window) is supplied by the
     caller; this harness only owns the split and the scoring. Nothing is scored on
     data it was fit on."""
-    periods = list(actuals_by_period)
+    if holdout < 1:
+        raise ValueError("holdout must be at least one")
+    periods = sorted(actuals_by_period, key=lambda period: pd.Period(period).start_time)
     if len(periods) <= holdout:
         raise ValueError(f"need more than {holdout} periods, got {len(periods)}")
     fit_periods = periods[:-holdout]
@@ -40,4 +45,7 @@ def holdout_backtest(
     cfg = build_cfg_fn(fit_actuals)
     predicted = extract_lines(cashflow_from_config(cfg), score_lines)
     actual = aggregate_periods([dict(actuals_by_period[p]) for p in holdout_periods], score_lines)
-    return score_forecast(predicted, actual, weights=weights)
+    selected_weights = weights if weights is not None else {
+        line: DEFAULT_WEIGHTS.get(line, 1.0) for line in score_lines
+    }
+    return score_forecast(predicted, actual, weights=selected_weights)

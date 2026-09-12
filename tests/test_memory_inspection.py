@@ -48,3 +48,19 @@ def test_context_md_included_only_when_signal_present(tmp_path):
     paths = [f["path"] for f in result.files]
     assert "business-model.md" in paths
     assert "random-notes.md" not in paths
+
+
+def test_walk_continues_when_a_file_disappears(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    for name in ("missing.csv", "present.csv"):
+        (tmp_path / name).write_text("Account,Amount\n", encoding="utf-8")
+    stat = Path.stat
+
+    def raced_stat(path, *args, **kwargs):
+        if path.name == "missing.csv":
+            raise FileNotFoundError(path)
+        return stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", raced_stat)
+    assert [item["path"] for item in inspect_data_files(tmp_path).files] == ["present.csv"]

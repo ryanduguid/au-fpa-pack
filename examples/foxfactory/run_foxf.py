@@ -11,6 +11,7 @@ Outputs land in examples/foxfactory/output/.
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -476,6 +477,37 @@ def phase_d(forecast: pd.DataFrame) -> tuple[str, pd.DataFrame, pd.DataFrame]:
 
 
 # --------------------------------------------------------------------------- #
+def export_forecast_workbook(destination, forecast, segs, grid, proceeds_grid):
+    """Check every exported value before replacing the static report workbook."""
+    sheets = {
+        "Historical holdout": (holdout_workbook_rows(), False),
+        "Forecast (monthly)": (forecast, True),
+        **{f"Segments {fy}": (segment_pnl(segs[fy]), True) for fy in ("FY2026", "FY2027")},
+        "Divestiture (timing)": (grid, True),
+        "Divestiture (price)": (proceeds_grid, True),
+    }
+    with tempfile.TemporaryDirectory(prefix="foxf-export-", dir=destination.parent) as temporary:
+        candidate = Path(temporary) / destination.name
+        with pd.ExcelWriter(candidate) as xl:
+            for name, (frame, include_index) in sheets.items():
+                exported = frame.copy()
+                if isinstance(exported.index, pd.PeriodIndex):
+                    exported.index = exported.index.astype(str)
+                exported.to_excel(xl, sheet_name=name, index=include_index)
+        # The kernel formula verifier requires a Model sheet; this export holds
+        # static tables, so compare each sheet directly with its source frame.
+        with pd.ExcelFile(candidate) as workbook:
+            if workbook.sheet_names != list(sheets):
+                raise ValueError("workbook sheet inventory differs")
+            for name, (frame, include_index) in sheets.items():
+                actual = pd.read_excel(workbook, sheet_name=name, index_col=0 if include_index else None)
+                expected = frame.copy()
+                if isinstance(expected.index, pd.PeriodIndex):
+                    expected.index = expected.index.astype(str)
+                pd.testing.assert_frame_equal(actual, expected, check_dtype=False, check_names=False)
+        candidate.replace(destination)
+
+
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     workspace = initialize_demo_workspace()
@@ -492,7 +524,7 @@ def main() -> None:
     save_research_objective(fm.HOLDOUT_OBJECTIVE, research_dir / "objective.yaml")
     epochs = fm.historical_research_epochs()
     for epoch in epochs:
-        save_epoch(epoch, research_dir, overwrite=True)
+        save_epoch(epoch, research_dir)
     registry = ModelRegistry(champion=ModelVersion(
         model_id="foxf-flat-fy2024-run-rate",
         created="2026-06-09",
@@ -539,15 +571,7 @@ def main() -> None:
     )
     save_entrypoint_registry(entrypoints, entrypoint_path)
 
-    with pd.ExcelWriter(OUT / "foxf-forecast.xlsx") as xl:
-        holdout_workbook_rows().to_excel(
-            xl, sheet_name="Historical holdout", index=False
-        )
-        forecast.to_excel(xl, sheet_name="Forecast (monthly)")
-        for fy in ("FY2026", "FY2027"):
-            segment_pnl(segs[fy]).to_excel(xl, sheet_name=f"Segments {fy}")
-        grid.to_excel(xl, sheet_name="Divestiture (timing)")
-        proceeds_grid.to_excel(xl, sheet_name="Divestiture (price)")
+    export_forecast_workbook(OUT / "foxf-forecast.xlsx", forecast, segs, grid, proceeds_grid)
 
     print("Wrote output/reconciliation.md, historical-holdout.md, forecast-briefing.md,")
     print("divestiture.md, foxf-forecast.xlsx, and .fpa research/model memory")

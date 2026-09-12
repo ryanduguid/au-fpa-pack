@@ -1,5 +1,8 @@
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 _SPEC = importlib.util.spec_from_file_location(
@@ -29,3 +32,10 @@ def test_run_demo_writes_artifacts(tmp_path):
     text = briefing.read_text()
     assert "# Ridgeline Chair Co." in text
     assert "## 13-Week Cash Runway" in text
+
+
+def test_demo_refuses_a_failed_formula_verification(tmp_path, monkeypatch):
+    run_demo = _load_run_demo()
+    monkeypatch.setitem(run_demo.__globals__, "verify_workbook", lambda *args: SimpleNamespace(passed=False, failures=["synthetic mismatch"]))
+    with pytest.raises(ValueError, match="workbook verification failed"):
+        run_demo(tmp_path)

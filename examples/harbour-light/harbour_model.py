@@ -69,10 +69,16 @@ def taxable_sales_pct() -> float:
 
 
 def channels_from_xero() -> list[Channel]:
-    splits = profit_and_loss().by_tracking()
+    report = profit_and_loss()
+    accounts = report.by_account()
+    for account in ("Sales - Domestic", "Sales - GST Free"):
+        if account not in accounts:
+            raise ValueError(f"required sales account is missing: {account}")
+    splits = report.by_tracking()
     channels = []
     for name in ("North", "South"):
         row = splits[name]
+        # Tracking splits are sparse; an established account can have no rows in a region.
         sales = row.get("Sales - Domestic", 0.0) + row.get("Sales - GST Free", 0.0)
         cogs = abs(row["Cost of Goods Sold"])
         channels.append(

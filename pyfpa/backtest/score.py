@@ -78,13 +78,20 @@ def score_forecast(
     *,
     weights: Mapping[str, float] | None = None,
 ) -> ScoreResult:
-    """Weighted MAPE of predicted vs actual over the scored lines present in both
-    (and with non-zero actual). Per-line error reuses `reconcile`'s variance_pct.
-    Weights are renormalized over the lines actually scored."""
-    weights = dict(weights or DEFAULT_WEIGHTS)
-    lines = [line for line in weights if line in predicted and line in actual and actual[line] != 0]
-    if not lines:
-        raise ValueError("no scorable lines: provide matching, non-zero actuals")
+    """Weighted MAPE requiring complete, finite evidence for every weighted line.
+
+    Relative error is undefined for a zero actual; callers must choose an
+    explicit alternative objective instead of silently omitting that line.
+    """
+    weights = dict(DEFAULT_WEIGHTS if weights is None else weights)
+    if any(not math.isfinite(weight) or weight < 0 for weight in weights.values()):
+        raise ValueError("scoring weights must be finite and non-negative")
+    lines = list(weights)
+    unscorable = [line for line in lines if line not in predicted or line not in actual
+                  or actual[line] == 0 or not math.isfinite(actual[line])
+                  or not math.isfinite(predicted[line])]
+    if unscorable or not lines:
+        raise ValueError(f"no scorable lines for requested evidence: {unscorable}")
     rec = reconcile({line: predicted[line] for line in lines},
                     {line: actual[line] for line in lines})
     per_line = {line: float(rec.loc[line, "variance_pct"]) for line in lines}

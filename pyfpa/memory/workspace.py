@@ -85,7 +85,7 @@ class Workspace:
         return self.memory.is_dir()
 
     def is_ready(self) -> bool:
-        if not self.initialized:
+        if not self.initialized or not self.intake_path.is_file():
             return False
         from pyfpa.memory.intake import intake_ready, load_intake
 
@@ -201,15 +201,15 @@ def _seed_intake(target: Path, business_name: str) -> None:
 def _seed_profile(target: Path, business_name: str) -> None:
     from pyfpa.memory.onboarding import render_business_profile
 
-    target.write_text(render_business_profile(Intake(business_name=business_name)))
+    target.write_text(render_business_profile(Intake(business_name=business_name)), encoding="utf-8")
 
 
 def _seed_scorecard(target: Path, business_name: str) -> None:
-    target.write_text("# Forecast Scorecard\n")
+    target.write_text("# Forecast Scorecard\n", encoding="utf-8")
 
 
 def _seed_learnings(target: Path, business_name: str) -> None:
-    target.write_text("# Learnings\n")
+    target.write_text("# Learnings\n", encoding="utf-8")
 
 
 def _seed_memory_index(target: Path, business_name: str) -> None:
@@ -228,7 +228,7 @@ def _seed_memory_index(target: Path, business_name: str) -> None:
         "- `models/`: champion/challenger history and generated entrypoints\n"
         "- `research/`: immutable autonomous research epochs\n"
         "- `../connectors/generated/`: fixture-tested company data access\n"
-    )
+    , encoding="utf-8")
 
 
 # Files seeded on first run, in creation order. Each writer receives the target

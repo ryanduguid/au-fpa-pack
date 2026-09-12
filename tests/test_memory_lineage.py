@@ -176,3 +176,14 @@ def test_reconciliation_accepts_utf8_with_or_without_bom(tmp_path, encoding):
     )
     assert result["passed"] is True
     assert result["mapped_totals"] == {"revenue": 100.0}
+
+
+def test_missing_expected_target_cannot_pass_as_a_real_zero(tmp_path):
+    path = tmp_path / "actuals.csv"
+    path.write_text("Account,Amount\nRevenue,100\n", encoding="utf-8")
+    registry = MappingRegistry(mappings=[MappingRule(source_id="gl", source_value="Revenue", target="revenue")])
+    result = reconcile_account_table(path, source_id="gl", mappings=registry,
+                                     account_column="Account", amount_column="Amount",
+                                     expected={"revenue": 100, "missing": 0})
+    assert not result["passed"]
+    assert result["variances"]["missing"]["mapped"] is None

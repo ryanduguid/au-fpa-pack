@@ -16,7 +16,7 @@ def reconcile(
     """Compare modeled vs actual line items.
 
     ``variance = model - actual``, ``variance_pct = variance / actual``
-    (0.0 when actual is 0). A line is within tolerance when
+    (undefined when actual is 0). A line is within tolerance when
     ``|variance_pct| <= tolerance``, or when both values are 0.
 
     Parameters
@@ -34,12 +34,14 @@ def reconcile(
         Indexed by line-item name with columns
         ``model, actual, variance, variance_pct, within_tolerance``.
     """
+    if set(model) != set(actual):
+        raise ValueError(f"reconciliation line sets differ: {sorted(set(model) ^ set(actual))}")
     rows = []
     for line in actual:
-        m = float(model.get(line, 0.0))
+        m = float(model[line])
         a = float(actual[line])
         variance = m - a
-        variance_pct = (variance / a) if a else 0.0
+        variance_pct = (variance / a) if a else (0.0 if m == 0 else float("nan"))
         within = (m == a) if a == 0 else (abs(variance_pct) <= tolerance)
         rows.append({
             "line": line,

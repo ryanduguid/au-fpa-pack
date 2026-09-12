@@ -163,7 +163,11 @@ def test_foxf_income_statement_mapping_covers_every_source_row():
         check=False,
     )
 
-    assert result.returncode == 0, result.stdout
+    assert result.returncode == 1, result.stdout
+    evidence = json.loads(result.stdout)["data"]
+    assert evidence["unmapped"] == []
+    assert evidence["duplicates"] == []
+    assert evidence["expected_provided"] is False
 
 
 def test_foxf_workspace_passes_agent_toolbelt_diagnostics():
@@ -193,8 +197,8 @@ def _fake_concept_doc(tag: str) -> bytes:
     ]
     rows += [{"end": pe.FY_END[fy], "val": 2_000_000 + fy} for fy in (2022, *pe.FYS)]
     rows += [
-        {"start": "2025-01-01", "end": "2025-03-31", "val": 300_000},
-        {"start": "2026-01-01", "end": "2026-03-31", "val": 310_000},
+        {"form": "10-Q", "fy": 2025, "fp": "Q1", "start": "2025-01-04", "end": "2025-04-04", "val": 300_000},
+        {"form": "10-Q", "fy": 2026, "fp": "Q1", "start": "2026-01-03", "end": "2026-04-03", "val": 310_000},
     ]
     return json.dumps({"units": {"USD": rows}}).encode()
 
@@ -250,3 +254,104 @@ def test_main_leaves_committed_csvs_untouched_when_a_late_pull_fails(monkeypatch
 
     assert {p.name: p.read_bytes() for p in data.glob("*.csv")} == before
     assert not (data / "SOURCES.md").exists()
+
+
+def test_quarter_selection_is_fixed_and_rejects_conflicting_facts(monkeypatch):
+    import pull_edgar as pe
+
+    rows = json.loads(_fake_concept_doc("sales"))["units"]["USD"]
+    rows.append({"form": "10-Q", "fy": 2026, "fp": "Q2", "start": "2026-04-04", "end": "2026-07-03", "val": 999})
+    monkeypatch.setattr(pe, "_concept", lambda tag: rows)
+    assert pe.latest_quarter("sales") == ("2026-01-03", "2026-04-03", 310_000)
+    rows.append({"form": "10-Q", "fy": 2026, "fp": "Q1", "start": "2026-01-03", "end": "2026-04-03", "val": 123})
+    with pytest.raises(RuntimeError, match="expected one Q1"):
+        pe.latest_quarter("sales")
+
+
+def test_incomplete_segment_table_is_refused(monkeypatch):
+    import pandas as pd
+    import pull_edgar as pe
+
+    table = pd.DataFrame([
+        ["PVG | Operating Segments", "", "", "", "", ""],
+        ["Net sales", "", "", "100", "100", "100"],
+        ["Adjusted EBITDA", "", "", "20", "20", "20"],
+    ])
+    monkeypatch.setattr(pe, "_curl", lambda url: b"synthetic")
+    monkeypatch.setattr(pd, "read_html", lambda html: [table])
+    with pytest.raises(RuntimeError, match="per segment"):
+        pe.pull_segments()
+
+
+def test_phase_a_checks_engine_ebitda(monkeypatch):
+    import foxf_model as fm
+
+    from pyfpa.analysis.reconcile import reconcile
+
+    engine = fm.cashflow_from_config
+
+    def incorrect(config):
+        frame = engine(config)
+        frame["ebitda"] *= 2
+        return frame
+
+    monkeypatch.setattr(fm, "cashflow_from_config", incorrect)
+    result = reconcile(fm.phase_a_model("FY2025", "FY2024"), fm.phase_a_actual("FY2025", "FY2024"))
+    assert not result.loc["adjusted_ebitda", "within_tolerance"]
+
+
+def test_static_workbook_verification_preserves_previous_export(tmp_path, monkeypatch):
+    import foxf_model as fm
+    import pandas as pd
+    import run_foxf as runner
+
+    forecast, segments = fm.build_forecast()
+    _, timing, price = runner.phase_d(forecast)
+    destination = tmp_path / "forecast.xlsx"
+    runner.export_forecast_workbook(destination, forecast, segments, timing, price)
+    before = destination.read_bytes()
+    read_excel = pd.read_excel
+
+    def corrupted(*args, **kwargs):
+        frame = read_excel(*args, **kwargs)
+        if kwargs["sheet_name"] == "Forecast (monthly)":
+            frame.iloc[0, 0] += 1_000_000
+        return frame
+
+    monkeypatch.setattr(pd, "read_excel", corrupted)
+    with pytest.raises(AssertionError):
+        runner.export_forecast_workbook(destination, forecast, segments, timing, price)
+    assert destination.read_bytes() == before
+
+
+def test_historical_candidate_does_not_read_holdout_actuals(monkeypatch):
+    import foxf_model as fm
+
+    expected = fm.historical_candidate(revenue_reversion=0.5, margin_reversion=0.05)
+    for name in ("income_statement", "balance_sheet", "cash_flow"):
+        frame = getattr(fm, name)().filter(items=["FY2023", "FY2024"])
+        monkeypatch.setattr(fm, name, lambda frame=frame: frame)
+    segments_for_year = fm.segments_for_year
+
+    def training_segments(year):
+        assert year in {"FY2023", "FY2024"}
+        return segments_for_year(year)
+
+    monkeypatch.setattr(fm, "segments_for_year", training_segments)
+    assert fm.historical_candidate(revenue_reversion=0.5, margin_reversion=0.05) == expected
+
+
+def test_historical_checks_detect_broken_rollup(monkeypatch):
+    import foxf_model as fm
+
+    engine = fm.cashflow_from_config
+
+    def broken(config):
+        frame = engine(config)
+        frame["ebitda"] *= 2
+        return frame
+
+    monkeypatch.setattr(fm, "cashflow_from_config", broken)
+    for epoch in fm.historical_research_epochs():
+        assert next(check.result for check in epoch.checks if check.name == "segment rollup") == "fail"
+        assert not epoch.evaluation.promotion_eligible

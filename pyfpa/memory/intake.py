@@ -115,8 +115,14 @@ _REQUIRED_KEYS = frozenset(_QUESTIONS_BY_KEY)
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     if text.startswith("---"):
-        _, frontmatter, body = text.split("---", 2)
-        return yaml.safe_load(frontmatter) or {}, body.strip()
+        parts = text.split("---", 2)
+        if len(parts) != 3:
+            raise ValueError("missing closing frontmatter delimiter")
+        _, frontmatter, body = parts
+        data = yaml.safe_load(frontmatter) or {}
+        if not isinstance(data, dict):
+            raise ValueError("frontmatter must be a mapping")
+        return data, body.strip()
     return {}, text.strip()
 
 
@@ -129,7 +135,7 @@ def save_intake(intake: Intake, path: str | Path) -> None:
     text = "---\n" + yaml.safe_dump(data, sort_keys=False) + "---\n"
     if notes:
         text += notes.rstrip() + "\n"
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
 
 
 def load_intake(path: str | Path) -> Intake:
@@ -137,7 +143,10 @@ def load_intake(path: str | Path) -> Intake:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"intake not found: {path}")
-    frontmatter, notes = _split_frontmatter(path.read_text())
+    try:
+        frontmatter, notes = _split_frontmatter(path.read_text(encoding="utf-8"))
+    except (ValueError, yaml.YAMLError) as exc:
+        raise ValueError(f"invalid intake {path}: {exc}") from exc
     return Intake.model_validate({**frontmatter, "notes": notes})
 
 
@@ -219,7 +228,7 @@ def record_intake_fact(
     return intake.model_copy(update={"facts": facts})
 
 
-def _known(fact: IntakeFact | None) -> bool:
+def is_fact_known(fact: IntakeFact | None) -> bool:
     return bool(
         fact
         and fact.status != "conflict"
@@ -230,7 +239,7 @@ def _known(fact: IntakeFact | None) -> bool:
 def intake_ready(intake: Intake) -> bool:
     """Return whether all architecture-critical intake topics are known."""
     facts = _fact_by_key(intake)
-    return all(_known(facts.get(key)) for key in _REQUIRED_KEYS)
+    return all(is_fact_known(facts.get(key)) for key in _REQUIRED_KEYS)
 
 
 def next_intake_questions(intake: Intake, *, limit: int = 3) -> list[IntakeQuestion]:

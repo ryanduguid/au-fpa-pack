@@ -49,6 +49,8 @@ def divest(
     """
     out = forecast.copy(deep=True)
     n = len(out.index)
+    if not 0 <= sale_month <= n:
+        raise ValueError("sale_month must be within the forecast horizon")
     monthly_interest_saved = proceeds * annual_rate / 12.0
     opening_cash = (
         float(forecast["ending_cash"].iloc[0])
@@ -66,7 +68,7 @@ def divest(
         da = row["da"] - carve_out.da
         capex = row["capex"] - carve_out.capex
         ebitda = gross_profit - opex
-        interest = row["interest"] - monthly_interest_saved
+        interest = max(0.0, row["interest"] - monthly_interest_saved)
         pretax = ebitda - da - interest   # EBIT (= EBITDA - D&A) less interest
         tax = max(0.0, pretax) * tax_rate
         net_income = pretax - tax
@@ -98,5 +100,5 @@ def net_debt_to_ebitda(
 
     Returns ``inf`` when total EBITDA is zero to avoid silent division by zero.
     """
-    ebitda = float(forecast["ebitda"].sum())
+    ebitda = float(forecast["ebitda"].sum()) * 12 / len(forecast) if len(forecast) else 0.0
     return (debt_balance - cash) / ebitda if ebitda else float("inf")

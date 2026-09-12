@@ -77,6 +77,16 @@ def test_snapshot_never_overwrites(tmp_path):
     assert first.exists() and second.exists()
 
 
+def test_concurrent_snapshots_keep_every_observation(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    series = [_series(data={"2026-08": float(i)}) for i in range(8)]
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        paths = list(pool.map(lambda item: save_snapshot(item, tmp_path), series))
+    assert len(set(paths)) == 8
+    assert {load_snapshot(path).data["2026-08"] for path in paths} == set(range(8))
+
+
 def test_fetch_rba_unknown_series_rejected():
     with pytest.raises(ValueError, match="unknown RBA series"):
         fetch_rba_series("house_prices")

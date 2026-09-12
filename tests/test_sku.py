@@ -18,7 +18,7 @@ def test_sku_profitability_columns_and_sort():
         "units", "revenue", "cogs", "gross_profit", "gross_margin",
         "revenue_share", "cumulative_revenue_pct",
     ]
-    # sorted by gross_profit desc: A, B, C
+    # Sorted by revenue, with the input order retained for the tied A and B.
     assert df.index.tolist() == ["A", "B", "C"]
     assert round(df.loc["A", "revenue"], 2) == 100000.0
     assert round(df.loc["A", "gross_profit"], 2) == 60000.0
@@ -49,3 +49,12 @@ def test_sku_rejects_negative():
 def test_empty_skus_returns_empty_frame():
     df = sku_profitability([])
     assert len(df) == 0
+
+
+def test_revenue_pareto_does_not_follow_profit_ranking():
+    frame = sku_profitability([
+        Sku(name="High margin", units=1, price=20, unit_cost=0),
+        Sku(name="High revenue", units=1, price=100, unit_cost=95),
+    ])
+    assert frame.index[0] == "High revenue"
+    assert pareto_breakpoint(frame, threshold=0.8) == 1

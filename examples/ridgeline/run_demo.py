@@ -16,6 +16,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 import pyfpa
 from pyfpa.excel.model_workbook import model_to_excel
+from pyfpa.excel.verify import verify_workbook
 from pyfpa.io.loaders import load_cash13_config
 from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
 
@@ -40,6 +41,9 @@ def run_demo(output_dir: str | Path) -> dict:
 
     cfg = pyfpa.load_config(_HERE / "config.yaml")
     model_to_excel(cfg, out / "model.xlsx")
+    verification = verify_workbook(out / "model.xlsx", monthly)
+    if not verification.passed:
+        raise ValueError(f"workbook verification failed: {verification.failures}")
 
     return {
         "revenue_total": round(monthly["revenue"].sum()),

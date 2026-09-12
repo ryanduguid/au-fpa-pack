@@ -17,7 +17,7 @@ class Sku(BaseModel):
 
 
 def sku_profitability(skus: list[Sku]) -> pd.DataFrame:
-    """Per-SKU economics sorted by gross profit (desc), with revenue share and
+    """Per-SKU economics sorted by revenue (desc), with revenue share and
     cumulative revenue % (Pareto). Index is the SKU name."""
     if not skus:
         return pd.DataFrame(columns=_COLUMNS)
@@ -37,7 +37,7 @@ def sku_profitability(skus: list[Sku]) -> pd.DataFrame:
         })
 
     df = pd.DataFrame(rows).set_index("sku")
-    df = df.sort_values("gross_profit", ascending=False)
+    df = df.sort_values("revenue", ascending=False)
     total_revenue = df["revenue"].sum()
     share = df["revenue"] / total_revenue if total_revenue else df["revenue"] * 0.0
     return df.assign(

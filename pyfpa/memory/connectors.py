@@ -210,7 +210,7 @@ def load_connector_manifest(path: str | Path) -> ConnectorManifest:
         path = path / "connector.yaml"
     if not path.exists():
         raise FileNotFoundError(f"connector manifest not found: {path}")
-    return ConnectorManifest.model_validate(yaml.safe_load(path.read_text()) or {})
+    return ConnectorManifest.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
 def save_connector_manifest(
@@ -221,7 +221,7 @@ def save_connector_manifest(
     if path.suffix != ".yaml":
         path = path / "connector.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(manifest.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(manifest.model_dump(), sort_keys=False), encoding="utf-8")
 
 
 def load_connector_manifests(company_root: str | Path) -> list[ConnectorManifest]:
@@ -421,9 +421,9 @@ def scaffold_connector_bundle(
                 account_column=account_column,
                 amount_column=amount_column,
             )
-        )
-        (staging / "run.py").write_text(_runner_module())
-        (staging / "README.md").write_text(_readme(manifest))
+        , encoding="utf-8")
+        (staging / "run.py").write_text(_runner_module(), encoding="utf-8")
+        (staging / "README.md").write_text(_readme(manifest), encoding="utf-8")
 
     _replace_generated_tree(
         workspace,
