@@ -83,12 +83,20 @@ jobs:
         if: matrix.python-version != '3.13'
         run: uv run --locked --extra dev pytest -q
 
-      - name: Run tests with scoped branch coverage
+      - name: Run tests with branch coverage over the whole package
         if: matrix.python-version == '3.13'
         run: >-
           uv run --locked --extra dev coverage run --branch
-          --source=pyfpa/memory
+          --source=pyfpa
           -m pytest -q
+
+      # The CLI tests run in-process, so this covers pyfpa/cli.py and
+      # pyfpa/cli_commands/ as well as the memory, research and portfolio
+      # packages. The floor is the measured figure rounded down to the nearest
+      # five, not an aspiration.
+      - name: Require the package branch-coverage floor
+        if: matrix.python-version == '3.13'
+        run: uv run --locked --extra dev coverage report --fail-under=90
 
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.13'

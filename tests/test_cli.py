@@ -1,23 +1,16 @@
 import json
+import shutil
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "-m", "pyfpa.cli", *args],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-
-
-def output_json(result: subprocess.CompletedProcess[str]) -> dict:
+def output_json(result) -> dict:
     assert result.stdout, result.stderr
     return json.loads(result.stdout)
 
@@ -28,7 +21,49 @@ def test_project_registers_openfpa_console_script():
     assert project["project"]["scripts"]["openfpa"] == "pyfpa.cli:main"
 
 
-def test_init_is_idempotent_and_returns_machine_readable_state(tmp_path):
+# The rest of this file drives the CLI in-process through the `run_cli` fixture,
+# which is what lets coverage see pyfpa/cli.py and pyfpa/cli_commands/. The two
+# tests below stay on subprocess because they establish the part an in-process
+# call cannot: that a fresh interpreter and the installed console script both
+# reach `main` and return its exit code.
+def test_module_entrypoint_runs_in_a_fresh_interpreter(tmp_path):
+    result = subprocess.run(
+        [sys.executable, "-m", "pyfpa.cli", "init", str(tmp_path), "--business-name", "Acme"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output_json(result)["data"]["created"] is True
+
+
+def test_installed_console_script_runs(tmp_path):
+    script = shutil.which("openfpa") or next(
+        (
+            str(candidate)
+            for name in ("openfpa", "openfpa.exe")
+            if (candidate := Path(sys.executable).parent / name).exists()
+        ),
+        None,
+    )
+    if script is None:
+        pytest.skip("openfpa console script is not installed in this environment")
+
+    result = subprocess.run(
+        [script, "status", str(tmp_path)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output_json(result)["data"]["initialized"] is False
+
+
+def test_init_is_idempotent_and_returns_machine_readable_state(tmp_path, run_cli):
     company = tmp_path / "acme"
 
     first = run_cli("init", str(company), "--business-name", "Acme")
@@ -46,7 +81,7 @@ def test_init_is_idempotent_and_returns_machine_readable_state(tmp_path):
     assert (company / ".fpa" / "intake.md").exists()
 
 
-def test_inspect_data_classifies_likely_financial_files_without_writing(tmp_path):
+def test_inspect_data_classifies_likely_financial_files_without_writing(tmp_path, run_cli):
     (tmp_path / "Income Statement FY2025.xlsx").write_bytes(b"xlsx")
     (tmp_path / "AR Aging.csv").write_text("customer,balance\n")
     (tmp_path / "Inventory Detail.tsv").write_text("sku\tunits\n")
@@ -72,7 +107,7 @@ def test_inspect_data_classifies_likely_financial_files_without_writing(tmp_path
     assert not (tmp_path / ".fpa").exists()
 
 
-def test_status_and_intake_next_expose_state_for_the_agent(tmp_path):
+def test_status_and_intake_next_expose_state_for_the_agent(tmp_path, run_cli):
     uninitialized = run_cli("status", str(tmp_path))
     assert output_json(uninitialized)["data"]["initialized"] is False
 
@@ -97,7 +132,7 @@ def test_status_and_intake_next_expose_state_for_the_agent(tmp_path):
     assert question_payload["writes_performed"] is False
 
 
-def test_intake_record_persists_provenance_and_advances_questions(tmp_path):
+def test_intake_record_persists_provenance_and_advances_questions(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path), "--business-name", "Acme").returncode == 0
 
     result = run_cli(
@@ -123,7 +158,7 @@ def test_intake_record_persists_provenance_and_advances_questions(tmp_path):
     assert all(question["key"] != "business_model" for question in questions)
 
 
-def test_entrypoint_register_list_and_overwrite(tmp_path):
+def test_entrypoint_register_list_and_overwrite(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     args = (
         "entrypoint-register",
@@ -164,7 +199,7 @@ def test_entrypoint_register_list_and_overwrite(tmp_path):
     }]
 
 
-def test_entrypoint_register_rejects_unsafe_paths(tmp_path):
+def test_entrypoint_register_rejects_unsafe_paths(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
 
     result = run_cli(
@@ -186,7 +221,7 @@ def test_entrypoint_register_rejects_unsafe_paths(tmp_path):
     assert output_json(result)["error"]["type"] == "invalid_entrypoint"
 
 
-def test_source_mapping_profile_and_reconciliation_commands(tmp_path):
+def test_source_mapping_profile_and_reconciliation_commands(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     data = tmp_path / "data"
     data.mkdir()
@@ -253,7 +288,7 @@ def test_source_mapping_profile_and_reconciliation_commands(tmp_path):
     assert output_json(run_cli("mapping-list", str(tmp_path)))["data"]["mapping_count"] == 2
 
 
-def test_reconcile_source_fails_for_unmapped_accounts(tmp_path):
+def test_reconcile_source_fails_for_unmapped_accounts(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     (tmp_path / "actuals.csv").write_text("Account,Amount\nMystery,10\n")
     assert run_cli(
@@ -281,7 +316,7 @@ def test_reconcile_source_fails_for_unmapped_accounts(tmp_path):
     assert payload["error"]["type"] == "reconciliation_failed"
 
 
-def test_reconcile_source_requires_initialized_workspace(tmp_path):
+def test_reconcile_source_requires_initialized_workspace(tmp_path, run_cli):
     result = run_cli(
         "reconcile-source",
         str(tmp_path),
@@ -293,7 +328,7 @@ def test_reconcile_source_requires_initialized_workspace(tmp_path):
     assert output_json(result)["error"]["type"] == "workspace_not_initialized"
 
 
-def test_connector_scaffold_list_and_validate(tmp_path):
+def test_connector_scaffold_list_and_validate(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     fixture = tmp_path / "redacted.csv"
     fixture.write_text("Account,Amount\nProduct Revenue,100\nRent,(20)\n")
@@ -362,7 +397,7 @@ def test_connector_scaffold_list_and_validate(tmp_path):
     assert status["connectors"] == ["quickbooks-pl"]
 
 
-def test_connector_scaffold_rejects_unmapped_fixture(tmp_path):
+def test_connector_scaffold_rejects_unmapped_fixture(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     (tmp_path / "redacted.csv").write_text("Account,Amount\nMystery,10\n")
     assert run_cli(
@@ -402,7 +437,7 @@ def test_connector_scaffold_rejects_unmapped_fixture(tmp_path):
     assert not (tmp_path / "connectors" / "generated" / "quickbooks-pl").exists()
 
 
-def test_doctor_returns_nonzero_json_when_workspace_contract_is_broken(tmp_path):
+def test_doctor_returns_nonzero_json_when_workspace_contract_is_broken(tmp_path, run_cli):
     healthy = run_cli("init", str(tmp_path))
     assert healthy.returncode == 0
     assert run_cli("doctor", str(tmp_path)).returncode == 0
@@ -421,7 +456,7 @@ def test_doctor_returns_nonzero_json_when_workspace_contract_is_broken(tmp_path)
     )
 
 
-def test_doctor_requires_entrypoint_registry(tmp_path):
+def test_doctor_requires_entrypoint_registry(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     (tmp_path / ".fpa" / "models" / "entrypoints.yaml").unlink()
 
@@ -435,7 +470,7 @@ def test_doctor_requires_entrypoint_registry(tmp_path):
     )
 
 
-def test_doctor_requires_lineage_registries(tmp_path):
+def test_doctor_requires_lineage_registries(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     (tmp_path / ".fpa" / "sources" / "registry.yaml").unlink()
     (tmp_path / ".fpa" / "mappings" / "registry.yaml").unlink()
@@ -451,7 +486,7 @@ def test_doctor_requires_lineage_registries(tmp_path):
     assert {"source_registry", "mapping_registry"} <= failed
 
 
-def test_doctor_rejects_invalid_generated_connector_manifest(tmp_path):
+def test_doctor_rejects_invalid_generated_connector_manifest(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     bundle = tmp_path / "connectors" / "generated" / "broken"
     bundle.mkdir(parents=True)
@@ -468,7 +503,7 @@ def test_doctor_rejects_invalid_generated_connector_manifest(tmp_path):
     )
 
 
-def test_usage_errors_are_json_on_stderr(tmp_path):
+def test_usage_errors_are_json_on_stderr(tmp_path, run_cli):
     result = run_cli("inspect-data", str(tmp_path), "--max-files", "0")
 
     assert result.returncode == 2
@@ -478,7 +513,7 @@ def test_usage_errors_are_json_on_stderr(tmp_path):
     assert payload["error"]["type"] == "usage_error"
 
 
-def test_correction_record_and_list(tmp_path):
+def test_correction_record_and_list(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
 
     result = run_cli(
@@ -507,7 +542,7 @@ def test_correction_record_and_list(tmp_path):
     assert ldata["corrections"][0]["status"] == "open"
 
 
-def test_correction_record_with_override(tmp_path):
+def test_correction_record_with_override(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
 
     result = run_cli(
@@ -527,7 +562,7 @@ def test_correction_record_with_override(tmp_path):
     assert payload["override"] == {"path": "working_capital.dio_days", "value": 45.0}
 
 
-def test_scorecard_render_empty_workspace(tmp_path):
+def test_scorecard_render_empty_workspace(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
 
     result = run_cli("scorecard-render", str(tmp_path))
@@ -539,7 +574,7 @@ def test_scorecard_render_empty_workspace(tmp_path):
     assert (tmp_path / ".fpa" / "scorecard.md").exists()
 
 
-def test_scorecard_render_writes_table_for_scored_snapshots(tmp_path):
+def test_scorecard_render_writes_table_for_scored_snapshots(tmp_path, run_cli):
     import yaml
     assert run_cli("init", str(tmp_path)).returncode == 0
     forecasts = tmp_path / ".fpa" / "forecasts"
@@ -566,7 +601,7 @@ def test_scorecard_render_writes_table_for_scored_snapshots(tmp_path):
     assert "2026-01" in scorecard_text
 
 
-def test_experiment_list_empty(tmp_path):
+def test_experiment_list_empty(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
 
     result = run_cli("experiment-list", str(tmp_path))
@@ -577,7 +612,7 @@ def test_experiment_list_empty(tmp_path):
     assert payload["experiments"] == []
 
 
-def test_experiment_list_with_experiments(tmp_path):
+def test_experiment_list_with_experiments(tmp_path, run_cli):
     import yaml
     assert run_cli("init", str(tmp_path)).returncode == 0
     experiments_dir = tmp_path / ".fpa" / "experiments"
@@ -613,7 +648,7 @@ def test_experiment_list_with_experiments(tmp_path):
     assert first["snapshot"] is None
 
 
-def test_context_pack_returns_markdown(tmp_path):
+def test_context_pack_returns_markdown(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path), "--business-name", "Acme").returncode == 0
 
     result = run_cli(
@@ -628,7 +663,7 @@ def test_context_pack_returns_markdown(tmp_path):
     assert payload["hit_count"] >= 0
 
 
-def test_context_pack_respects_limit(tmp_path):
+def test_context_pack_respects_limit(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path), "--business-name", "Acme").returncode == 0
 
     result = run_cli(
@@ -643,7 +678,7 @@ def test_context_pack_respects_limit(tmp_path):
     assert payload["hit_count"] <= 2
 
 
-def test_onboarding_render_requires_ready_intake(tmp_path):
+def test_onboarding_render_requires_ready_intake(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path), "--business-name", "Acme").returncode == 0
 
     result = run_cli(
@@ -657,7 +692,7 @@ def test_onboarding_render_requires_ready_intake(tmp_path):
     assert payload["error"]["type"] == "onboarding_render_failed"
 
 
-def test_onboarding_render_writes_profile_and_proposal(tmp_path):
+def test_onboarding_render_writes_profile_and_proposal(tmp_path, run_cli):
     from pyfpa.memory.intake import (
         load_intake,
         next_intake_questions,

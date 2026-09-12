@@ -1,27 +1,15 @@
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "-m", "pyfpa.cli", *args],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-
-
-def output_json(result: subprocess.CompletedProcess[str]) -> dict:
+def output_json(result) -> dict:
     assert result.stdout, result.stderr
     return json.loads(result.stdout)
 
 
-def test_model_export_writes_xlsx_with_both_sheets(tmp_path):
+def test_model_export_writes_xlsx_with_both_sheets(tmp_path, run_cli):
     from openpyxl import load_workbook
 
     assert run_cli("init", str(tmp_path)).returncode == 0
@@ -48,7 +36,7 @@ def test_model_export_writes_xlsx_with_both_sheets(tmp_path):
     assert set(wb.sheetnames) == {"Assumptions", "Model"}
 
 
-def test_model_export_fails_without_workspace(tmp_path):
+def test_model_export_fails_without_workspace(tmp_path, run_cli):
     config_path = ROOT / "examples/ridgeline/config.yaml"
     out_path = tmp_path / "model.xlsx"
 
@@ -67,7 +55,7 @@ def test_model_export_fails_without_workspace(tmp_path):
     assert payload["error"]["type"] == "workspace_not_initialized"
 
 
-def test_model_export_fails_on_invalid_config(tmp_path):
+def test_model_export_fails_on_invalid_config(tmp_path, run_cli):
     assert run_cli("init", str(tmp_path)).returncode == 0
     bad_config = tmp_path / "bad.yaml"
     bad_config.write_text("not: valid: entity: config\n")
