@@ -1,6 +1,6 @@
 ## Agent toolbelt CLI
 
-The `openfpa` command is a machine-oriented control surface for Codex, Claude
+The `openfpa` command is an interface for Codex, Claude
 Code, and other capable coding agents. It emits JSON, performs deterministic
 workspace operations, and leaves reasoning and conversation to the host agent.
 
@@ -38,8 +38,8 @@ command also works as `python3 -m pyfpa.cli <command>`.
 
 The CLI can:
 
-- initialize and validate the workspace;
-- inventory local files and likely financial artifacts;
+- initialise and validate the workspace;
+- inventory local files and likely financial artefacts;
 - profile CSV, TSV, and Excel tables without changing them;
 - register source provenance, coverage, entities, and currencies;
 - persist exact source-to-model mappings and deliberate ignores;
@@ -128,5 +128,5 @@ system.
 
 The generated `extract_live()` function intentionally fails until the agent
 implements host-authenticated access. After the live path has its own
-fixture-backed tests and safe failure behavior, register the recurring command
+fixture-backed tests and safe failure behaviour, register the recurring command
 with `entrypoint-register --kind connector`.

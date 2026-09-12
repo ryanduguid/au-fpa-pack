@@ -7,18 +7,16 @@ description: Use when wiring a company's real numbers into an openfpa model - fr
 
 ## Overview
 
-Connect the model to real data - from wherever it lives. openfpa is **not married to a connector**: everything normalizes to one shape (`{account: amount}`), and where no built-in path exists, **you build the ingestion for this source**. That's the job, not a workaround - see `examples/foxfactory/pull_edgar.py`, a SEC-EDGAR adapter the agent wrote from scratch because no built-in one existed.
-
-**Core principle:** one normalized shape regardless of source, so the engine never cares where the numbers came from - and the agent meets the data where it is.
+Connect the model to the available data and normalise it to one shape (`{account: amount}`). If no built-in connector fits, build an ingestion path for that source. `examples/foxfactory/pull_edgar.py` is a SEC-EDGAR adapter the agent wrote for this reason.
 
 ## The data can come from anywhere
 
-- **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP aging, or inventory export. `pyfpa.read_pl_csv(path)` reads any two-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR aging, **DIO** from inventory, **DPO** from AP aging.
+- **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP ageing, or inventory export. `pyfpa.read_pl_csv(path)` reads any two-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR ageing, **DIO** from inventory, **DPO** from AP ageing.
 - **A live accounting system via MCP** - the cleanest live path. If a **QuickBooks** or **NetSuite** MCP server is connected, pull the trial balance / P&L / balance sheet through it and map the result to `{account: amount}`. openfpa never handles credentials - the MCP server owns auth.
 - **A live system via API** - build a company-specific connector around the
   source API and its actual report shape.
 - **Public filings** - a 10-K / 10-Q from SEC EDGAR (curl + a compliant User-Agent), as in the Fox Factory example.
-- **Anything else** - if the source isn't covered, write a small ingestion that returns `{account: amount}` (or parses the richer statement to the drivers the model needs). That is the toolkit working exactly as intended.
+- **Anything else** - if the source isn't covered, write a small ingestion that returns `{account: amount}` (or parses the richer statement to the drivers the model needs).
 
 ## Workflow
 
@@ -45,7 +43,7 @@ Connect the model to real data - from wherever it lives. openfpa is **not marrie
    `openfpa connector-validate` after every change. Fixture validation must
    remain offline. Once the live command has separate fixture-backed coverage,
    publish it with `openfpa entrypoint-register --kind connector`.
-8. **Judgment**: apply **fpa-cfo-judgment** (pre-close months, flash-vs-GL cash, one-time items).
+8. **Judgement**: apply **fpa-cfo-judgment** (pre-close months, flash-vs-GL cash, one-time items).
 
 ## Credentials
 
