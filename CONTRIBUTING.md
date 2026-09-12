@@ -32,6 +32,11 @@ network` when you touch `pyfpa/au/drivers.py` or refresh the RBA fixtures under
 
 The distribution is `au-fpa-pack`; the importable package is `pyfpa` (`import pyfpa`).
 
+The openpyxl minimum is 3.1.3. Earlier versions can retain workbook file handles
+on Windows with Python 3.11.8 or newer, preventing verified exports from replacing
+their destination. See [openpyxl issue 2149 in its release notes](https://openpyxl.readthedocs.io/en/stable/changes.html).
+CI runs the minimum-dependency suite on both Linux and Windows.
+
 ## The workflow
 
 1. Fork, branch, and make your change.
