@@ -3,6 +3,7 @@
 Seams: Xero fixture mapping, quarterly BAS cash dates, and live-formula
 workbook verification against the engine.
 """
+import json
 import subprocess
 import sys
 from datetime import date
@@ -17,6 +18,19 @@ sys.path.insert(0, str(EXAMPLE))
 pytest.importorskip("formulas")
 
 from models.generated.harbour_excel import export_workbook
+
+
+def test_channels_refuse_a_missing_sales_account(monkeypatch):
+    from types import SimpleNamespace
+
+    import harbour_model as hm
+
+    report = hm.profit_and_loss()
+    accounts = report.by_account()
+    accounts.pop("Sales - GST Free")
+    monkeypatch.setattr(hm, "profit_and_loss", lambda: SimpleNamespace(by_account=lambda: accounts, by_tracking=report.by_tracking))
+    with pytest.raises(ValueError, match="required sales account"):
+        hm.channels_from_xero()
 
 
 def test_xero_mapping_annualises_tracking_channels():
@@ -217,7 +231,11 @@ def test_harbour_pl_mapping_covers_every_source_row():
         capture_output=True,
         check=False,
     )
-    assert result.returncode == 0, result.stdout
+    assert result.returncode == 1, result.stdout
+    evidence = json.loads(result.stdout)["data"]
+    assert evidence["unmapped"] == []
+    assert evidence["duplicates"] == []
+    assert evidence["expected_provided"] is False
 
 
 def test_harbour_workspace_passes_agent_toolbelt_diagnostics():

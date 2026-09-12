@@ -3,6 +3,7 @@
 Seams: source totals versus SOURCES.md, Phase A reproduction tolerance,
 and the FY2025 holdout champion/challenger verdicts.
 """
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -127,10 +128,19 @@ def test_registered_challenger_resolves_to_a_committed_research_epoch():
 
     challenger = registry.challengers[0]
     assert challenger.source_epoch is not None
+    with pytest.raises(ValueError, match="complexity inputs"):
+        promote_challenger(
+            registry, challenger_id=challenger.model_id,
+            epoch=epochs[challenger.source_epoch], approved_by="reviewer",
+            approved_at="2026-08-21",
+            objective=load_research_objective(research / "objective.yaml"),
+        )
+    import arb_model as am
+    refreshed = {epoch.epoch_id: epoch for epoch in am.historical_research_epochs()}
     promoted = promote_challenger(
         registry,
         challenger_id=challenger.model_id,
-        epoch=epochs[challenger.source_epoch],
+        epoch=refreshed[challenger.source_epoch],
         approved_by="reviewer",
         approved_at="2026-08-21",
         objective=load_research_objective(research / "objective.yaml"),
@@ -161,7 +171,16 @@ def test_run_arb_regenerates_the_research_memory_it_claims_to(tmp_path):
     # The run stays inside output_dir, so re-running this guard cannot erase the
     # evidence it just caught.
     assert after == before
-    assert written == before  # the committed memory is exactly what the run writes
+    import yaml
+    for name, text in written.items():
+        current = yaml.safe_load(text)
+        historical = yaml.safe_load(before[name])
+        if name.endswith(".epoch.yaml"):
+            assert current["evaluation"].pop("champion_complexity") == 1.0
+            assert current["evaluation"].pop("challenger_complexity") == 1.1
+        assert current == historical
+    with pytest.raises(FileExistsError):
+        runner.run_arb(tmp_path)
 
 
 def test_arb_pipeline_is_registered_for_agent_discovery():
@@ -193,7 +212,11 @@ def test_arb_income_statement_mapping_covers_every_source_row():
         capture_output=True,
         check=False,
     )
-    assert result.returncode == 0, result.stdout
+    assert result.returncode == 1, result.stdout
+    evidence = json.loads(result.stdout)["data"]
+    assert evidence["unmapped"] == []
+    assert evidence["duplicates"] == []
+    assert evidence["expected_provided"] is False
 
 
 def test_arb_workspace_passes_agent_toolbelt_diagnostics():

@@ -487,7 +487,7 @@ def build_parser() -> JsonArgumentParser:
     reconcile_parser.add_argument("--account-column", default="Account")
     reconcile_parser.add_argument("--amount-column", default="Amount")
     reconcile_parser.add_argument("--expected-json")
-    reconcile_parser.add_argument("--tolerance", type=float, default=0.01)
+    reconcile_parser.add_argument("--tolerance", type=float, default=0.01, help="Fractional variance tolerance; 0.01 means 1 percent")
     reconcile_parser.add_argument("--allow-unmapped", action="store_true")
     reconcile_parser.set_defaults(handler=command_reconcile_source)
 
@@ -602,6 +602,7 @@ def build_parser() -> JsonArgumentParser:
         help="Write business-profile.md and initial-model-architecture.md from intake",
     )
     onboarding_render_parser.add_argument("--proposal-summary", required=True)
+    onboarding_render_parser.add_argument("--overwrite", action="store_true", help="Replace existing profile and architecture proposal")
     onboarding_render_parser.add_argument("--connector", action="append", default=[])
     onboarding_render_parser.add_argument("--model-component", action="append", default=[])
     onboarding_render_parser.add_argument("--generated-skill", action="append", default=[])

@@ -53,6 +53,9 @@ class Experiment(BaseModel):
 
     @model_validator(mode="after")
     def _validate_ratification(self) -> Experiment:
+        names = [check.name for check in self.checks]
+        if len(names) != len(set(names)):
+            raise ValueError("check names must be unique")
         terminal = {"accepted", "rejected", "reverted"}
         if self.status in terminal:
             if self.decision is None:
@@ -86,7 +89,7 @@ def save_experiment(
     path = directory / f"{experiment.slug}.experiment.yaml"
     if path.exists() and not overwrite:
         raise FileExistsError(f"experiment already exists: {path}")
-    path.write_text(yaml.safe_dump(experiment.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(experiment.model_dump(), sort_keys=False), encoding="utf-8")
     return path
 
 
@@ -95,7 +98,7 @@ def load_experiment(path: str | Path) -> Experiment:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"experiment not found: {path}")
-    return Experiment.model_validate(yaml.safe_load(path.read_text()))
+    return Experiment.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
 def load_experiments(directory: str | Path) -> list[Experiment]:

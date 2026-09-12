@@ -17,6 +17,8 @@ def magnitude_cap(old: float, new: float, *, cap: float = 0.25) -> float:
 def persistent_miss(errors: Sequence[float], *, k: int = 2, threshold: float = 0.0) -> bool:
     """True when the last `k` per-line errors are all the same sign and all exceed
     `threshold` in magnitude - a repeated, directional miss, not noise."""
+    if k < 1:
+        raise ValueError("k must be at least one")
     if len(errors) < k:
         return False
     last = errors[-k:]

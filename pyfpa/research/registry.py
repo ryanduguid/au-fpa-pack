@@ -97,27 +97,29 @@ def promote_challenger(
     ):
         raise ValueError("promotion requires a proposed, promotion-eligible epoch")
     if objective is not None:
+        if objective.complexity_penalty and (
+            evaluation.champion_complexity is None or evaluation.challenger_complexity is None
+        ):
+            raise ValueError("stored evaluation lacks complexity inputs; evaluate it again")
         recomputed = evaluate_challenger(
             objective,
             evaluation.champion_metrics,
             evaluation.challenger_metrics,
             epoch.checks,
+            champion_complexity=evaluation.champion_complexity or 0.0,
+            challenger_complexity=evaluation.challenger_complexity or 0.0,
         )
-        # Complexity inputs are not stored on the epoch, so reapply the STORED
-        # complexity cost to the recomputed weighted improvement. Everything
-        # derivable from metrics (weights, clamp, regression guard, hard checks)
-        # is re-derived; only the complexity term is trusted from the record.
-        faithful_gain = recomputed.weighted_improvement - evaluation.complexity_cost
         reproduces = (
-            recomputed.hard_checks_passed
-            and recomputed.regression_guard_passed
-            and faithful_gain >= objective.min_improvement
+            recomputed.promotion_eligible
+            and recomputed.complexity_cost == evaluation.complexity_cost
         )
         if not reproduces:
             raise ValueError(
                 "stored evaluation does not reproduce: recomputed evaluation is not "
                 "promotion_eligible -- the stored YAML may have been hand-edited"
             )
+    if registry.champion is not None and registry.champion.model_id != epoch.champion_id:
+        raise ValueError("epoch champion does not match current registry champion")
     challenger = next(
         (item for item in registry.challengers if item.model_id == challenger_id),
         None,

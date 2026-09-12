@@ -32,12 +32,18 @@ class Correction(BaseModel):
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     if text.startswith("---"):
-        _, frontmatter, body = text.split("---", 2)
-        return yaml.safe_load(frontmatter) or {}, body.strip()
+        parts = text.split("---", 2)
+        if len(parts) != 3:
+            raise ValueError("missing closing frontmatter delimiter")
+        _, frontmatter, body = parts
+        data = yaml.safe_load(frontmatter) or {}
+        if not isinstance(data, dict):
+            raise ValueError("frontmatter must be a mapping")
+        return data, body.strip()
     return {}, text.strip()
 
 
-def save_correction(correction: Correction, directory: str | Path) -> None:
+def save_correction(correction: Correction, directory: str | Path, *, overwrite: bool = False) -> None:
     """Write `<slug>.md` (YAML frontmatter + markdown body) into `directory`."""
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
@@ -45,7 +51,8 @@ def save_correction(correction: Correction, directory: str | Path) -> None:
     body = data.pop("notes", "")
     data.pop("slug")
     text = "---\n" + yaml.safe_dump(data, sort_keys=False) + "---\n" + body + "\n"
-    (directory / f"{correction.slug}.md").write_text(text)
+    with (directory / f"{correction.slug}.md").open("w" if overwrite else "x", encoding="utf-8") as output:
+        output.write(text)
 
 
 def load_corrections(directory: str | Path) -> list[Correction]:
@@ -56,7 +63,10 @@ def load_corrections(directory: str | Path) -> list[Correction]:
         return []
     out: list[Correction] = []
     for path in sorted(directory.glob("*.md")):
-        frontmatter, body = _split_frontmatter(path.read_text())
+        try:
+            frontmatter, body = _split_frontmatter(path.read_text(encoding="utf-8"))
+        except (ValueError, yaml.YAMLError) as exc:
+            raise ValueError(f"invalid correction {path}: {exc}") from exc
         out.append(Correction.model_validate({**frontmatter, "slug": path.stem, "notes": body}))
     return out
 

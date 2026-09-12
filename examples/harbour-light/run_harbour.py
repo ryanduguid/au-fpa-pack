@@ -6,6 +6,7 @@ Writes a briefing, live-formula workbook, and 13-week cash forecast.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -48,6 +49,5 @@ def run_harbour(output_dir: str | Path) -> dict:
 
 if __name__ == "__main__":
     figures = run_harbour(HERE / "output")
-    print("Wrote briefing.md + model.xlsx to examples/harbour-light/output/")
-    for key, value in figures.items():
-        print(f"  {key}: {value}")
+    print("Wrote briefing.md + model.xlsx to examples/harbour-light/output/", file=sys.stderr)
+    print(json.dumps(figures))

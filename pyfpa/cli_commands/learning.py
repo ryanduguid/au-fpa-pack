@@ -16,6 +16,8 @@ def command_correction_record(args: argparse.Namespace) -> int:
         return failure
     try:
         override = None
+        if args.override_value is not None and args.override_path is None:
+            raise ValueError("override_value requires override_path")
         if args.override_path is not None:
             override = Override(path=args.override_path, value=args.override_value)
         correction = Correction(
@@ -104,7 +106,7 @@ def command_scorecard_render(args: argparse.Namespace) -> int:
     unscored = [s for s in snapshots if s.score is None]
     scorecard_path = workspace / "scorecard.md"
     try:
-        scorecard_path.write_text(render_scorecard(snapshots))
+        scorecard_path.write_text(render_scorecard(snapshots), encoding="utf-8")
     except Exception as exc:
         return _failure("scorecard-render", root, "render_failed", str(exc))
     return _success(
@@ -209,7 +211,7 @@ def command_onboarding_render(args: argparse.Namespace) -> int:
             risks=args.risk or [],
             validation_checks=args.validation_check or [],
         )
-        profile_path, proposal_path = write_onboarding_outputs(intake, workspace, proposal)
+        profile_path, proposal_path = write_onboarding_outputs(intake, workspace, proposal, overwrite=args.overwrite)
     except Exception as exc:
         return _failure("onboarding-render", root, "onboarding_render_failed", str(exc))
     return _success(

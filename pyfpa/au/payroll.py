@@ -58,6 +58,8 @@ class Role(BaseModel):
 
     @model_validator(mode="after")
     def _require_contractor_sg_status(self) -> Role:
+        if self.start_month and self.end_month and pd.Period(self.start_month, freq="M") > pd.Period(self.end_month, freq="M"):
+            raise ValueError("start_month must not follow end_month")
         if self.contractor and self.sg_eligible is None:
             raise ValueError("Set sg_eligible after assessing the contractor's SG eligibility")
         return self
@@ -117,6 +119,8 @@ def payroll_forecast(
     workers_comp, leave_provisions, total_cost (P&L view),
     total_cash (excludes leave provisions).
     """
+    if not isinstance(months, pd.PeriodIndex) or months.freqstr != "M" or not months.is_unique:
+        raise ValueError("payroll requires a unique monthly PeriodIndex")
     assumptions = assumptions or PayrollAssumptions()
     sg_table = sg_table or load_super_guarantee_table()
     payroll_tax_table = payroll_tax_table or load_payroll_tax_table()

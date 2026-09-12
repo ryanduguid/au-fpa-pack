@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pytest
+
 from pyfpa.backtest.score import score_forecast
 from pyfpa.backtest.snapshot import save_snapshot, snapshot_forecast
 from pyfpa.config.schemas import EntityConfig
@@ -74,3 +78,10 @@ def test_find_recurring_skills(tmp_path):
     names = [s.name for s in skills]
     assert "arr-waterfall" in names
     assert "one-off" not in names
+
+
+def test_same_skill_name_with_different_content_is_not_reusable(tmp_path):
+    clients = [_make_client(tmp_path, n, 45, gen_skills=["rollup"]) for n in ("a", "b", "c")]
+    (Path(clients[0].path) / "skills/generated/rollup/SKILL.md").write_text("Different behaviour", encoding="utf-8")
+    with pytest.raises(ValueError, match="different content"):
+        find_recurring_skills(_portfolio(clients), "d2c")

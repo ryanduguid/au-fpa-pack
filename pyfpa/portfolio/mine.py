@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import statistics
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
@@ -95,6 +96,9 @@ def find_recurring_skills(portfolio: Portfolio, business_type: str, *,
     out: list[SkillCandidate] = []
     for name, refs in by_name.items():
         if len(refs) >= min_support:
+            contents = {(Path(source) / "SKILL.md").read_bytes() for _, source in refs}
+            if len(contents) != 1:
+                raise ValueError(f"recurring skill name has different content: {name}")
             out.append(SkillCandidate(
                 business_type=business_type, name=name,
                 support=[p for p, _ in refs], source=refs[0][1],

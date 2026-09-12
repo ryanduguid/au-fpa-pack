@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from pyfpa.cli_helpers import _failure, _require_initialized, _success
 from pyfpa.memory.connectors import (
@@ -29,7 +30,14 @@ from pyfpa.memory.workspace import Workspace
 def _expected_from_json(value: str | None) -> dict[str, float] | None:
     if value is None:
         return None
-    expected = json.loads(value)
+    def unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, amount in pairs:
+            if key in result:
+                raise ValueError(f"duplicate expected account: {key}")
+            result[key] = amount
+        return result
+    expected = json.loads(value, object_pairs_hook=unique_pairs)
     if not isinstance(expected, dict) or any(
         not isinstance(key, str) or not isinstance(amount, (int, float))
         for key, amount in expected.items()
@@ -208,6 +216,7 @@ def command_reconcile_source(args: argparse.Namespace) -> int:
                 item["within_tolerance"] for item in result["variances"].values()
             ) if result["expected_provided"] else True
             result["passed"] = expected_passed
+        result["passed"] = bool(result["passed"] and result["expected_provided"])
     except StopIteration:
         return _failure(
             "reconcile-source",
@@ -222,7 +231,7 @@ def command_reconcile_source(args: argparse.Namespace) -> int:
             "reconcile-source",
             root,
             "reconciliation_failed",
-            "source contains duplicates, unmapped values, or out-of-tolerance totals",
+            "source lacks expected totals or contains duplicates, unmapped values, or out-of-tolerance totals",
             data=result,
         )
     return _success("reconcile-source", root, result)

@@ -18,7 +18,7 @@ Map the real numbers onto the existing engine structure.
 
 ## Workflow
 
-1. **Ingest** the financials: `pyfpa.read_pl_csv(path)` → `{account: amount}`.
+1. **Normalise and ingest** the financials. For XLSX or pasted statements, first save a reviewed UTF-8 CSV with `Account,Amount` columns, one row per account and numeric signed amounts. Reconcile the conversion to the supplied statement and preserve its source reference. Then call `pyfpa.read_pl_csv(path)` → `{account: amount}`. The reader accepts CSV, not workbooks or pasted text.
 2. **Map accounts to model lines** of the `EntityConfig` schema:
    - revenue accounts → `channels[]` (one `Channel` per channel/segment, with `annual_revenue`, a 12-month `seasonality` weight list, `growth_rate`, `cogs_pct`)
    - cost accounts → `opex[]` as `OpexLine(kind="fixed", monthly_amount=…)` or `kind="variable", pct_of_revenue=…`

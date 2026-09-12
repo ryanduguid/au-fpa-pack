@@ -1,3 +1,5 @@
+import pytest
+
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.portfolio.library import (
     load_library,
@@ -67,3 +69,19 @@ def test_promote_skill_copies_and_logs(tmp_path):
                                       support=["a", "b", "c"], source=str(src)))
     assert (lib / "skills" / "arr-waterfall" / "SKILL.md").exists()
     assert "arr-waterfall" in (lib / "library-log.md").read_text()
+    original = (lib / "skills/arr-waterfall/SKILL.md").read_bytes()
+    (src / "SKILL.md").write_text("replacement", encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        promote_skill(lib, SkillCandidate(business_type="saas", name="arr-waterfall",
+                                          support=["a", "b", "c"], source=str(src)))
+    assert (lib / "skills/arr-waterfall/SKILL.md").read_bytes() == original
+
+
+@pytest.mark.parametrize("folds,validated", [(1, True), (3, False)])
+def test_invalid_prior_cannot_create_library(tmp_path, folds, validated):
+    lib = tmp_path / "library"
+    candidate = PriorCandidate(business_type="d2c", driver="tax_rate", value=0.25,
+                               support=["a", "b", "c"], dispersion=0)
+    with pytest.raises(ValueError, match="validation"):
+        promote_prior(lib, candidate, ValidationResult(mean_delta=0, n_folds=folds, validated=validated))
+    assert not lib.exists()

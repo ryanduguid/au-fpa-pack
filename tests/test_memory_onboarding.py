@@ -54,6 +54,24 @@ def test_render_business_profile_includes_sources_and_confidence():
     assert "source: CFO interview" in profile
 
 
+def test_other_topics_and_conflicts_are_preserved_without_duplicate_classification():
+    intake = record_intake_fact(_ready_intake(), key="extra", answer="Additional fact", source_type="user", topic="custom")
+    assert "Additional fact" in render_business_profile(intake)
+    intake.facts[-1] = intake.facts[-1].model_copy(update={"status": "conflict"})
+    rendered = render_architecture_proposal(intake, _proposal())
+    known, unresolved = rendered.split("## Remaining Unknowns")
+    assert "Additional fact" not in known
+    assert "Additional fact" in unresolved
+
+
+def test_onboarding_refuses_to_replace_either_existing_output(tmp_path):
+    paths = write_onboarding_outputs(_ready_intake(), tmp_path, _proposal())
+    previous = [path.read_bytes() for path in paths]
+    with pytest.raises(FileExistsError):
+        write_onboarding_outputs(_ready_intake(), tmp_path, _proposal())
+    assert [path.read_bytes() for path in paths] == previous
+
+
 def test_architecture_proposal_is_an_explicit_human_gate():
     proposal = render_architecture_proposal(_ready_intake(), _proposal())
 

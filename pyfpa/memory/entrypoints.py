@@ -72,13 +72,13 @@ def load_entrypoint_registry(path: str | Path) -> EntrypointRegistry:
     path = Path(path)
     if not path.exists():
         return EntrypointRegistry()
-    return EntrypointRegistry.model_validate(yaml.safe_load(path.read_text()) or {})
+    return EntrypointRegistry.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
 def save_entrypoint_registry(registry: EntrypointRegistry, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False), encoding="utf-8")
 
 
 def register_entrypoint(

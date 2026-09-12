@@ -167,7 +167,7 @@ def run_arb(output_dir: str | Path | None = None) -> dict:
     # tells the next agent to read prior epochs before repeating a hypothesis.
     save_research_objective(am.HOLDOUT_OBJECTIVE, research / "objective.yaml")
     for epoch in am.historical_research_epochs():
-        save_epoch(epoch, research, overwrite=True)
+        save_epoch(epoch, research)
     forecast, _ = am.build_forecast()
     return {
         "fy2026_revenue": round(float(forecast.iloc[:12]["revenue"].sum())),

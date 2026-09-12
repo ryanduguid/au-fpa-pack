@@ -88,20 +88,20 @@ def instant(tag: str, fy: int, *, required: bool = True) -> float | None:
     return value
 
 
-def latest_quarter(tag: str) -> tuple[str, str, float]:
-    """Most recent ~quarterly (80-100 day) value for a duration concept."""
+def latest_quarter(tag: str, fy: int = 2026) -> tuple[str, str, float]:
+    """Select the requested fiscal Q1, independent of later quarterly filings."""
     rows = _concept(tag)
+    start = (pd.Timestamp(FY_END[fy - 1]) + pd.Timedelta(days=1)).date().isoformat()
     quarters = [
         r for r in rows
-        if r.get("start") and 80 <= (pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])).days <= 100
+        if r.get("form") == "10-Q" and r.get("fy") == fy and r.get("fp") == "Q1"
+        and r.get("start") == start
+        and 80 <= (pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])).days <= 100
     ]
-    if not quarters:
-        raise RuntimeError(f"no ~quarterly value for concept {tag}")
-    latest_end = max(row["end"] for row in quarters)
-    # Last row wins on a tied period end, as in `annual`/`instant` above: EDGAR
-    # lists the most recently filed value for a period last.
-    r = [row for row in quarters if row["end"] == latest_end][-1]
-    return r["start"], r["end"], float(r["val"])
+    values = {(r["start"], r["end"], float(r["val"])) for r in quarters}
+    if len(values) != 1:
+        raise RuntimeError(f"expected one Q1 FY{fy} value for concept {tag}, got {len(values)}")
+    return next(iter(values))
 
 
 def _row(line: str, tag: str, kind: str, q1: float | None = None) -> dict:
@@ -161,15 +161,11 @@ def pull_cash_flow() -> pd.DataFrame:
 
 
 def pull_quarterly() -> pd.DataFrame:
-    """The two most recent Q1 net-sales prints (Q1 anchors the FY2026 forecast)."""
-    rows = _concept("RevenueFromContractWithCustomerExcludingAssessedTax")
-    q1s = [
-        r for r in rows
-        if r.get("start") and pd.Timestamp(r["start"]).month == 1
-        and 80 <= (pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])).days <= 100
-    ]
-    q1s = sorted({(r["start"], r["end"], r["val"]) for r in q1s}, key=lambda t: t[1])[-2:]
-    out = [{"line": "net_sales", **{f"Q1_FY{pd.Timestamp(e).year}": float(v) for s, e, v in q1s}}]
+    """The fixed FY2025 and FY2026 Q1 net-sales comparison."""
+    out = [{"line": "net_sales", **{
+        f"Q1_FY{fy}": latest_quarter("RevenueFromContractWithCustomerExcludingAssessedTax", fy)[2]
+        for fy in (2025, 2026)
+    }}]
     return pd.DataFrame(out)
 
 
@@ -210,7 +206,14 @@ def pull_segments() -> pd.DataFrame:
                          "FY2023": money(r["FY2023"]), "FY2024": money(r["FY2024"]),
                          "FY2025": money(r["FY2025"])})
             current = None  # reset after capturing both metrics for a segment
-    return pd.DataFrame(rows)
+    expected = {(segment, metric) for segment in seg_map.values() for metric in ("net_sales", "adjusted_ebitda")}
+    keys = [(row["segment"], row["metric"]) for row in rows]
+    if set(keys) != expected or len(keys) != len(expected):
+        raise RuntimeError("segment table must contain exactly one sales and EBITDA row per segment")
+    frame = pd.DataFrame(rows)
+    if frame[["FY2023", "FY2024", "FY2025"]].isna().any().any():
+        raise RuntimeError("segment table contains missing amounts")
+    return frame
 
 
 def write_sources() -> None:
@@ -229,10 +232,10 @@ def write_sources() -> None:
         f"- FY2023 (period end 2023-12-29): accession {TENK[2023]}",
         f"- FY2024 (period end 2025-01-03): accession {TENK[2024]}",
         f"- FY2025 (period end 2026-01-02): accession {TENK[2025]}",
-        "- Q1 FY2026 (period end 2026-04-03): latest 10-Q (most recent quarterly value per concept)",
+        "- Q1 FY2026 (period end 2026-04-03): fiscal Q1 10-Q facts for FY2026",
         "",
-        "`quarterly.csv` holds the two most recent Q1 net-sales prints (the FY2026",
-        "forecast anchor), selected as the ~90-day periods starting in early January.",
+        "`quarterly.csv` holds the fixed FY2025 and FY2026 Q1 net-sales comparison.",
+        "Selection requires the fiscal year, Q1 filing period and start after the prior year-end.",
         "",
         "## Segment net sales + Adjusted EBITDA",
         "",

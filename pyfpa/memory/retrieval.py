@@ -60,7 +60,10 @@ def build_memory_index(workspace: str | Path) -> MemoryIndex:
             or path.suffix.lower() not in {".md", ".yaml", ".yml"}
         ):
             continue
-        text = path.read_text()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
         relative = path.relative_to(workspace).as_posix()
         entries.append(MemoryEntry(
             path=relative,
@@ -76,14 +79,14 @@ def save_memory_index(index: MemoryIndex, path: str | Path) -> None:
     """Save the rebuildable index without changing canonical memory."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(index.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(index.model_dump(), sort_keys=False), encoding="utf-8")
 
 
 def load_memory_index(path: str | Path) -> MemoryIndex:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"memory index not found: {path}")
-    return MemoryIndex.model_validate(yaml.safe_load(path.read_text()))
+    return MemoryIndex.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
 def search_memory(

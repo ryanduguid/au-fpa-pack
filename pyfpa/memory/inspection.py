@@ -117,11 +117,15 @@ def inspect_data_files(root: Path, *, max_files: int = 500) -> InspectionResult:
             if not _is_candidate_file(path):
                 continue
             category, signals = _classify_file(path)
+            try:
+                size = path.stat().st_size
+            except OSError:
+                continue
             files.append(
                 {
                     "path": path.relative_to(root).as_posix(),
                     "extension": path.suffix.casefold(),
-                    "bytes": path.stat().st_size,
+                    "bytes": size,
                     "category": category,
                     "signals": signals,
                 }

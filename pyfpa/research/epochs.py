@@ -25,6 +25,8 @@ class EpochEvaluation(BaseModel):
     per_metric_improvement: dict[str, float]
     weighted_improvement: float
     complexity_cost: float
+    champion_complexity: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    challenger_complexity: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     objective_gain: float
     hard_checks_passed: bool
     regression_guard_passed: bool = True
@@ -49,6 +51,9 @@ class ResearchEpoch(BaseModel):
 
     @model_validator(mode="after")
     def _evaluation_matches_status(self) -> ResearchEpoch:
+        names = [check.name for check in self.checks]
+        if len(names) != len(set(names)):
+            raise ValueError("check names must be unique")
         if self.status == "generated":
             return self
         if self.evaluation is None:
@@ -76,6 +81,8 @@ def evaluate_challenger(
     if missing:
         raise ValueError(f"missing objective metrics: {missing}")
     check_results = {check.name: check.result for check in checks}
+    if len(check_results) != len(checks):
+        raise ValueError("check names must be unique")
     missing_checks = [name for name in objective.hard_checks if name not in check_results]
     if missing_checks:
         raise ValueError(f"missing hard checks: {missing_checks}")
@@ -125,6 +132,8 @@ def evaluate_challenger(
         per_metric_improvement=improvements,
         weighted_improvement=weighted,
         complexity_cost=complexity_cost,
+        champion_complexity=champion_complexity,
+        challenger_complexity=challenger_complexity,
         objective_gain=objective_gain,
         hard_checks_passed=hard_checks_passed,
         regression_guard_passed=regression_guard_passed,
@@ -145,9 +154,8 @@ def save_epoch(
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{epoch.epoch_id}.epoch.yaml"
-    if path.exists() and not overwrite:
-        raise FileExistsError(f"research epoch already exists: {path}")
-    path.write_text(yaml.safe_dump(epoch.model_dump(), sort_keys=False))
+    with path.open("w" if overwrite else "x", encoding="utf-8") as output:
+        output.write(yaml.safe_dump(epoch.model_dump(), sort_keys=False))
     return path
 
 
@@ -155,7 +163,7 @@ def load_epoch(path: str | Path) -> ResearchEpoch:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"research epoch not found: {path}")
-    return ResearchEpoch.model_validate(yaml.safe_load(path.read_text()))
+    return ResearchEpoch.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
 def load_epochs(directory: str | Path) -> list[ResearchEpoch]:

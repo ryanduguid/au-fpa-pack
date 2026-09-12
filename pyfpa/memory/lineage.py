@@ -120,13 +120,13 @@ def load_source_registry(path: str | Path) -> SourceRegistry:
     path = Path(path)
     if not path.exists():
         return SourceRegistry()
-    return SourceRegistry.model_validate(yaml.safe_load(path.read_text()) or {})
+    return SourceRegistry.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
 def save_source_registry(registry: SourceRegistry, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False), encoding="utf-8")
 
 
 def register_source(
@@ -151,13 +151,13 @@ def load_mapping_registry(path: str | Path) -> MappingRegistry:
     path = Path(path)
     if not path.exists():
         return MappingRegistry()
-    return MappingRegistry.model_validate(yaml.safe_load(path.read_text()) or {})
+    return MappingRegistry.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
 def save_mapping_registry(registry: MappingRegistry, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False))
+    path.write_text(yaml.safe_dump(registry.model_dump(), sort_keys=False), encoding="utf-8")
 
 
 def register_mapping(
@@ -228,6 +228,11 @@ def reconcile_account_table(
     expected: dict[str, float] | None = None,
     tolerance: float = 0.01,
 ) -> dict[str, Any]:
+    """Check mapping coverage and optional totals; tolerance is a relative fraction.
+
+    Without expected totals, passed reports mapping coverage only. The CLI
+    requires expected_provided before reporting successful reconciliation.
+    """
     path = Path(path)
     if path.suffix.casefold() != ".csv":
         raise ValueError("reconcile-source currently supports CSV files")
@@ -268,14 +273,15 @@ def reconcile_account_table(
             continue
         mapped_totals[rule.target] = mapped_totals.get(rule.target, 0.0) + amount
 
-    variances: dict[str, dict[str, float | bool]] = {}
+    variances: dict[str, dict[str, float | bool | None]] = {}
     expected = expected or {}
     for target in sorted(set(mapped_totals) | set(expected)):
-        mapped = float(mapped_totals.get(target, 0.0))
-        expected_value = float(expected.get(target, 0.0))
-        variance = mapped - expected_value
-        variance_pct = variance / expected_value if expected_value else 0.0
-        within = mapped == expected_value if expected_value == 0 else abs(variance_pct) <= tolerance
+        mapped = float(mapped_totals[target]) if target in mapped_totals else None
+        expected_value = float(expected[target]) if target in expected else None
+        variance = mapped - expected_value if mapped is not None and expected_value is not None else None
+        variance_pct = variance / expected_value if expected_value and variance is not None else None
+        within = (mapped == expected_value if expected_value == 0
+                  else variance_pct is not None and abs(variance_pct) <= tolerance)
         variances[target] = {
             "mapped": mapped,
             "expected": expected_value,

@@ -40,6 +40,8 @@ def _set_segments(
         raise TypeError(
             f"override path expects a list at {key!r}, got {type(target).__name__}"
         )
+    if index == "*" and not target:
+        raise ValueError(f"override wildcard matches an empty list: {key!r}")
     items = range(len(target)) if index == "*" else [int(index)]
     for i in items:
         if rest:

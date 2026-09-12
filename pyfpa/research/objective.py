@@ -18,7 +18,7 @@ class MetricObjective(BaseModel):
 class ResearchObjective(BaseModel):
     """Company-specific fitness function plus non-negotiable checks."""
 
-    metrics: list[MetricObjective]
+    metrics: list[MetricObjective] = Field(min_length=1)
     hard_checks: list[str] = Field(default_factory=list)
     min_improvement: float = Field(default=0.0, ge=0)
     complexity_penalty: float = Field(default=0.0, ge=0)

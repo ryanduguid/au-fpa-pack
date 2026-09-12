@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from pyfpa.memory.intake import Intake, intake_ready
+from pyfpa.memory.intake import Intake, intake_ready, is_fact_known
 
 
 class ArchitectureProposal(BaseModel):
@@ -38,9 +38,14 @@ def render_business_profile(intake: Intake) -> str:
         "> Generated from `.fpa/intake.md`. Update the intake when facts change.",
         "",
     ]
-    for topic, heading in PROFILE_HEADINGS.items():
+    headings = list(PROFILE_HEADINGS.items())
+    if any(fact.topic not in PROFILE_HEADINGS for fact in intake.facts):
+        headings.append(("__other__", "Other Context"))
+    for topic, heading in headings:
         lines.extend([f"## {heading}", ""])
-        facts = [fact for fact in intake.facts if fact.topic == topic]
+        facts = [fact for fact in intake.facts if (
+            fact.topic not in PROFILE_HEADINGS if topic == "__other__" else fact.topic == topic
+        )]
         if not facts:
             lines.extend(["- Not yet known.", ""])
             continue
@@ -63,12 +68,12 @@ def render_architecture_proposal(
     knowns = [
         f"{fact.question}: {fact.answer}"
         for fact in intake.facts
-        if fact.status == "confirmed" or fact.confidence >= 0.7
+        if is_fact_known(fact)
     ]
     unresolved = [
         f"{fact.question}: {fact.answer}"
         for fact in intake.facts
-        if fact.status == "conflict" or fact.confidence < 0.7
+        if not is_fact_known(fact)
     ]
     return (
         "# Initial Model Architecture Proposal\n\n"
@@ -100,6 +105,8 @@ def write_onboarding_outputs(
     intake: Intake,
     workspace: str | Path,
     proposal: ArchitectureProposal,
+    *,
+    overwrite: bool = False,
 ) -> tuple[Path, Path]:
     """Write the business profile and architecture proposal after intake is ready."""
     if not intake_ready(intake):
@@ -110,6 +117,14 @@ def write_onboarding_outputs(
     decisions.mkdir(exist_ok=True)
     profile_path = workspace / "business-profile.md"
     proposal_path = decisions / "initial-model-architecture.md"
-    profile_path.write_text(render_business_profile(intake))
-    proposal_path.write_text(render_architecture_proposal(intake, proposal))
+    if not overwrite:
+        for path in (profile_path, proposal_path):
+            if path.exists():
+                raise FileExistsError(f"onboarding output already exists: {path}")
+    for path, text in (
+        (profile_path, render_business_profile(intake)),
+        (proposal_path, render_architecture_proposal(intake, proposal)),
+    ):
+        with path.open("w" if overwrite else "x", encoding="utf-8") as output:
+            output.write(text)
     return profile_path, proposal_path

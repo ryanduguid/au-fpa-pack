@@ -173,3 +173,23 @@ def test_promote_without_objective_trusts_stored_evaluation():
     )
     assert promoted.champion is not None
     assert promoted.champion.model_id == "model-v2"
+
+
+def test_promotion_rejects_stale_champion_and_forged_complexity():
+    champion = ModelVersion(model_id="model-v1", created="2026-01-01", artifact="model.py")
+    challenger = ModelVersion(model_id="model-v2", created="2026-06-09", artifact="candidate.py", source_epoch="epoch-1")
+    registry = register_challenger(ModelRegistry(champion=champion), challenger)
+    epoch = _epoch()
+    objective = _objective().model_copy(update={"complexity_penalty": 0.1})
+    epoch.checks = [ExperimentCheck(name="reconcile", result="pass")]
+    epoch.evaluation = evaluate_challenger(objective, {"cash_error": 0.2}, {"cash_error": 0.1}, epoch.checks,
+                                         champion_complexity=1.0, challenger_complexity=1.1)
+    args = {"challenger_id": "model-v2", "epoch": epoch, "approved_by": "CFO", "approved_at": "2026-06-09", "objective": objective}
+    assert promote_challenger(registry, **args).champion == challenger
+    epoch.evaluation.complexity_cost = -1.0
+    with pytest.raises(ValueError, match="does not reproduce"):
+        promote_challenger(registry, **args)
+    args.pop("objective")
+    stale = registry.model_copy(update={"champion": champion.model_copy(update={"model_id": "new-champion"})})
+    with pytest.raises(ValueError, match="current registry champion"):
+        promote_challenger(stale, **args)

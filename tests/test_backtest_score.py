@@ -72,10 +72,11 @@ def test_score_forecast_weighted_mape():
     assert res.fitness == pytest.approx(0.07)
 
 
-def test_score_forecast_skips_absent_and_zero_actual_lines():
+def test_score_forecast_accepts_an_explicit_cash_only_objective():
     res = score_forecast(
         {"ending_cash": 90.0, "ebitda": 30.0},
         {"ending_cash": 100.0, "ebitda": 0.0},
+        weights={"ending_cash": 1.0},
     )
     assert set(res.per_line) == {"ending_cash"}
     assert res.weights == {"ending_cash": pytest.approx(1.0)}  # renormalized to the one line

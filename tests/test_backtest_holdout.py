@@ -34,7 +34,8 @@ def _build_cfg(growth):
 def test_holdout_backtest_scores_holdout():
     res = holdout_backtest(_actuals(), _build_cfg(0.0), holdout=3,
                            score_lines=["revenue", "ebitda"])
-    assert "revenue" in res.per_line
+    assert set(res.per_line) == {"revenue", "ebitda"}
+    assert res.per_line["ebitda"] != 0
     assert res.fitness >= 0.0
 
 
@@ -48,3 +49,18 @@ def test_holdout_rejects_too_few_periods():
     with pytest.raises(ValueError):
         holdout_backtest({"2026-01": {"revenue": 1.0}}, _build_cfg(0.0), holdout=3,
                          score_lines=["revenue"])
+
+
+@pytest.mark.parametrize("holdout", [0, -1])
+def test_holdout_rejects_non_positive_window(holdout):
+    with pytest.raises(ValueError, match="holdout"):
+        holdout_backtest(_actuals(), _build_cfg(0), holdout=holdout)
+
+
+def test_holdout_uses_chronology_instead_of_insertion_order():
+    actuals = _actuals()
+    for index, values in enumerate(actuals.values()):
+        values["revenue"] = 100 * (index + 1)
+    ordered = holdout_backtest(actuals, _build_cfg(0), holdout=3, score_lines=["revenue"])
+    shuffled = holdout_backtest(dict(reversed(list(actuals.items()))), _build_cfg(0), holdout=3, score_lines=["revenue"])
+    assert shuffled == ordered

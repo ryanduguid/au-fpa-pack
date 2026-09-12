@@ -57,7 +57,7 @@ def test_divest_proceeds_cut_interest():
     base = _base_forecast()
     out = divest(base, _carveout(), sale_month=6, proceeds=1200.0, annual_rate=0.10, tax_rate=0.0)
     assert out.iloc[5]["interest"] == 4.0
-    assert out.iloc[6]["interest"] == pytest.approx(4.0 - 10.0)
+    assert out.iloc[6]["interest"] == pytest.approx(0.0)
 
 
 def test_divest_cascades_cash_lines_with_tax():
@@ -103,3 +103,15 @@ def test_net_debt_to_ebitda_zero_ebitda_is_inf():
     base = _base_forecast()
     base["ebitda"] = 0.0
     assert net_debt_to_ebitda(base, debt_balance=100.0) == float("inf")
+
+
+@pytest.mark.parametrize("sale_month", [-1, 13])
+def test_sale_must_be_within_forecast(sale_month):
+    with pytest.raises(ValueError, match="horizon"):
+        divest(_base_forecast(), _carveout(), sale_month=sale_month, proceeds=0, annual_rate=0, tax_rate=0)
+
+
+def test_leverage_annualises_short_and_long_forecasts():
+    for months in (6, 24):
+        frame = pd.DataFrame({"ebitda": [30.0] * months})
+        assert net_debt_to_ebitda(frame, debt_balance=360) == pytest.approx(1)

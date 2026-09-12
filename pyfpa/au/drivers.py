@@ -224,10 +224,14 @@ def save_snapshot(series: DriverSeries, directory: str | Path) -> Path:
     base = f"{series.source}_{series.name}_{series.retrieved.isoformat()}"
     path = directory / f"{base}.json"
     counter = 1
-    while path.exists():
-        path = directory / f"{base}_{counter}.json"
-        counter += 1
-    path.write_text(json.dumps(series.model_dump(mode="json"), indent=2))
+    while True:
+        try:
+            with path.open("x", encoding="utf-8") as output:
+                output.write(json.dumps(series.model_dump(mode="json"), indent=2))
+            break
+        except FileExistsError:
+            path = directory / f"{base}_{counter}.json"
+            counter += 1
     return path
 
 

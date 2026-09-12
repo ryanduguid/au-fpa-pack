@@ -38,6 +38,12 @@ def test_parse_pl_fixture():
     assert {r.tracking_option for r in sales} == {"North", "South"}
 
 
+def test_blank_account_amount_does_not_reset_cost_section_sign(tmp_path):
+    source = tmp_path / "report.csv"
+    source.write_text("Account,Jul 2026\nIncome,\nSales,100\nOperating Expenses,\nEmpty Account,\nRent,20\n", encoding="utf-8")
+    assert read_xero_report(source).by_account() == {"Sales": 100, "Rent": -20}
+
+
 def test_by_account_sums_tracking_splits():
     report = read_xero_report(FIXTURE_PL)
     totals = report.by_account()
@@ -165,8 +171,10 @@ def test_end_to_end_lineage_pipeline(tmp_path):
         "--amount-column", "Amount",
         "--allow-unmapped",
     )
-    assert reconcile["ok"] is True, reconcile
-    assert reconcile["data"]["passed"] is True
+    assert reconcile["ok"] is False, reconcile
+    assert reconcile["data"]["unmapped"] == []
+    assert reconcile["data"]["expected_provided"] is False
+    assert reconcile["data"]["passed"] is False
 
 
 def test_reconcile_fails_on_unmapped_accounts(tmp_path):

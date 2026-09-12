@@ -20,10 +20,6 @@ def test_reconcile_zero_actual():
     assert bool(df.loc["x"]["within_tolerance"]) is True
 
 
-def test_reconcile_missing_model_line_defaults_zero():
-    # a line present in actual but absent from model is treated as model=0.0
-    df = reconcile({}, {"revenue": 100.0}, tolerance=0.01)
-    rev = df.loc["revenue"]
-    assert rev["model"] == 0.0
-    assert rev["variance"] == pytest.approx(-100.0)
-    assert bool(rev["within_tolerance"]) is False
+def test_reconcile_missing_model_line_is_refused():
+    with pytest.raises(ValueError, match="line sets differ"):
+        reconcile({}, {"revenue": 100.0}, tolerance=0.01)

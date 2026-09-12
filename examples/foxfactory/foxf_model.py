@@ -102,7 +102,9 @@ def opening_balances(prior_fy: str) -> OpeningBalances:
     bs = balance_sheet()
     def v(line: str) -> float:
         raw = bs.loc[line, prior_fy]
-        return 0.0 if pd.isna(raw) else float(raw)
+        if pd.isna(raw):
+            raise ValueError(f"missing balance sheet actual: {line} {prior_fy}")
+        return float(raw)
     return OpeningBalances(
         cash=v("cash"), ar=v("accounts_receivable"),
         ap=v("accounts_payable"), inventory=v("inventory"),
@@ -162,11 +164,10 @@ def phase_a_model(fy: str, prior_fy: str) -> dict[str, float]:
     cfg = reconciliation_config(fy, prior_fy, start_month=f"{fy[-4:]}-01")
     forecast = cashflow_from_config(cfg)
     annual = forecast.sum()
-    segments = segments_for_year(fy)
     return {
         "net_sales": float(annual["revenue"]),
         "gross_profit": float(annual["gross_profit"]),
-        "adjusted_ebitda": float(roll_up_segments(segments)["adjusted_ebitda"]),
+        "adjusted_ebitda": float(annual["ebitda"]),
         "depreciation_amortization": float(annual["da"]),
         "capex": float(annual["capex"]),
         "operating_cash_flow_before_tax": float(annual["ebitda"] + annual["wc_cash_impact"]),
@@ -181,7 +182,9 @@ def phase_a_actual(fy: str, prior_fy: str) -> dict[str, float]:
 
     def bs_v(line: str, col: str) -> float:
         raw = bs.loc[line, col]
-        return 0.0 if pd.isna(raw) else float(raw)
+        if pd.isna(raw):
+            raise ValueError(f"missing balance sheet actual: {line} {col}")
+        return float(raw)
 
     # actual change in working capital (cash impact): AR/Inv use cash, AP frees cash
     d_ar = bs_v("accounts_receivable", fy) - bs_v("accounts_receivable", prior_fy)
@@ -355,20 +358,30 @@ def _historical_epoch(
         revenue_reversion=revenue_reversion,
         margin_reversion=margin_reversion,
     )
+    cfg, segments = historical_candidate(revenue_reversion=revenue_reversion, margin_reversion=margin_reversion)
+    frame = cashflow_from_config(cfg)
+    totals = roll_up_segments(segments)
+    training_periods = ["FY2023", "FY2024"]
+    holdout_periods = ["FY2025"]
+    separation = (set(training_periods).isdisjoint(holdout_periods)
+                  and str(frame.index[0]) == "2025-01" and str(frame.index[-1]) == "2025-12")
+    rollup = (abs(float(frame["revenue"].sum()) - float(totals["net_sales"])) < 0.01
+              and abs(float(frame["ebitda"].sum()) - float(totals["adjusted_ebitda"])) < 0.01)
+    continuity = cfg.opening_balances == opening_balances("FY2024")
     checks = [
         ExperimentCheck(
             name="holdout separation",
-            result="pass",
+            result="pass" if separation else "fail",
             details="Candidate uses FY2023-FY2024 only; FY2025 is held out.",
         ),
         ExperimentCheck(
             name="segment rollup",
-            result="pass",
+            result="pass" if rollup else "fail",
             details="Candidate segment sales and Adjusted EBITDA roll to consolidated.",
         ),
         ExperimentCheck(
             name="working capital continuity",
-            result="pass",
+            result="pass" if continuity else "fail",
             details="FY2025 opens from reported FY2024 balances.",
         ),
     ]
@@ -396,8 +409,8 @@ def _historical_epoch(
             "data/cash_flow.csv",
         ],
         files_changed=["foxf_model.py"],
-        training_periods=["FY2023", "FY2024"],
-        holdout_periods=["FY2025"],
+        training_periods=training_periods,
+        holdout_periods=holdout_periods,
         checks=checks,
         evaluation=evaluation,
         notes="A deliberately simple annual holdout, not a claim of production-grade validation.",

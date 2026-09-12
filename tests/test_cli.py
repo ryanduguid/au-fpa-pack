@@ -684,6 +684,7 @@ def test_onboarding_render_writes_profile_and_proposal(tmp_path):
         "--proposal-summary", "Build a driver-based forecast.",
         "--connector", "QuickBooks P&L",
         "--model-component", "Channel revenue model",
+        "--overwrite",
     )
 
     assert result.returncode == 0, result.stdout

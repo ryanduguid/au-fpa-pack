@@ -109,6 +109,7 @@ module = [
     "models.generated.*",
     "pull_edgar",
     "run_arb",
+    "run_foxf",
     "run_harbour",
 ]
 ignore_missing_imports = true

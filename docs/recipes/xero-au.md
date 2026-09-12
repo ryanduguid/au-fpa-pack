@@ -69,14 +69,28 @@ mapping conversation, not a default to sweep under head office.
 
 ## Register and map
 
+From the company root, persist the account totals before registration. Keep the original tracking export for department mapping:
+
+```python
+import csv
+from pathlib import Path
+from pyfpa.io.xero_au import read_xero_report
+
+report = read_xero_report("data/xero_pl_jul2026.csv")
+with Path("data/xero_pl_jul2026_accounts.csv").open("x", encoding="utf-8", newline="") as output:
+    writer = csv.writer(output)
+    writer.writerow(["Account", "Amount"])
+    writer.writerows(sorted(report.by_account().items()))
+```
+
 ```bash
 python3 -m pyfpa.cli init <company-root> --business-name "<Name>"
 python3 -m pyfpa.cli source-register <company-root> \
   --source-id xero-au --kind accounting_system \
-  --location "data/xero_pl_jul2026.csv" \
+  --location "data/xero_pl_jul2026_accounts.csv" \
   --entity "<Entity Pty Ltd>" --currency AUD \
   --period 2026-07 \
-  --extraction-method "Xero P&L CSV export, GST-exclusive, tracking by Region"
+  --extraction-method "Account totals from data/xero_pl_jul2026.csv, GST-exclusive, tracking by Region"
 
 python3 -m pyfpa.cli mapping-register <company-root> --source-id xero-au \
   --source-value "Sales - Domestic" --target revenue.domestic
@@ -106,10 +120,12 @@ Ignore nothing silently: `Interest Income` either maps
 
 ```bash
 python3 -m pyfpa.cli reconcile-source <company-root> --source-id xero-au \
-  --account-column Account --amount-column Amount
+  --account-column Account --amount-column Amount \
+  --expected-json '<reviewed target-to-total JSON object>'
 ```
 
-- Fails on duplicate account names in the export, unmapped accounts, or
+- Expected totals must come from an independently reviewed control, not a copy of the mapped totals. Tolerance is a fraction: `0.01` means 1%.
+- Fails on missing expected totals, duplicate account names in the export, unmapped accounts, or
   out-of-tolerance totals. That is the point: unmapped is surfaced, not
   defaulted.
 - **Tracking-split exports repeat account rows** (one per option), which

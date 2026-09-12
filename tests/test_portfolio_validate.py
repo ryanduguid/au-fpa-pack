@@ -46,3 +46,21 @@ def test_validate_too_few_clients(tmp_path):
     res = validate_prior("working_capital.dio_days", clients)
     assert res.n_folds == 1
     assert res.validated is False
+
+
+def test_incomplete_recovered_actuals_do_not_count_as_validation(tmp_path, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_client(tmp_path, name, 45) for name in ("a", "b", "c")]
+    recover = module.recover_actuals
+
+    def incomplete(snapshot):
+        result = recover(snapshot)
+        result.pop("ebitda")
+        return result
+
+    monkeypatch.setattr(module, "recover_actuals", incomplete)
+    result = validate_prior("working_capital.dio_days", clients)
+    assert result.n_folds == 0
+    assert not result.validated
