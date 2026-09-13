@@ -82,7 +82,7 @@ DEMO_INTAKE_FACTS = {
         "fiscal calendar."
     ),
     "financing": (
-        "Fox uses a term loan and revolver and ended FY2025 with about $524M of "
+        "Fox uses a term loan and revolver and ended FY2025 with about $674M of "
         "total debt."
     ),
     "data_sources": (
@@ -427,8 +427,7 @@ def phase_c(forecast: pd.DataFrame, segs: dict) -> str:
 # Phase D - Marucci sensitivity
 # --------------------------------------------------------------------------- #
 def phase_d(forecast: pd.DataFrame) -> tuple[str, pd.DataFrame, pd.DataFrame]:
-    bs = fm.balance_sheet()
-    debt = float(bs.loc["long_term_debt_total", "FY2025"])
+    debt = fm.total_debt("FY2025")
     grid = fm.divestiture_grid(forecast, debt_balance=debt)
     proceeds_grid = fm.proceeds_sensitivity(forecast, debt_balance=debt, sale_month=12)
     lines = [

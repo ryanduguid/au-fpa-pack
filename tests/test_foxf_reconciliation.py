@@ -366,3 +366,30 @@ def test_historical_checks_detect_broken_rollup(monkeypatch):
     for epoch in fm.historical_research_epochs():
         assert next(check.result for check in epoch.checks if check.name == "segment rollup") == "fail"
         assert not epoch.evaluation.promotion_eligible
+
+
+@requires_foxf_data
+def test_forecast_ebitda_deducts_unallocated_corporate_expense():
+    import foxf_model as fm
+
+    from pyfpa.analysis.segments import roll_up_segments
+
+    forecast, segs = fm.build_forecast()
+    fy26 = forecast[forecast.index.year == 2026].sum()
+    segment_ebitda = float(roll_up_segments(segs["FY2026"])["adjusted_ebitda"])
+    corporate = fm.FORECAST["FY2026"]["corporate_expense"]
+    assert fy26["ebitda"] == pytest.approx(segment_ebitda - corporate, rel=1e-9)
+
+
+@requires_foxf_data
+def test_leverage_uses_total_debt_and_closing_balances():
+    import foxf_model as fm
+
+    forecast, _ = fm.build_forecast()
+    debt = fm.total_debt("FY2025")
+    assert debt == pytest.approx(523_538_000.0 + 150_000_000.0)
+    hold = fm.divestiture_grid(forecast, debt_balance=debt).loc["Hold Marucci", "net_debt_to_ebitda"]
+    closing_debt = debt - float(forecast["principal"].sum())
+    closing_cash = float(forecast["ending_cash"].iloc[-1])
+    run_rate = float(forecast["ebitda"].iloc[-12:].sum())
+    assert hold == pytest.approx((closing_debt - closing_cash) / run_rate)
