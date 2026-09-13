@@ -25,7 +25,7 @@ checks:
   details: Candidate uses FY2024 only; FY2025 is held out.
 - name: channel rollup
   result: pass
-  details: Australian Aftermarket, Exports, and OEM sales roll to consolidated.
+  details: 'Australian Aftermarket, Exports and OEM sales of 730,779,536 against engine revenue of 730,779,536: 0.00% gap, tolerance 1%.'
 evaluation:
   champion_metrics:
     revenue_error: 0.0504076312180714

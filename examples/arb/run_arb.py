@@ -39,8 +39,11 @@ def phase_a() -> str:
         "The engine is driven with ARB's reported sales mix, materials/sales COGS,",
         "working-capital days, D&A and PPE capex. EBITDA is EBIT + D&A.",
         "Gross profit is sales minus materials (ARB does not print GP).",
+        "`operating_cash_flow_before_tax` is a constructed proxy on both sides:",
+        "EBITDA plus the balance-sheet working-capital movement, not the reported",
+        "cash-flow statement.",
         "",
-        "| Line | Model | Actual | Variance |",
+        "| Line | Model | Actual or proxy | Variance |",
         "|---|--:|--:|--:|",
     ]
     for line, row in rec.iterrows():

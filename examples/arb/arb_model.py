@@ -274,6 +274,36 @@ def holdout_metrics(
     }
 
 
+def channel_rollup_check(
+    *,
+    export_growth: float,
+    other_growth: float,
+    margin_delta: float,
+    tolerance: float = 0.01,
+) -> ExperimentCheck:
+    """Hard check that the candidate's channel sales roll up to the engine's revenue.
+
+    The result is computed, not asserted, so a broken roll-up blocks promotion.
+    """
+    cfg, segments = historical_candidate(
+        export_growth=export_growth,
+        other_growth=other_growth,
+        margin_delta=margin_delta,
+    )
+    engine_revenue = float(cashflow_from_config(cfg).sum()["revenue"])
+    channel_sales = sum(segment.net_sales for segment in segments)
+    gap = _abs_variance_pct(engine_revenue, channel_sales)
+    return ExperimentCheck(
+        name="channel rollup",
+        result="pass" if gap <= tolerance else "fail",
+        details=(
+            f"Australian Aftermarket, Exports and OEM sales of {channel_sales:,.0f} "
+            f"against engine revenue of {engine_revenue:,.0f}: {gap:.2%} gap, "
+            f"tolerance {tolerance:.0%}."
+        ),
+    )
+
+
 def _historical_epoch(
     *,
     epoch_id: str,
@@ -295,10 +325,10 @@ def _historical_epoch(
             result="pass",
             details="Candidate uses FY2024 only; FY2025 is held out.",
         ),
-        ExperimentCheck(
-            name="channel rollup",
-            result="pass",
-            details="Australian Aftermarket, Exports, and OEM sales roll to consolidated.",
+        channel_rollup_check(
+            export_growth=export_growth,
+            other_growth=other_growth,
+            margin_delta=margin_delta,
         ),
     ]
     evaluation = evaluate_challenger(

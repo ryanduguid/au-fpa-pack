@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Literal
 
@@ -94,13 +95,16 @@ def evaluate_challenger(
     for metric in objective.metrics:
         champion = champion_metrics[metric.name]
         challenger = challenger_metrics[metric.name]
+        if not (math.isfinite(champion) and math.isfinite(challenger)):
+            raise ValueError(
+                f"metric {metric.name!r} must be finite, got "
+                f"champion={champion!r} challenger={challenger!r}"
+            )
         if champion == 0:
-            if challenger == 0:
-                raw_improvement = 0.0
-            elif metric.direction == "lower":
-                raw_improvement = -1.0
-            else:
-                raw_improvement = 1.0
+            # A relative change is undefined at a zero baseline, so score the
+            # bounded direction of the move: better is +1, worse is -1.
+            change = challenger if metric.direction == "higher" else -challenger
+            raw_improvement = 0.0 if change == 0 else (1.0 if change > 0 else -1.0)
         else:
             denominator = abs(champion)
             if metric.direction == "lower":

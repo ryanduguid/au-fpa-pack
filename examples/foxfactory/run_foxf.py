@@ -188,12 +188,17 @@ def phase_a() -> str:
         "mechanics reproduce known outcomes; it is **not** an independent forecast",
         "validation because the target-year drivers are inputs. Tolerance: 1%.",
         "",
+        "`operating_cash_flow_before_tax` is a constructed proxy on both sides:",
+        "segment Adjusted EBITDA plus the balance-sheet working-capital cash",
+        "movement. It is not the reported cash-flow statement, which also carries",
+        "interest and other operating adjustments.",
+        "",
     ]
     for fy, prior in [("FY2024", "FY2023"), ("FY2025", "FY2024")]:
         model = fm.phase_a_model(fy, prior)
         actual = fm.phase_a_actual(fy, prior)
         rec = reconcile(model, actual, tolerance=0.01)
-        lines += [f"## {fy}", "", "| Line | Model | Reported | Variance | Tie |",
+        lines += [f"## {fy}", "", "| Line | Model | Reported or proxy | Variance | Tie |",
                   "|---|--:|--:|--:|:--:|"]
         for name, r in rec.iterrows():
             tie = "yes" if r["within_tolerance"] else "no"
