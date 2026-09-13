@@ -277,6 +277,85 @@ def test_report_layout_without_a_period_column_is_refused(tmp_path):
         read_xero_report(p)
 
 
+@pytest.mark.parametrize(
+    "columns", ["Eastside,North,Unassigned", "2026,North,Unassigned"]
+)
+def test_tracking_comparison_is_not_read_as_one_period(tmp_path, columns):
+    """Fabricated amounts in the Compare Region layout observed 13 September 2026."""
+    source = tmp_path / "tracking.csv"
+    source.write_text(
+        "Profit and Loss,,,\nFabricated Company,,,\n"
+        "For the year ended 30 June 2027,,,\n,,,\n"
+        f"Account,{columns}\nTrading Income,,,\nSales,120,80,50\n"
+        "Total Trading Income,120,80,50\nOperating Expenses,,,\n"
+        "Rent,40,20,10\nNet Profit,80,60,40\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Tracking Option"):
+        read_xero_report(source)
+
+
+@pytest.mark.parametrize("period", ["2026", "Sept 2026", "September 2026", "30 June 2026"])
+def test_report_period_headers_keep_the_first_period(tmp_path, period):
+    source = tmp_path / "period.csv"
+    source.write_text(
+        f"Profit and Loss\nFabricated Company\nAccount,{period},2025\n"
+        "Trading Income,,\nSales,120,999\nOperating Expenses,,\nRent,40,888\n",
+        encoding="utf-8",
+    )
+    assert read_xero_report(source).by_account() == {"Sales": 120, "Rent": -40}
+
+
+@pytest.mark.parametrize("first_option", ["Eastside", "2026"])
+def test_explicit_tracking_comparison_preserves_every_option(tmp_path, first_option):
+    source = tmp_path / "tracking.csv"
+    source.write_text(
+        "Profit and Loss,,,\nFabricated Company,,,\n"
+        f"Account,{first_option},North,Unassigned\nTrading Income,,,\n"
+        "Sales (200),120,80,50\nTotal Trading Income,120,80,50\n"
+        "Cost of Sales,,,\nPurchases (310),10,-5,\nGross Profit,110,85,50\n"
+        "Operating Expenses,,,\nRent,40,20,10\nNet Profit,70,65,40\n",
+        encoding="utf-8-sig",
+    )
+    report = read_xero_report(source, tracking_comparison=True)
+    assert report.by_tracking() == {
+        first_option: {"Sales": 120, "Purchases": -10, "Rent": -40},
+        "North": {"Sales": 80, "Purchases": 5, "Rent": -20},
+        "(untracked)": {"Sales": 50, "Purchases": 0, "Rent": -10},
+    }
+    assert report.by_account() == {"Sales": 250, "Purchases": -5, "Rent": -70}
+    assert sum(report.by_account().values()) == 175
+    assert [row.code for row in report.rows if row.account == "Sales"] == ["200"] * 3
+
+
+@pytest.mark.parametrize(
+    "columns", ["North,north", "North,", "North,Total", "North,(untracked)"]
+)
+def test_tracking_comparison_refuses_ambiguous_headers(tmp_path, columns):
+    source = tmp_path / "ambiguous.csv"
+    source.write_text(f"Profit and Loss\nAccount,{columns}\nSales,120,80\n")
+    with pytest.raises(ValueError, match="tracking columns"):
+        read_xero_report(source, tracking_comparison=True)
+
+
+@pytest.mark.parametrize("amounts", ["", "120", "120,80,99", "120,TBC", "120,NaN"])
+@pytest.mark.parametrize("account", ["Sales", "Income"])
+def test_tracking_comparison_refuses_missing_extra_or_bad_amounts(tmp_path, amounts, account):
+    source = tmp_path / "bad.csv"
+    source.write_text(f"Profit and Loss\nAccount,Eastside,North\n{account},{amounts}\n")
+    with pytest.raises(ValueError):
+        read_xero_report(source, tracking_comparison=True)
+
+
+def test_tracking_comparison_mode_refuses_other_layouts(tmp_path):
+    source = tmp_path / "flat.csv"
+    source.write_text("Account,Amount,Tracking Option\nSales,120,North\n")
+    with pytest.raises(ValueError, match="P&L report layout"):
+        read_xero_report(source, tracking_comparison=True)
+    with pytest.raises(ValueError, match="P&L report layout"):
+        read_xero_report(FIXTURE_BS_EXPORT, tracking_comparison=True)
+
+
 def test_unrecognised_layout_names_the_columns_it_wanted(tmp_path):
     p = tmp_path / "bad.csv"
     p.write_text("Name,Value\nSales,1\n")

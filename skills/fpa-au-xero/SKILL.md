@@ -16,6 +16,10 @@ the operating loop.
    Confirm the basis explicitly. Obtain BAS G1 total sales and 1A/1B GST
    amounts for separate reconciliations, following the recipe.
 2. **Load and inspect** with `pyfpa.io.xero_au.read_xero_report`.
+   Use a CSV saved from the recalculated Excel export. For a standard P&L
+   tracking comparison, confirm the source settings and select
+   `tracking_comparison=True` as described in the recipe. Reconcile each
+   option and the combined total; period-like option names cannot select the mode.
    Check `by_tracking()` for `(untracked)` revenue/COGS - surface to
    the user before mapping.
 3. **GST basis check**: `detect_gst_inclusive(report, control_total=...)`
