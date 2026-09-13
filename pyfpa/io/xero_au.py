@@ -239,15 +239,3 @@ def detect_gst_inclusive(
         return None
     return None
 
-
-def from_xero(
-    *, fixture: str | Path | None = None, balance_sheet: bool = False
-) -> dict[str, float]:
-    """Return a normalised {account: amount} table from a Xero export.
-
-    Reads a CSV export, falling back to the bundled fixture. There is no
-    live path here; a
-    per-company connector supplies one.
-    """
-    path = fixture or (_FIXTURES / ("xero_bs_au.csv" if balance_sheet else "xero_pl_au.csv"))
-    return read_xero_report(path).by_account()

@@ -4,7 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pyfpa.memory.diagnostics import WorkspaceReport, validate_workspace
+from pyfpa.memory.diagnostics import WorkspaceReport
+from pyfpa.memory.workspace import Workspace
 
 
 def _init_workspace(root: Path) -> None:
@@ -18,7 +19,7 @@ def _init_workspace(root: Path) -> None:
 
 def test_validate_workspace_healthy(tmp_path):
     _init_workspace(tmp_path)
-    report = validate_workspace(tmp_path)
+    report = Workspace.open(tmp_path).validate()
 
     assert isinstance(report, WorkspaceReport)
     assert report.healthy is True
@@ -27,7 +28,7 @@ def test_validate_workspace_healthy(tmp_path):
 
 
 def test_validate_workspace_missing_workspace(tmp_path):
-    report = validate_workspace(tmp_path)
+    report = Workspace.open(tmp_path).validate()
 
     assert report.healthy is False
     assert report.error_count >= 1
@@ -38,7 +39,7 @@ def test_validate_workspace_corrupt_registry(tmp_path):
     _init_workspace(tmp_path)
     (tmp_path / ".fpa" / "models" / "registry.yaml").write_text("not: [valid")
 
-    report = validate_workspace(tmp_path)
+    report = Workspace.open(tmp_path).validate()
 
     assert report.healthy is False
     assert any(
@@ -57,7 +58,7 @@ def test_validate_workspace_reports_corrections_and_snapshots(tmp_path):
         "status: open\ndate: '2026-01-01'\n---\nTest correction.\n"
     )
 
-    report = validate_workspace(tmp_path)
+    report = Workspace.open(tmp_path).validate()
 
     assert report.healthy is True
     correction_check = next(
@@ -71,7 +72,7 @@ def test_validate_workspace_reports_corrections_and_snapshots(tmp_path):
 def test_validate_workspace_reports_snapshots(tmp_path):
     _init_workspace(tmp_path)
 
-    report = validate_workspace(tmp_path)
+    report = Workspace.open(tmp_path).validate()
 
     snapshot_check = next(
         (c for c in report.checks if c["name"] == "snapshots"), None

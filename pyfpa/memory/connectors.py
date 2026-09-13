@@ -14,7 +14,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from pyfpa.memory.entrypoints import _relative_path
-from pyfpa.memory.lineage import MappingRegistry, reconcile_account_table
+from pyfpa.memory.lineage import MappingRegistry, reconcile_account_table, required_text
 from pyfpa.memory.workspace import Workspace, _is_link_or_reparse, _lstat
 
 ConnectorAuth = Literal["none", "host_environment", "mcp"]
@@ -147,10 +147,7 @@ class ConnectorManifest(BaseModel):
     )
     @classmethod
     def validate_required_text(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("value must not be empty")
-        return value
+        return required_text(value)
 
     @field_validator("fixture_path")
     @classmethod
