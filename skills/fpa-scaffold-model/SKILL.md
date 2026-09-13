@@ -3,7 +3,7 @@ name: fpa-scaffold-model
 description: Use when building a new openfpa forecast model from a company's financials - a trial balance, a P&L export, or a pasted income statement - and you need a runnable config to exist before any forecasting or analysis.
 ---
 
-# Scaffold a Model (Phase 1)
+# Scaffold a model (Phase 1)
 
 ## Overview
 
@@ -34,8 +34,8 @@ Map the real numbers onto the existing engine structure.
 6. **Register the tested command** with `openfpa entrypoint-register`, including
    its inputs and outputs. Registration publishes the command for agent
    discovery; it does not run it.
-7. **Surface assumptions**: list the 6-10 inferences a human must confirm
-   (seasonality shape, fixed vs variable splits, cogs_pct per channel, opening
+7. **Surface assumptions**: list the 6 to 10 inferences a human must confirm
+   (seasonality shape, fixed versus variable splits, cogs_pct per channel, opening
    balances). Do not bury them.
 
 ## Conventions (match the engine)

@@ -1,9 +1,9 @@
 ---
 name: fpa-cash-runway
-description: Use when answering "when do we run out of cash", building a 13-week cash forecast, sizing a credit line, or analyzing near-term liquidity and payment timing in openfpa.
+description: Use when answering "when do we run out of cash", building a 13-week cash forecast, sizing a credit line, or analysing near-term liquidity and payment timing in openfpa.
 ---
 
-# Cash Runway (Operate)
+# Cash runway (operate)
 
 ## Overview
 
@@ -13,7 +13,7 @@ Build the 13-week direct-method cash forecast - the operator's near-term liquidi
 
 ## When to use
 
-- "When do we run out of money?" / runway questions
+- 'When do we run out of money?' / runway questions
 - Sizing or stress-testing a working-capital line
 - Lumpy near-term cash events (inventory buys, tax, payroll cadence)
 
@@ -31,7 +31,7 @@ Build the 13-week direct-method cash forecast - the operator's near-term liquidi
    runway = pyfpa.runway_summary(weekly)
    # {'min_cash': -146000.0, 'min_week': 7, 'first_negative_week': 3}
    ```
-4. **Interpret** (see **fpa-cfo-judgment**): a negative `min_cash` means "needs a draw of at least this much," not "insolvent." `first_negative_week` is the deadline to act. Size the credit line to the trough plus a buffer.
+4. **Interpret** (see **fpa-cfo-judgment**): a negative `min_cash` means 'needs a draw of at least this much,' not "insolvent." `first_negative_week` is the deadline to act. Size the credit line to the trough plus a buffer.
 5. **Report**: trough amount + week, first-negative week, and the recommended line size / action.
 
 ## Common mistakes

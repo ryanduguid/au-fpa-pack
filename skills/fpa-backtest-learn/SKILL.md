@@ -3,14 +3,14 @@ name: fpa-backtest-learn
 description: Use when you want the model to learn from how its past forecasts actually turned out - scoring forecasts against the company's real actuals, backtesting assumptions on history, and proposing ratified improvements. Runs at/after monthly close.
 ---
 
-# Backtest & Learn (Operate)
+# Backtest and learn (operate)
 
 ## Overview
 
 The model should get measurably better at this business over time. This skill
 scores past forecasts against the company's actuals, surfaces what keeps missing,
 and proposes improvements a human ratifies. The objective metric is reconciliation
-error against the user's own books (`pyfpa.score_forecast`) - the FP&A analog of a
+error against the user's own books (`pyfpa.score_forecast`) - the FP&A analogue of a
 validation loss.
 
 **Core principle:** self-experimenting, but never self-promoting. The AI may run
@@ -44,7 +44,7 @@ the champion. Everything learned lives as plain files in `.fpa/`.
    - **Parametric** (an assumption change): re-score it with `holdout_backtest` on the
      company's history. Surface it **only if it lowers holdout fitness** (not in-sample),
      ranked by the delta. Clamp the proposed move with `magnitude_cap` (±25%/cycle).
-   - **Structural** (a methodology/skill change, e.g. a revenue-recognition lag): surface
+   - **Structural** (a methodology/skill change, for example, a revenue-recognition lag): surface
      **only** when `persistent_miss` is true for the line (same-signed across K≥2 closes)
      and it survived the one-time screen. Hand it to **fpa-learn-business** to generate the
      skill *on approval* - propose, don't auto-write.
@@ -75,4 +75,4 @@ to report current accuracy and the first round of parametric proposals.
 
 ## Next
 
-Scored + learned → **fpa-board-briefing** (report the forecast and how it's tracking).
+Scored + learnt → **fpa-board-briefing** (report the forecast and how it's tracking).

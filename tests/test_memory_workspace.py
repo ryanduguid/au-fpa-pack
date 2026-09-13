@@ -213,7 +213,7 @@ def test_business_profile_headings_are_unified_across_init_and_onboarding(tmp_pa
 
 
 def test_memory_index_describes_complete_vault(tmp_path):
-    """MEMORY.md must reference every documented vault artifact."""
+    """MEMORY.md must reference every documented vault artefact."""
     workspace = initialize_workspace(tmp_path, business_name="Acme")
     content = (workspace / "MEMORY.md").read_text()
 

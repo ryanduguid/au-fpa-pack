@@ -14,11 +14,11 @@ from pyfpa.config.schemas import EntityConfig
 
 class Snapshot(BaseModel):
     """The full record of one forecast: the assumptions it used, the lines it
-    predicted, and (once the period closes) the realized score."""
+    predicted, and (once the period closes) the realised score."""
 
     label: str
     created: str                  # caller-supplied date string; never generated here
-    assumptions: dict[str, Any]   # serialized EntityConfig
+    assumptions: dict[str, Any]   # serialised EntityConfig
     predicted: dict[str, float]
     score: ScoreResult | None = None
 
@@ -41,13 +41,13 @@ def snapshot_forecast(
 
 
 def save_snapshot(snapshot: Snapshot, path: str | Path, *, overwrite: bool = False) -> None:
-    """Serialize a Snapshot to YAML at the given path."""
+    """Serialise a Snapshot to YAML at the given path."""
     with Path(path).open("w" if overwrite else "x", encoding="utf-8") as output:
         output.write(yaml.safe_dump(snapshot.model_dump(), sort_keys=False))
 
 
 def load_snapshot(path: str | Path) -> Snapshot:
-    """Deserialize a Snapshot from a YAML file."""
+    """Deserialise a Snapshot from a YAML file."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"snapshot not found: {p}")

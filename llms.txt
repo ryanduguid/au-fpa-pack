@@ -17,7 +17,7 @@
 
 ## Australian scope
 1. **Calendar**: 30 June financial years with `FY2027`, `Q1 FY2027` and `1H FY2027` labels and dd/mm/yyyy dates.
-2. **Payroll**: super guarantee, state payroll tax across all eight jurisdictions with effective dates, workers compensation, leave provisions and contractors.
+2. **Payroll**: super guarantee, state payroll tax across all 8 jurisdictions with effective dates, workers compensation, leave provisions and contractors.
 3. **GST and BAS**: net GST from GST-exclusive series, with monthly and quarterly settlement timing fed into the 13-week cash model.
 4. **Rates and dates**: recorded with their sources in docs/australian-pack.md. They are modelling assumptions, not a tax engine.
 

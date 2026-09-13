@@ -20,7 +20,7 @@ Open this after completing the trial.
 | December GST / supplier / PAYG withholding liabilities | $12,600 / $13,200 / $5,000 |
 | Monthly gross / net wage payments | $24,000 gross / $19,000 net |
 | Monthly super | $2,880, separate from net wages |
-| Cash reconciliation differences | $0.00 in all three months and both cases |
+| Cash reconciliation differences | $0.00 in all 3 months and both cases |
 | Extra cash needed at the late-case trough | $25,160 to reach zero; $40,160 to retain a $15,000 buffer |
 
 A delay changes the bank receipt and debtor balance, not service revenue or

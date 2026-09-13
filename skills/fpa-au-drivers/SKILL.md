@@ -3,7 +3,7 @@ name: fpa-au-drivers
 description: Use when an Australian forecast needs official economic drivers - RBA cash rate and exchange rates, ABS CPI/WPI/retail/labour series - snapshotted with provenance for reproducible scenarios.
 ---
 
-# Australian Economic Drivers
+# Australian economic drivers
 
 Use when a model's assumptions should tie to official data: debt pricing
 off the cash rate, wage escalation off WPI, CPI-linked revenue, FX
@@ -40,7 +40,7 @@ operating loop.
 - Month-granularity storage: daily announcement precision needs the raw
   table snapshotted in the company workspace.
 - Driver values are point-in-time facts. Forecast-forward projections
-  (e.g. cash rate futures) are assumptions the user supplies, recorded
+  (for example, cash rate futures) are assumptions the user supplies, recorded
   as intake facts with confidence, not adapter output.
 
 ## Verification

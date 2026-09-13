@@ -15,11 +15,11 @@ Every figure traces to [`data/SOURCES.md`](data/SOURCES.md).
 mix, materials as COGS, WC days, D&A, PPE capex). Gross profit is constructed.
 This is arithmetic, not a forecast.
 
-**Phase B** holds FY2025 out. A uniform 16.4 percent growth challenger is
+**Phase B** holds FY2025 out. A uniform 16.4% growth challenger is
 discarded. An export-led challenger with 150bps margin compression is proposed,
 not promoted.
 
-**Phase C** forecasts FY2026–FY2027 from the August 2025 4E view.
+**Phase C** forecasts FY2026 to FY2027 from the August 2025 4E view.
 
 **Phase D** is a labelled Thai Baht / US-tariff sensitivity (+150bps COGS). It is
 not a kernel FX engine.

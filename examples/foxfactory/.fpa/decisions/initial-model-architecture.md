@@ -1,4 +1,4 @@
-# Initial Model Architecture
+# Initial model architecture
 
 **Status:** Approved for the public Fox Factory worked example.
 
@@ -8,13 +8,13 @@ Demonstrate a source-traced public-company workflow with separate accounting
 reproduction, historical holdout research, forward forecasting, and capital
 allocation sensitivity.
 
-## Data Access
+## Data access
 
 - Committed CSV extracts sourced from SEC 10-K and 10-Q filings.
 - `pull_edgar.py` refreshes the public source data.
 - `data/SOURCES.md` preserves the filing trail.
 
-## Model Components
+## Model components
 
 - Consolidated finance kernel for revenue, COGS, working capital, debt, and cash.
 - Generated PVG, AAG, and SSG segment rollup.

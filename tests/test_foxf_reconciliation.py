@@ -40,7 +40,7 @@ def test_phase_a_reproduces_actual_driver_mechanics(fy, prior):
 
 @requires_foxf_data
 def test_historical_holdout_rejects_broad_recovery_via_regression_guard():
-    """Verify the research loop's verdicts are principled, not numerical artifacts.
+    """Verify the research loop's verdicts are principled, not numerical artefacts.
 
     Broad recovery (epoch 001) multiplies the adjusted EBITDA error roughly
     twentyfold versus the champion. The improvement clamp bounds its SCORE

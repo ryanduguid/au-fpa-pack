@@ -54,7 +54,7 @@ See the [Moneysmart GST calculator](https://moneysmart.gov.au/work-and-tax/gst-c
 
 The raw export loads as it comes from Reports (observed on the Demo
 Company (AU) Excel exports of the Profit and Loss and Balance Sheet,
-5 September 2026, saved as CSV): three title rows, a blank row, then a
+5 September 2026, saved as CSV): 3 title rows, a blank row, then a
 header whose account column is `Account` (column B on the Balance
 Sheet). In its default period mode, the reader requires English year,
 month/year or day/month/year headings, takes the first period column after
@@ -175,7 +175,7 @@ python3 -m pyfpa.cli reconcile-source <company-root> --source-id xero-au \
   do not add them again. Record the reconciliation and explain differences.
   The [ATO BAS labels](https://softwaredevelopers.ato.gov.au/SimplerBAS) distinguish
   G1 total sales, 1A GST on sales and 1B GST on purchases.
-- Payroll actuals vs `pyfpa.au.payroll_forecast`: wages, super and
+- Payroll actuals versus `pyfpa.au.payroll_forecast`: wages, super and
   payroll tax lines each reconcile to the model's gross_wages,
   super_guarantee and payroll_tax columns for the same month.
 

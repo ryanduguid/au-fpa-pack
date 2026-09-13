@@ -1,7 +1,7 @@
 """ARB Corporation worked example - full pipeline.
 
 Phase A reproduces FY2025 operating mechanics from actual drivers.
-Phase B replays two FY2025 champion/challenger holdout epochs.
+Phase B replays 2 FY2025 champion/challenger holdout epochs.
 Phase C forecasts FY2026-FY2027 from the August 2025 4E view.
 Phase D labels a Thai Baht / US-tariff COGS sensitivity.
 
@@ -150,7 +150,7 @@ def phase_d() -> str:
 def run_arb(output_dir: str | Path | None = None) -> dict:
     """Run Phases A-D and return the FY2026 headline figures.
 
-    ``output_dir`` takes the four markdown files and the research memory
+    ``output_dir`` takes the 4 markdown files and the research memory
     together, so a caller that redirects it writes nothing into the tracked
     example. Omitting it keeps the committed layout: markdown under
     ``output/``, memory under ``.fpa/research/``.

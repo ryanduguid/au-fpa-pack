@@ -1,6 +1,6 @@
 # Harbour Light Pty Ltd
 
-Synthetic Victorian lighting wholesaler for FY2027 (July 2026 – June 2027).
+Synthetic Victorian lighting wholesaler for FY2027 (July 2026 to June 2027).
 This is the Australian pack's Xero / payroll / GST worked example. It is not a
 client. Numbers come from the committed Xero fixtures.
 
@@ -45,7 +45,7 @@ Annual cash reconciles as follows:
 
 Opening GST of $3,850 plus $38,520 accrued less $32,740 settled leaves $9,630
 payable in July 2027. The 13-week forecast starts from reconciled September
-cash of $81,228 and ends with $60,312. It includes seven fortnightly payroll
+cash of $81,228 and ends with $60,312. It includes 7 fortnightly payroll
 payments beginning in week 1. The monthly model spreads payroll evenly, so
 the weekly and monthly closing balances differ with pay dates.
 

@@ -3,7 +3,7 @@ name: fpa-learn-business
 description: Use when starting FP&A work for a new company, onboarding a business into openfpa, or asked to "understand my business / set up a model for us" before any forecasting - produces a durable business profile and generates business-specific skills.
 ---
 
-# Learn the Business (Phase 0)
+# Learn the business (Phase 0)
 
 ## Overview
 
@@ -12,7 +12,7 @@ Learn the business before scaffolding a model. Record that understanding in a bu
 ## When to use
 
 - A new company is being onboarded into openfpa
-- You're asked to "build us a model" / "understand our business" before forecasting
+- You're asked to 'build us a model' / 'understand our business' before forecasting
 - An existing `.fpa/business-profile.md` is missing or stale
 
 Do not force this workflow when the user asks for a narrow task that can be
@@ -35,7 +35,7 @@ completed without understanding the whole company.
 
 3. **Ask only what remains unknown.** Run
    `openfpa intake-next <company-root>` and ask that related round of at most
-   three questions. After every response, call `openfpa intake-record` with
+   3 questions. After every response, call `openfpa intake-record` with
    `--source-type user`. Direct answers are confirmed immediately. Only ask the
    user to resolve conflicting or low-confidence inferred facts.
 

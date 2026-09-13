@@ -3,7 +3,7 @@ name: fpa-au-gst-bas
 description: Use when forecasting cash for a GST-registered Australian entity - net GST positions, BAS settlement timing (monthly or quarterly), GST-free and input-taxed categories, 13-week cash impacts.
 ---
 
-# Australian GST and BAS Cash Timing
+# Australian GST and BAS cash timing
 
 Use when forecasting cash for a GST-registered Australian entity. GST
 collections and BAS settlements create material cash swings that a
@@ -35,7 +35,7 @@ naive P&L-to-cash bridge misses entirely.
    config.disbursements.extend(disbursements)
    ```
 
-4. Reconcile: management P&L (GST-exclusive) vs bank cash (GST-inclusive).
+4. Reconcile: management P&L (GST-exclusive) versus bank cash (GST-inclusive).
    Receipts in the cash model should run ~1.1x taxable revenue; the
    difference accumulates as a GST liability until BAS settlement.
 

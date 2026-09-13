@@ -8,7 +8,7 @@ from pyfpa.models.periods import month_index
 
 def debt_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Monthly interest, principal, and ending balance summed across all
-    instruments. Term loans amortize by monthly_principal; LOCs are interest-only."""
+    instruments. Term loans amortise by monthly_principal; LOCs are interest-only."""
     idx = month_index(cfg.start_month, cfg.horizon_months)
     interest = pd.Series(0.0, index=idx)
     principal = pd.Series(0.0, index=idx)

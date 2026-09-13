@@ -80,7 +80,7 @@ def forecast(data: Path = ROOT / "data", delay_days: int = 0) -> dict:
     opening = invoices[invoices["service_month"] == "2026-09"]
     if abs(opening[["net", "gst"]].sum().sum() - bs["Accounts Receivable"]) > 0.01:
         raise ValueError("Opening receivables do not reconcile")
-    # ponytail: this fixed three-month case refuses changed payment totals; extend the
+    # ponytail: this fixed 3-month case refuses changed payment totals; extend the
     # liability roll-forwards before using it for a different supplier or payroll cycle.
     expected_payments = {
         "Materials": -pl["Materials"] * (1 + a["gst_rate"]),

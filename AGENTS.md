@@ -29,7 +29,7 @@ The live RBA tests are separate from the default offline suite, as CONTRIBUTING.
 - Do not force a business into `EntityConfig` when its economics require a
   different model. Extend the company workspace and use the kernel where useful.
 
-## Company Onboarding
+## Company onboarding
 
 - Trigger onboarding when `.fpa/intake.md` is incomplete and the user asks to
   build, configure, forecast, analyse, or learn the business.
@@ -86,7 +86,7 @@ The live RBA tests are separate from the default offline suite, as CONTRIBUTING.
 - Record source-derived and user-confirmed facts with citations and confidence
   using `openfpa intake-record`.
 - Ask only unresolved questions returned by `pyfpa.next_intake_questions`, in
-  rounds of at most three related questions.
+  rounds of at most 3 related questions.
 - Record direct user answers immediately as confirmed facts. Ask for
   confirmation only when evidence conflicts or confidence is low.
 - When `pyfpa.intake_ready` is true, write the business profile and
@@ -98,7 +98,7 @@ The live RBA tests are separate from the default offline suite, as CONTRIBUTING.
   `.fpa/models/entrypoints.yaml`. Registration advertises the command but does
   not execute it.
 
-## Adaptation Loop
+## Adaptation loop
 
 After architecture approval, use `fpa-research-loop` for bounded autonomous improvement.
 
@@ -119,7 +119,7 @@ review past hypotheses with `openfpa experiment-list <company-root>`.
 9. Present only promotion-eligible challengers for human ratification. Never
    replace the champion without explicit approval.
 
-## Excel Output
+## Excel output
 
 When the user wants Excel output with working formulas, use `openfpa model-export`
 or `pyfpa.model_to_excel` for the standard monthly model. For any other cadence or
@@ -127,7 +127,7 @@ layout, generate a company-specific exporter from `pyfpa.excel.toolkit` in the
 generated namespace and register it as a report entrypoint. Install `formulas` and run
 `verify_workbook` before delivering. No workbook ships unverified.
 
-## Kernel Guardrails
+## Kernel guardrails
 
 - Never hide reconciliation differences, missing actuals, duplicate names, or
   unmapped accounts behind defaults.
@@ -142,14 +142,14 @@ generated namespace and register it as a report entrypoint. Install `formulas` a
 - Promote company-specific behaviour into `pyfpa/` only after it is demonstrably
   reusable across businesses.
 
-## Required Evidence
+## Required evidence
 
 An accepted model change should identify:
 
-- the hypothesis and CFO question;
-- source evidence and periods used;
-- files and assumptions changed;
-- before/after metrics;
-- reconciliation and accounting checks;
-- holdout or scenario results where applicable;
+- the hypothesis and CFO question
+- source evidence and periods used
+- files and assumptions changed
+- before/after metrics
+- reconciliation and accounting checks
+- holdout or scenario results where applicable
 - who accepted it, when, and why.

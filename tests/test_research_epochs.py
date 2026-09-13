@@ -122,7 +122,7 @@ def test_epoch_round_trip_and_promotion_gate(tmp_path):
 def test_clamp_prevents_near_zero_baseline_from_dominating():
     """A near-zero champion baseline should not swamp the weighted objective.
 
-    Three metrics improve ~98 percent each; the fourth has a near-zero champion
+    Three metrics improve ~98% each; the fourth has a near-zero champion
     baseline that triggers a raw improvement far below -1. After clamping, the
     fourth contributes at most -1.0 to the weighted sum, so weighted_improvement
     is close to 0.75 * 0.98 - 0.25 * 1.0, not a large negative number.
@@ -235,7 +235,7 @@ def test_regression_guard_boundary_exactly_at_bound_passes():
 
 
 def test_regression_guard_disabled_by_default():
-    # max_metric_regression=None preserves prior behavior
+    # max_metric_regression=None preserves prior behaviour
     result = evaluate_challenger(
         _guarded_objective(max_regression=None),
         {"cash_error": 0.01, "bias_control": 0.50},

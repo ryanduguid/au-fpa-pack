@@ -1,4 +1,4 @@
-# Initial Model Architecture
+# Initial model architecture
 
 **Status:** Approved for the synthetic Harbour Light example.
 
@@ -7,15 +7,15 @@
 Prove the Australian pack on one company: Xero mapping, statutory payroll,
 quarterly BAS into 13-week cash, and a verified live-formula workbook.
 
-## Data Access
+## Data access
 
 - Committed Xero Australia GST-exclusive fixtures.
 - Tracking file is the channel source. Aggregated P&L is the lineage source
   (`reconcile-source` rejects duplicate account rows).
 
-## Model Components
+## Model components
 
-- North / South revenue channels, 30 June year, 30 percent company tax.
+- North / South revenue channels, 30 June year, 30% company tax.
 - Payroll from `payroll_forecast`, not from copying Xero wage on-cost lines
   except as a reconciling check.
 - The company example adds leave provisions back to cash and reconciles GST
@@ -79,14 +79,14 @@ formula fails verification before delivery. A failed replacement also leaves
 an existing output file intact. No historical holdout is available for these
 synthetic fixtures, and native Excel recalculation has not been tested.
 
-Ryan accepted correcting the five reported defects with "OK action all of
+Ryan accepted correcting the 5 reported defects with "OK action all of
 those please" and subsequently authorised integration with "merge them
 please" on 10 September 2026 in Sydney. Acceptance covers the reported cash
 and evidence defects and their verification; it does not establish that this
 synthetic forecast is suitable for a real company.
 
 The source registry also records the bundled GST, superannuation and payroll-tax
-YAML files and the twelve forecast periods that use them. Both commands declare
+YAML files and the 12 forecast periods that use them. Both commands declare
 the local registry as an input manifest because entrypoint paths cannot traverse
 outside the company directory. The registry locations point to the existing
 package tables in the source checkout; no rate values were copied or changed.

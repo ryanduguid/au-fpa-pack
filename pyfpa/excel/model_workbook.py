@@ -1,4 +1,4 @@
-"""Canonical monthly translator: EntityConfig -> two-sheet live-formula workbook.
+"""Canonical monthly translator: EntityConfig -> 2-sheet live-formula workbook.
 
 Assumptions sheet: named driver cells (editable).
 Model sheet: every line a formula referencing those names.
@@ -357,7 +357,7 @@ def _build_nol_block(
     cfg: EntityConfig, n: int, r_pretax: int, alloc: _RowAlloc,
 ) -> tuple[int, int, int]:
     """NOL opening/used/closing rows that cross-reference each other."""
-    # Allocate all three rows first, then fill
+    # Allocate all 3 rows first, then fill
     nol_open_row = alloc.alloc()
     nol_used_row = alloc.alloc()
     nol_close_row = alloc.alloc()
@@ -388,7 +388,7 @@ def _build_nol_block(
 def _wc_cash_impact_formulas(
     n: int, r_ar: int, r_ap: int, r_inv: int,
 ) -> list[str]:
-    """First month vs opening balances; later months vs prior column."""
+    """First month versus opening balances; later months versus prior column."""
     formulas: list[str] = []
     for m_idx in range(n):
         cl = get_column_letter(_MODEL_START_COL + m_idx)
@@ -496,7 +496,7 @@ def _build_model(
 
 
 def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
-    """Compile an EntityConfig into a two-sheet live-formula workbook at `path`."""
+    """Compile an EntityConfig into a 2-sheet live-formula workbook at `path`."""
     wb = Workbook()
     ws_assump = wb.active
     ws_assump.title = "Assumptions"

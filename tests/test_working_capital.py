@@ -15,7 +15,7 @@ def test_working_capital_balances_and_cash_impact(sample_config):
     # dio=0 -> inventory 0
     assert df["inventory"].round(6).tolist() == [0.0] * 12
 
-    # Month 1 deltas vs opening (all opening = 0): d_ar=100, d_ap=50, d_inv=0
+    # Month 1 deltas versus opening (all opening = 0): d_ar=100, d_ap=50, d_inv=0
     assert round(df["d_ar"].iloc[0], 6) == 100.0
     assert round(df["d_ap"].iloc[0], 6) == 50.0
     # cash impact month 1 = -100 + 50 - 0 = -50

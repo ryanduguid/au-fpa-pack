@@ -34,7 +34,7 @@ def divest(
     ``sale_month`` is the number of months the unit is **retained** before the
     sale closes: the unit contributes for forecast months 1..``sale_month`` and
     is removed from the following month onward (0-based index ``sale_month``).
-    So ``sale_month=6`` means "sold 6 months out" - six months of contribution,
+    So ``sale_month=6`` means "sold 6 months out" - 6 months of contribution,
     then gone. In post-sale months, interest is reduced by
     ``proceeds * annual_rate / 12`` (debt paid down with the sale proceeds).
 

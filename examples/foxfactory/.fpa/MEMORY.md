@@ -1,4 +1,4 @@
-# Fox Factory Holding Corp. FP&A Memory
+# Fox Factory Holding Corp. FP&A memory
 
 - `intake.md`: onboarding facts, evidence, confidence, and open questions
 - `business-profile.md`: durable business context derived from intake

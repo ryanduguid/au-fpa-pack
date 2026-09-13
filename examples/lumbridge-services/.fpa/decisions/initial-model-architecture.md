@@ -16,8 +16,8 @@ verifier. Keep the kernel unchanged. A dated cash schedule is needed to
 show the receipt-delay effect that a flat monthly working-capital ratio
 would hide. No live connector or new dependency is needed.
 
-The source registry and exact account mappings identify the six fabricated
-files and two bundled payroll rate tables. The business profile records
+The source registry and exact account mappings identify the 6 fabricated
+files and 2 bundled payroll rate tables. The business profile records
 the synthetic assumptions and planning question.
 
 ## Acceptance
@@ -33,7 +33,7 @@ independent accountant must still complete the trial; native Excel and
 Python checks do not establish forecast accuracy or client suitability.
 
 On 11 September 2026 (Australia/Sydney), Ryan approved publishing the prepared example through
-a pull request and merging after checks pass: "ok merge". Releases and
+a pull request and merging after checks pass: 'ok merge'. Releases and
 outreach remain outside this approval.
 
 ## Evidence for this initial example
@@ -42,7 +42,7 @@ The CFO question is whether a profitable quarter can still need short-term
 funding. The hypothesis is that delaying OPEN-V by 45 days changes cash and
 receivables while preserving service revenue and pre-tax profit.
 
-The source registry identifies the six fabricated inputs and two bundled
+The source registry identifies the 6 fabricated inputs and 2 bundled
 rate tables. September 2026 supplies the opening balances and repeated
 monthly P&L; invoices and payments cover the October to December forecast
 and later debtor collections. The README records each financial assumption.
@@ -51,7 +51,7 @@ This is a new example, with no prior accepted company model or actual holdout.
 The on-time and delayed cases both produce $180,000 quarterly revenue and
 $35,957.55 profit before income tax. Minimum daily cash changes from $16,800
 to ($25,160), and October closing cash changes from $32,040 to ($11,960).
-December cash returns to $67,320 in both cases. All three monthly cash
+December cash returns to $67,320 in both cases. All 3 monthly cash
 reconciliation differences are zero. Tests in tests/test_lumbridge.py check
 these results, delayed receipts beyond the horizon, source rejection and
 all 21 monthly workbook lines. Native Excel also checked the 0, 45 and

@@ -31,17 +31,17 @@ not begin with a long generic questionnaire.
 It records what it can establish, including sources and confidence, then asks
 only unresolved questions in short rounds. Typical questions cover:
 
-- business model, products, customers, segments, and revenue drivers;
-- seasonality, pricing, unit economics, and major operating constraints;
-- legal entities, reporting periods, currencies, and consolidation needs;
-- debt, liquidity, capital spending, and working-capital behaviour;
-- the decisions the CFO needs the model to support;
+- business model, products, customers, segments, and revenue drivers
+- seasonality, pricing, unit economics, and major operating constraints
+- legal entities, reporting periods, currencies, and consolidation needs
+- debt, liquidity, capital spending, and working-capital behaviour
+- the decisions the CFO needs the model to support
 - available systems, exports, folders, and credentials.
 
 The first durable outputs are:
 
-- `.fpa/intake.md`;
-- `.fpa/business-profile.md`;
+- `.fpa/intake.md`
+- `.fpa/business-profile.md`
 - `.fpa/decisions/initial-model-architecture.md`.
 
 The agent waits for approval before generating a model or accessing an external
@@ -54,13 +54,13 @@ reliable ingestion path for that company.
 
 The agent should first ask where the relevant evidence lives:
 
-- QuickBooks, Xero, NetSuite, or another accounting system;
-- local CSV, Excel, or Google Sheets files;
-- a shared folder containing monthly financial packages;
-- P&L and balance-sheet exports;
-- AR and AP ageing reports;
-- inventory balances, item detail, or purchasing data;
-- payroll, CRM, billing, bank, or operational systems;
+- QuickBooks, Xero, NetSuite, or another accounting system
+- local CSV, Excel, or Google Sheets files
+- a shared folder containing monthly financial packages
+- P&L and balance-sheet exports
+- AR and AP ageing reports
+- inventory balances, item detail, or purchasing data
+- payroll, CRM, billing, bank, or operational systems
 - public filings when the company is public.
 
 It should then choose an access path:
@@ -72,11 +72,11 @@ It should then choose an access path:
 
 Generated connector code belongs in `connectors/generated/`. It should include:
 
-- the expected source and authentication method;
-- a fixture or redacted sample;
-- explicit field and account mappings;
-- source totals and reconciliation checks;
-- failure behaviour for missing, duplicate, or unmapped records;
+- the expected source and authentication method
+- a fixture or redacted sample
+- explicit field and account mappings
+- source totals and reconciliation checks
+- failure behaviour for missing, duplicate, or unmapped records
 - tests that do not require production credentials.
 
 Credentials stay with the host tool or environment and are never committed.
@@ -107,7 +107,7 @@ supports task-specific retrieval, but the index is not the source of truth.
 
 Memory and learning are different:
 
-- **Memory** preserves what the system knows, where it learned it, and what
+- **Memory** preserves what the system knows, where it learnt it, and what
   humans corrected or approved.
 - **Learning** evaluates model changes against actual outcomes and retains the
   evidence from accepted and rejected experiments.
@@ -125,11 +125,11 @@ For FP&A, the objective is not simple in-sample reconciliation. A candidate
 should improve forecast performance on held-out actuals while passing hard
 checks such as:
 
-- source reconciliation;
-- accounting identities;
-- segment or entity rollups;
-- working-capital continuity;
-- fit and holdout separation;
+- source reconciliation
+- accounting identities
+- segment or entity rollups
+- working-capital continuity
+- fit and holdout separation
 - scenario coherence.
 
 The AI may generate, evaluate, and discard challengers after the initial
@@ -140,14 +140,14 @@ champion changes only after explicit approval.
 
 The repository includes skills for:
 
-- learning the business;
-- scaffolding an initial model;
-- configuring actuals and data access;
-- running monthly close and cash runway analysis;
-- producing board briefings;
-- capturing human corrections;
-- applying CFO judgement;
-- running company research epochs;
+- learning the business
+- scaffolding an initial model
+- configuring actuals and data access
+- running monthly close and cash runway analysis
+- producing board briefings
+- capturing human corrections
+- applying CFO judgement
+- running company research epochs
 - learning cautiously across a portfolio.
 
 The skills are repo-native instructions for capable coding agents. The

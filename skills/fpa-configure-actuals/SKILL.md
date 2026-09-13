@@ -1,9 +1,9 @@
 ---
 name: fpa-configure-actuals
-description: Use when wiring a company's real numbers into an openfpa model - from local spreadsheets (P&L, balance sheet, AR/AP aging, inventory), a live system via MCP or API (QuickBooks, NetSuite), public filings (10-K/10-Q), or anything else. Not married to one source - build the ingestion for whatever the company has; produces one normalized account-amount shape the rest of the toolkit reads.
+description: Use when wiring a company's real numbers into an openfpa model - from local spreadsheets (P&L, balance sheet, AR/AP ageing, inventory), a live system via MCP or API (QuickBooks, NetSuite), public filings (10-K/10-Q), or anything else. Not married to one source - build the ingestion for whatever the company has; produces one normalised account-amount shape the rest of the toolkit reads.
 ---
 
-# Configure Actuals & Data Sources (Phase 2)
+# Configure actuals and data sources (Phase 2)
 
 ## Overview
 
@@ -11,7 +11,7 @@ Connect the model to the available data and normalise it to one shape (`{account
 
 ## The data can come from anywhere
 
-- **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP ageing, or inventory export. `pyfpa.read_pl_csv(path)` reads any two-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR ageing, **DIO** from inventory, **DPO** from AP ageing.
+- **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP ageing, or inventory export. `pyfpa.read_pl_csv(path)` reads any 2-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR ageing, **DIO** from inventory, **DPO** from AP ageing.
 - **A live accounting system via MCP** - the cleanest live path. If a **QuickBooks** or **NetSuite** MCP server is connected, pull the trial balance / P&L / balance sheet through it and map the result to `{account: amount}`. openfpa never handles credentials - the MCP server owns auth.
 - **A live system via API** - build a company-specific connector around the
   source API and its actual report shape.

@@ -75,7 +75,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 "scripts/au_drivers_snapshot.py" = ["E402"]
 "tests/test_au_drivers.py" = ["E402"]
 "tests/test_harbour_light.py" = ["E402"]
-# E731: the generated Lumbridge exporter binds three short formula builders per
+# E731: the generated Lumbridge exporter binds 3 short formula builders per
 # month, each capturing the loop variables as default arguments. Named
 # functions would move that capture away from where it is read.
 "examples/lumbridge-services/models/generated/lumbridge.py" = ["E731"]

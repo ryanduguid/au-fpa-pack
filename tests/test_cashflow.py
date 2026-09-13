@@ -55,7 +55,7 @@ def test_ridgeline_config_runs_end_to_end():
 
 
 def test_ridgeline_golden_snapshot():
-    """Locks the flagship demo output. If engine math changes, update intentionally."""
+    """Locks the flagship demo output. If engine maths changes, update intentionally."""
     from pathlib import Path
 
     from pyfpa.config.loader import load_config

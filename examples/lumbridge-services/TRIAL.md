@@ -1,7 +1,7 @@
 # Lumbridge trial: leave Tutorial Island without help
 
 This is an independent usability and accounting review of a synthetic case.
-No OSRS knowledge is needed. Varrock and Falador are the two service lines;
+No OSRS knowledge is needed. Varrock and Falador are the 2 service lines;
 the Grand Exchange reference means customer collections.
 
 Use a fresh copy of `lumbridge.xlsx`, its source files and this guide.
@@ -12,7 +12,7 @@ You do not need a Xero login, client data, macros or an AI agent.
 
 If you received the workbook, open it in desktop Excel and enable automatic
 calculation. Do not enable macros or external links. If you are reproducing
-from source, follow the two commands in the example README first.
+from source, follow the 2 commands in the example README first.
 
 Record your Excel version, operating system, start time and whether you
 used the supplied workbook or rebuilt it. Record any help you need.
@@ -28,7 +28,7 @@ used the supplied workbook or rebuilt it. Record any help you need.
    State whether profit changed and explain the difference.
 5. Identify the outstanding December GST, supplier and PAYG withholding
    balances. Explain why gross wages and net employee bank payments differ.
-6. Check the profit-to-cash reconciliation for all three months. Explain
+6. Check the profit-to-cash reconciliation for all 3 months. Explain
    how non-cash leave, customer debtors and tax payments enter the bridge.
 7. Recommend one action for the owner before approving discretionary
    equipment spending. A dragon pickaxe is the fictional equipment upgrade.

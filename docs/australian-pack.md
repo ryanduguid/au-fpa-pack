@@ -32,7 +32,7 @@ employer with a steady full-year wage run rate. Mixed SA/interstate wages
 are refused; use an entity-specific calculator for apportionment, grouping
 or part-year adjustments. This is not an annual reconciliation or a
 statutory monthly return. See [RevenueSA](https://www.revenuesa.sa.gov.au/payrolltax/rates-and-thresholds)
-and [Payroll Tax Act 2009, Schedule 1 clauses 2 and 5](https://www.legislation.sa.gov.au/_legislation-documents/lz/c/a/payroll-tax-act-2009/current/2009.22.auth.pdf).
+and [*Payroll Tax Act 2009*, Schedule 1 clauses 2 and 5](https://www.legislation.sa.gov.au/_legislation-documents/lz/c/a/payroll-tax-act-2009/current/2009.22.auth.pdf).
 
 ```python
 from pyfpa.au import PayrollAssumptions, Role, payroll_forecast

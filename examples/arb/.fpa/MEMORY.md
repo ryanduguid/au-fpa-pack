@@ -1,4 +1,4 @@
-# ARB Corporation Limited FP&A Memory
+# ARB Corporation Limited FP&A memory
 
 - `intake.md`: onboarding facts from the FY2025 4E
 - `business-profile.md`: channels, FY2025 print, exclusions
@@ -6,7 +6,7 @@
 - `mappings/`: filing fields to normalised model fields
 - `corrections/`: none
 - `forecasts/`: none committed
-- `scorecard.md`: unused on a two-year public proof
+- `scorecard.md`: unused on a 2-year public proof
 - `learnings.md`: holdout lesson (export growth is not company-wide)
 - `experiments/`: none
 - `decisions/`: approved demo architecture

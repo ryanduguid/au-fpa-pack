@@ -7,7 +7,7 @@ from pyfpa.memory.workspace import Workspace
 
 
 def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
-    """Recover the realized actuals from a scored snapshot by inverting the stored
+    """Recover the realised actuals from a scored snapshot by inverting the stored
     per-line error: actual = predicted / (1 + error). Only scored lines are
     recoverable; an unscored snapshot yields {}. A line that predicted exactly 0
     (error == -1) is unrecoverable from the stored error and raises ValueError."""

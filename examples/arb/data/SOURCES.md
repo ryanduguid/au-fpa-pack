@@ -16,7 +16,7 @@ Consolidated income statement (report $'000):
 | Sales revenue | 729,949 | 693,154 | `net_sales` |
 | Materials and consumables used | 315,721 | 296,468 | `cost_of_sales` |
 | Gross profit | 414,228 | 396,686 | **Constructed** as sales minus materials. ARB does not print a gross-profit line. |
-| EBIT | 136,144 | 141,813 | KPI table "Earnings before interest and tax" |
+| EBIT | 136,144 | 141,813 | KPI table 'Earnings before interest and tax' |
 | Finance expense | 2,357 | 1,693 | `interest_expense`. Includes lease interest; ARB reports no borrowings. |
 | Profit before income tax | 134,938 | 141,419 | |
 | Income tax expense | 37,411 | 38,736 | |
