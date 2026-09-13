@@ -15,8 +15,6 @@ ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / "examples" / "harbour-light"
 sys.path.insert(0, str(EXAMPLE))
 
-pytest.importorskip("formulas")
-
 from models.generated.harbour_excel import export_workbook
 
 
@@ -90,6 +88,7 @@ def test_fy_summary_labels_harbour_months_as_fy2027():
 
 
 def test_verified_excel_matches_engine(tmp_path):
+    pytest.importorskip("formulas")
     import harbour_model as hm
 
     from pyfpa.excel.verify import verify_workbook
@@ -134,6 +133,7 @@ def test_weekly_bank_movements_include_gst_and_use_reconciled_opening_cash():
 
 
 def test_run_harbour_writes_artifacts(tmp_path):
+    pytest.importorskip("formulas")
     import run_harbour as runner
 
     result = runner.run_harbour(tmp_path)
@@ -146,6 +146,7 @@ def test_run_harbour_writes_artifacts(tmp_path):
 
 
 def test_workbook_cash_recalculates_after_opening_gst_edit(tmp_path):
+    pytest.importorskip("formulas")
     import harbour_model as hm
     from openpyxl import load_workbook
 
@@ -167,6 +168,7 @@ def test_workbook_cash_recalculates_after_opening_gst_edit(tmp_path):
 
 
 def test_export_verification_failure_preserves_existing_delivery(tmp_path, monkeypatch):
+    pytest.importorskip("formulas")
     import harbour_model as hm
 
     path = tmp_path / "model.xlsx"
@@ -181,6 +183,7 @@ def test_export_verification_failure_preserves_existing_delivery(tmp_path, monke
 
 
 def test_runner_rejects_corrupted_workbook_before_writing_briefing(tmp_path, monkeypatch):
+    pytest.importorskip("formulas")
     import run_harbour as runner
     from models.generated import harbour_excel
     from openpyxl import load_workbook
@@ -250,6 +253,7 @@ def test_harbour_workspace_passes_agent_toolbelt_diagnostics():
 
 
 def test_registered_report_exports_verified_workbook(tmp_path):
+    pytest.importorskip("formulas")
     from pyfpa.memory.entrypoints import load_entrypoint_registry
 
     registry = load_entrypoint_registry(EXAMPLE / ".fpa" / "models" / "entrypoints.yaml")

@@ -10,13 +10,16 @@ def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
     """Recover the realized actuals from a scored snapshot by inverting the stored
     per-line error: actual = predicted / (1 + error). Only scored lines are
     recoverable; an unscored snapshot yields {}. A line that predicted exactly 0
-    (error == -1) is unrecoverable from the stored error, so it is skipped."""
+    (error == -1) is unrecoverable from the stored error and raises ValueError."""
     if snapshot.score is None:
         return {}
+    unresolved = [line for line, error in snapshot.score.per_line.items()
+                  if line not in snapshot.predicted or error == -1.0]
+    if unresolved:
+        raise ValueError(f"cannot recover actuals for lines: {unresolved}")
     out: dict[str, float] = {}
     for line, error in snapshot.score.per_line.items():
-        if line in snapshot.predicted and error != -1.0:
-            out[line] = snapshot.predicted[line] / (1.0 + error)
+        out[line] = snapshot.predicted[line] / (1.0 + error)
     return out
 
 

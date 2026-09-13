@@ -1,3 +1,4 @@
+import ast
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 
@@ -123,14 +124,21 @@ def test_workspace_is_the_only_internal_location_seam():
         if path not in compatibility_surfaces
     ]
 
-    combined = "\n".join(
-        path.read_text(encoding="utf-8") for path in lifecycle_sources
-    )
-    assert "workspace_path" not in combined
-    assert '/ ".fpa"' not in combined
-    assert "/ '.fpa'" not in combined
-    assert "_canonical_company_root" not in combined
-    assert "def _assert_safe_existing_chain" not in combined
+    forbidden = {"workspace_path", "_canonical_company_root"}
+    for path in lifecycle_sources:
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Name):
+                assert node.id not in forbidden, path
+            elif isinstance(node, ast.Attribute):
+                assert node.attr not in forbidden, path
+            elif isinstance(node, ast.alias):
+                assert node.name not in forbidden, path
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                assert node.name != "_assert_safe_existing_chain", path
+            elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                assert not (isinstance(node.right, ast.Constant) and node.right.value == ".fpa"), path
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "joinpath":
+                assert not any(isinstance(arg, ast.Constant) and arg.value == ".fpa" for arg in node.args), path
 
 
 def test_initialize_workspace_creates_memory_contract(tmp_path):
