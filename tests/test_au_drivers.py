@@ -261,6 +261,15 @@ def test_abs_rejects_a_frequency_the_key_does_not_promise(monkeypatch):
     assert fetch_abs_series("cpi_monthly", api_key="synthetic-unused").frequency == "M"
 
 
+def test_abs_rejects_a_single_observation_of_the_wrong_frequency(monkeypatch):
+    # A quarterly response carrying one monthly period passed the aggregate
+    # check and folded that month into an existing quarter.
+    raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n2026-02,AUS,4.1\n2026-Q2,AUS,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="returned M observations"):
+        fetch_abs_series("wpi", api_key="synthetic-unused")
+
+
 def test_abs_dataflow_id_reaches_the_request_url(monkeypatch):
     seen = {}
 

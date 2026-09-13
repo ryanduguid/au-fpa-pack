@@ -212,14 +212,23 @@ def fetch_abs_series(
     ]
     if dimension_columns and len(frame[dimension_columns].drop_duplicates()) > 1:
         raise ValueError("ambiguous ABS dimensions; select a single series with dimensions")
+    # Every observation must carry the frequency the key promises. Judging the
+    # aggregate let a quarterly response smuggle in a monthly period, which
+    # to_series() then folded into the same quarter as a duplicate.
+    expected_frequency = ABS_FREQUENCIES[name]
     data: dict[str, float] = {}
     for _, row in frame.iterrows():
         period_raw = str(row[time_col]).strip()
         value_raw = str(row[obs_col]).strip()
         if not period_raw or value_raw in ("", "nan"):
             continue
+        freq = "Q" if "Q" in period_raw else "M"
+        if freq != expected_frequency:
+            raise ValueError(
+                f"ABS dataflow {dataflow} returned {freq} observations for {name!r}, "
+                f"which is {expected_frequency}: the dataflow's frequency has changed"
+            )
         try:
-            freq = "Q" if "Q" in period_raw else "M"
             period = str(pd.Period(period_raw, freq=freq))
             value = float(value_raw)
         except (ValueError, TypeError):
@@ -229,13 +238,7 @@ def fetch_abs_series(
         data[period] = value
     if not data:
         raise ValueError("no ABS observations match the selected dimensions")
-    frequency = "Q" if any("Q" in k for k in data) else "M"
-    expected_frequency = ABS_FREQUENCIES[name]
-    if frequency != expected_frequency:
-        raise ValueError(
-            f"ABS dataflow {dataflow} returned {frequency} observations for {name!r}, "
-            f"which is {expected_frequency}: the dataflow's frequency has changed"
-        )
+    frequency = expected_frequency
 
     return DriverSeries(
         name=name,
