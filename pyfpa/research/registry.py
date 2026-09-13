@@ -82,13 +82,13 @@ def promote_challenger(
 ) -> ModelRegistry:
     """Promote a challenger only with an explicit human approval record.
 
-    When *objective* is provided the stored evaluation is verified by recomputing
-    it from the epoch's champion and challenger metrics. This guards against
-    hand-edited YAML that asserts promotion_eligible=True with garbage metrics.
-    Without *objective* the stored flag is trusted (existing behavior).
+    An objective is required to recompute eligibility from the epoch's metrics
+    and checks. A stored eligibility flag cannot replace that evidence.
     """
     if not approved_by.strip():
         raise ValueError("promotion requires approved_by")
+    if objective is None:
+        raise ValueError("objective is required for promotion validation")
     evaluation = epoch.evaluation
     if (
         epoch.status != "proposed"
@@ -96,28 +96,27 @@ def promote_challenger(
         or not evaluation.promotion_eligible
     ):
         raise ValueError("promotion requires a proposed, promotion-eligible epoch")
-    if objective is not None:
-        if objective.complexity_penalty and (
-            evaluation.champion_complexity is None or evaluation.challenger_complexity is None
-        ):
-            raise ValueError("stored evaluation lacks complexity inputs; evaluate it again")
-        recomputed = evaluate_challenger(
-            objective,
-            evaluation.champion_metrics,
-            evaluation.challenger_metrics,
-            epoch.checks,
-            champion_complexity=evaluation.champion_complexity or 0.0,
-            challenger_complexity=evaluation.challenger_complexity or 0.0,
+    if objective.complexity_penalty and (
+        evaluation.champion_complexity is None or evaluation.challenger_complexity is None
+    ):
+        raise ValueError("stored evaluation lacks complexity inputs; evaluate it again")
+    recomputed = evaluate_challenger(
+        objective,
+        evaluation.champion_metrics,
+        evaluation.challenger_metrics,
+        epoch.checks,
+        champion_complexity=evaluation.champion_complexity or 0.0,
+        challenger_complexity=evaluation.challenger_complexity or 0.0,
+    )
+    reproduces = (
+        recomputed.promotion_eligible
+        and recomputed.complexity_cost == evaluation.complexity_cost
+    )
+    if not reproduces:
+        raise ValueError(
+            "stored evaluation does not reproduce: recomputed evaluation is not "
+            "promotion_eligible -- the stored YAML may have been hand-edited"
         )
-        reproduces = (
-            recomputed.promotion_eligible
-            and recomputed.complexity_cost == evaluation.complexity_cost
-        )
-        if not reproduces:
-            raise ValueError(
-                "stored evaluation does not reproduce: recomputed evaluation is not "
-                "promotion_eligible -- the stored YAML may have been hand-edited"
-            )
     if registry.champion is not None and registry.champion.model_id != epoch.champion_id:
         raise ValueError("epoch champion does not match current registry champion")
     challenger = next(

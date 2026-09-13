@@ -64,3 +64,21 @@ def test_incomplete_recovered_actuals_do_not_count_as_validation(tmp_path, monke
     result = validate_prior("working_capital.dio_days", clients)
     assert result.n_folds == 0
     assert not result.validated
+
+
+def test_unrecoverable_actuals_do_not_count_as_validation(tmp_path):
+    from pathlib import Path
+
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    clients = [_make_client(tmp_path, name, 45) for name in ("a", "b", "c")]
+    for client in clients:
+        path = Path(client.path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+        snapshot = load_snapshot(path)
+        snapshot.predicted["ebitda"] = 0.0
+        assert snapshot.score is not None
+        snapshot.score.per_line["ebitda"] = -1.0
+        save_snapshot(snapshot, path, overwrite=True)
+    result = validate_prior("working_capital.dio_days", clients)
+    assert result.n_folds == 0
+    assert not result.validated
