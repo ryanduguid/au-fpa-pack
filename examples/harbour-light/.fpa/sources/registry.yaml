@@ -81,7 +81,9 @@ sources:
   - 2026-07
   extraction_method: Xero Australia GST-exclusive balance sheet CSV fixture.
   refreshed_at: ''
-  notes: Opening cash, AR, inventory, and AP for the FY2027 model.
+  notes: Opening cash, AR, inventory, and AP for the FY2027 model. Fabricated
+    balances. Retained earnings carries the residual, so the eleven signed
+    accounts sum to zero; harbour_model.balance_sheet refuses the file otherwise.
 - source_id: xero-pl
   kind: accounting_system
   location: data/xero_pl.csv

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from pyfpa.io.loaders import read_yaml
 
@@ -12,9 +12,37 @@ class ClientRef(BaseModel):
     type: str          # business-type tag (the clustering key)
 
 
+def canonical_client_path(path: str) -> str:
+    """The workspace identity used to count support: one workspace, one client."""
+    return str(Path(path).expanduser().resolve())
+
+
+def require_distinct_clients(clients: list[ClientRef]) -> list[ClientRef]:
+    """Reject a client list that names the same workspace more than once.
+
+    Repeated entries are the same evidence counted twice: they would inflate
+    prior support and fill leave-one-out folds with copies of the held-out
+    client. Raising keeps the duplication visible instead of averaging it in.
+    """
+    seen: dict[str, str] = {}
+    for client in clients:
+        key = canonical_client_path(client.path)
+        if key in seen:
+            raise ValueError(
+                f"portfolio lists the same workspace twice: {seen[key]!r} and {client.path!r}"
+            )
+        seen[key] = client.path
+    return clients
+
+
 class Portfolio(BaseModel):
     library: str
     clients: list[ClientRef]
+
+    @model_validator(mode="after")
+    def _clients_are_distinct(self) -> Portfolio:
+        require_distinct_clients(self.clients)
+        return self
 
 
 def load_portfolio(path: str | Path) -> Portfolio:

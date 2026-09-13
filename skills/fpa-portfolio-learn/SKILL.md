@@ -46,7 +46,9 @@ clients:
 ## Guardrails
 
 - Local-only; nothing phones home.
-- At least 3 clients to propose; tight-cluster only; a prior must not degrade held-out clients.
+- At least 3 distinct client workspaces to propose; tight-cluster only; a prior must not
+  degrade held-out clients. A manifest that names the same workspace twice is rejected,
+  so support counts and validation folds stay independent.
 - You ratify everything; priors are *seeds*, not mandates - each client's Loop A refines.
 
 ## The payoff

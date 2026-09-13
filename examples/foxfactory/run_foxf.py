@@ -5,11 +5,12 @@ Phase B replays 2 FY2025 champion/challenger holdout epochs.
 Phase C forecasts FY2026-FY2027 at the segment level, anchored to Q1 FY2026.
 Phase D models a Marucci-divestiture FCF/leverage sensitivity.
 
-Run:  python3 examples/foxfactory/run_foxf.py
+Run:  python3 examples/foxfactory/run_foxf.py --replace-epochs
 Outputs land in examples/foxfactory/output/.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 import tempfile
 from pathlib import Path
@@ -512,7 +513,14 @@ def export_forecast_workbook(destination, forecast, segs, grid, proceeds_grid):
         candidate.replace(destination)
 
 
-def main() -> None:
+def main(*, replace_epochs: bool = False) -> None:
+    """Run every phase and write the example's outputs and research memory.
+
+    Research epochs are written exclusively, so a replay stops at the two
+    epochs this example already ships. ``replace_epochs`` rewrites them in
+    place; it exists to regenerate this example, and a real company
+    workspace should never use it.
+    """
     OUT.mkdir(exist_ok=True)
     workspace = initialize_demo_workspace()
     forecast, segs = fm.build_forecast()
@@ -528,7 +536,7 @@ def main() -> None:
     save_research_objective(fm.HOLDOUT_OBJECTIVE, research_dir / "objective.yaml")
     epochs = fm.historical_research_epochs()
     for epoch in epochs:
-        save_epoch(epoch, research_dir)
+        save_epoch(epoch, research_dir, overwrite=replace_epochs)
     registry = ModelRegistry(champion=ModelVersion(
         model_id="foxf-flat-fy2024-run-rate",
         created="2026-06-09",
@@ -585,4 +593,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=main.__doc__)
+    parser.add_argument(
+        "--replace-epochs",
+        action="store_true",
+        help="rewrite existing research epochs instead of refusing to overwrite them",
+    )
+    main(replace_epochs=parser.parse_args().replace_epochs)

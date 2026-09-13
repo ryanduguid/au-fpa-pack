@@ -113,3 +113,39 @@ def test_shipped_example_intake_supports_its_approved_architecture(path):
     for fact in intake.facts:
         assert fact.topic in PROFILE_HEADINGS, (path, fact.key)
         assert " ".join(fact.answer.split()) in profile, (path, fact.key)
+
+
+def test_first_render_replaces_the_untouched_seeded_profile(tmp_path):
+    # F072: `openfpa init` seeds business-profile.md, so the documented first
+    # `write_onboarding_outputs(...)` call used to fail with FileExistsError and
+    # create no architecture proposal.
+    from pyfpa.memory.workspace import initialize_workspace
+
+    workspace = initialize_workspace(tmp_path, business_name="Acme")
+    profile, proposal = write_onboarding_outputs(_ready_intake(), workspace, _proposal())
+    assert "Known business_model" in profile.read_text(encoding="utf-8")
+    assert proposal.exists()
+
+
+def test_a_profile_with_recorded_facts_is_still_protected(tmp_path):
+    # Control: only the fact-free seed is replaceable.
+    from pyfpa.memory.workspace import initialize_workspace
+
+    workspace = initialize_workspace(tmp_path, business_name="Acme")
+    profile_path = workspace / "business-profile.md"
+    profile_path.write_text(
+        render_business_profile(
+            record_intake_fact(
+                Intake(business_name="Acme"),
+                key="business_model",
+                answer="Wholesale to independents",
+                source_type="user",
+            )
+        ),
+        encoding="utf-8",
+    )
+    previous = profile_path.read_bytes()
+    with pytest.raises(FileExistsError):
+        write_onboarding_outputs(_ready_intake(), workspace, _proposal())
+    assert profile_path.read_bytes() == previous
+    assert not (workspace / "decisions" / "initial-model-architecture.md").exists()

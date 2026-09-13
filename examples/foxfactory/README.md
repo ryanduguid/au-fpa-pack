@@ -7,9 +7,16 @@ demo data. The example separates accounting reproduction from independent
 historical validation instead of presenting them as the same thing.
 
 ```bash
-python3 pull_edgar.py   # (re)pull actuals from SEC EDGAR → data/*.csv + SOURCES.md
-python3 run_foxf.py     # run all four phases → output/ + .fpa research memory
+pip install -e ".[dev]"  # the refresh parses the segment footnote with lxml
+python3 pull_edgar.py    # (re)pull actuals from SEC EDGAR → data/*.csv + SOURCES.md
+python3 run_foxf.py --replace-epochs   # all four phases → output/ + research memory
 ```
+
+`run_foxf.py` saves a research epoch per holdout challenger and refuses to
+overwrite one that already exists, which is the guard against losing research
+history. This example ships its two epochs, so a replay needs `--replace-epochs`
+to rewrite them in place. Leave the flag off in a real company workspace: there
+an existing epoch is history, not a regenerable artefact.
 
 Every figure traces to a filing via [`data/SOURCES.md`](data/SOURCES.md).
 

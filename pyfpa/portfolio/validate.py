@@ -15,7 +15,7 @@ from pyfpa.backtest.snapshot import Snapshot
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.memory.paths import apply_override
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.portfolio.manifest import ClientRef
+from pyfpa.portfolio.manifest import ClientRef, require_distinct_clients
 from pyfpa.portfolio.mine import client_driver_value
 from pyfpa.portfolio.recover import best_snapshot, recover_actuals
 
@@ -31,7 +31,10 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
     value as the median across the OTHER clients, apply it to the held-out client's
     best-snapshot config, re-forecast, and score against that client's recovered
     actuals. A prior is `validated` if the mean fitness delta (new - original) is
-    <= tolerance with >= 2 folds - a peer-derived value does not degrade held-out fit."""
+    <= tolerance with >= 2 folds - a peer-derived value does not degrade held-out fit.
+    Repeated workspaces are rejected: a fold whose peers include copies of the
+    held-out client is not held out."""
+    require_distinct_clients(type_clients)
     usable: list[tuple[float, Snapshot, ScoreResult]] = []
     for c in type_clients:
         snap = best_snapshot(c.path)

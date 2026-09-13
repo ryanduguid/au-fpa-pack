@@ -102,3 +102,20 @@ def test_apply_bad_path_raises_loudly():
                      override=Override(path="nonexistent.field", value=1.0))
     with pytest.raises(ValueError):
         apply_corrections(cfg, [bad])
+
+
+def test_a_correction_target_keeps_its_literal_triple_hyphens(tmp_path):
+    # F074: the shared frontmatter splitter cut this target short, so the
+    # correction failed validation on load.
+    correction = Correction(
+        slug="2026-06-08-domestic-revenue",
+        type="context",
+        target="revenue---domestic",
+        status="open",
+        date="2026-06-08",
+        notes="Domestic revenue only.",
+    )
+    save_correction(correction, tmp_path)
+    loaded = load_corrections(tmp_path)
+    assert [c.target for c in loaded] == ["revenue---domestic"]
+    assert loaded[0].notes == "Domestic revenue only."

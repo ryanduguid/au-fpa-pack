@@ -265,3 +265,28 @@ def test_registered_report_exports_verified_workbook(tmp_path):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert path.exists()
+
+
+def test_opening_balance_sheet_fixtures_balance():
+    # F068: the eleven signed balances used to sum to -2,000, and the shared
+    # kernel fixture carried the same difference.
+    from pyfpa.io.xero_au import read_xero_report
+
+    for fixture in (
+        EXAMPLE / "data" / "xero_bs.csv",
+        ROOT / "pyfpa" / "io" / "fixtures" / "xero_bs_au.csv",
+    ):
+        total = sum(read_xero_report(fixture).by_account().values())
+        assert abs(total) < 0.01, (fixture, total)
+
+
+def test_an_unbalanced_opening_sheet_is_refused(tmp_path, monkeypatch):
+    import harbour_model as hm
+
+    source = (EXAMPLE / "data" / "xero_bs.csv").read_text(encoding="utf-8")
+    (tmp_path / "xero_bs.csv").write_text(
+        source.replace('"(91,170.00)"', '"(93,170.00)"'), encoding="utf-8"
+    )
+    monkeypatch.setattr(hm, "DATA", tmp_path)
+    with pytest.raises(ValueError, match="does not balance"):
+        hm.balance_sheet()

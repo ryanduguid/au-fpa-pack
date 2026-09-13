@@ -58,7 +58,16 @@ def profit_and_loss():
 
 
 def balance_sheet():
-    return read_xero_report(DATA / "xero_bs.csv")
+    report = read_xero_report(DATA / "xero_bs.csv")
+    # The opening accounts are a source, not a plug: a signed total other than
+    # zero means the fixture is inconsistent and every balance drawn from it is
+    # suspect. Lumbridge applies the same check to its own opening sheet.
+    out_of_balance = sum(report.by_account().values())
+    if abs(out_of_balance) > 0.01:
+        raise ValueError(
+            f"Opening balance sheet does not balance: {out_of_balance:,.2f} difference"
+        )
+    return report
 
 
 def taxable_sales_pct() -> float:

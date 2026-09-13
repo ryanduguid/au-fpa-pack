@@ -142,3 +142,38 @@ def test_intake_readiness_requires_all_critical_topics():
 def test_question_limit_must_be_positive():
     with pytest.raises(ValueError, match="at least 1"):
         next_intake_questions(Intake(), limit=0)
+
+
+def test_literal_triple_hyphens_survive_a_save_and_load(tmp_path):
+    # F074: the loader used to split the whole document at the first two
+    # occurrences of "---", so three hyphens inside a value cut the frontmatter
+    # short. The business name came back truncated and the answer failed
+    # validation.
+    intake = record_intake_fact(
+        Intake(business_name="Division---A"),
+        key="business_model",
+        answer="Wholesale---retail",
+        source_type="user",
+    )
+    path = tmp_path / "intake.md"
+    save_intake(intake, path)
+    loaded = load_intake(path)
+    assert loaded.business_name == "Division---A"
+    assert loaded.facts[0].answer == "Wholesale---retail"
+
+
+def test_a_body_separator_still_stays_out_of_the_frontmatter(tmp_path):
+    # Control: a horizontal rule in the notes belongs to the body.
+    intake = Intake(business_name="Acme", notes="Intro\n\n---\n\nMore")
+    path = tmp_path / "intake.md"
+    save_intake(intake, path)
+    loaded = load_intake(path)
+    assert loaded.business_name == "Acme"
+    assert loaded.notes == "Intro\n\n---\n\nMore"
+
+
+def test_a_frontmatter_block_without_a_closing_line_is_rejected(tmp_path):
+    path = tmp_path / "intake.md"
+    path.write_text("---\nbusiness_name: Acme\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="missing closing frontmatter delimiter"):
+        load_intake(path)

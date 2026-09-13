@@ -128,22 +128,25 @@ def test_registered_challenger_resolves_to_a_committed_research_epoch():
 
     challenger = registry.challengers[0]
     assert challenger.source_epoch is not None
+    objective = load_research_objective(research / "objective.yaml")
+    source = epochs[challenger.source_epoch]
+    # F088: the committed epochs predated the complexity fields, so promotion
+    # from them was refused until they were regenerated.
+    stripped = source.model_copy(deep=True)
+    assert stripped.evaluation is not None
+    stripped.evaluation.champion_complexity = None
     with pytest.raises(ValueError, match="complexity inputs"):
         promote_challenger(
-            registry, challenger_id=challenger.model_id,
-            epoch=epochs[challenger.source_epoch], approved_by="reviewer",
-            approved_at="2026-08-21",
-            objective=load_research_objective(research / "objective.yaml"),
+            registry, challenger_id=challenger.model_id, epoch=stripped,
+            approved_by="reviewer", approved_at="2026-08-21", objective=objective,
         )
-    import arb_model as am
-    refreshed = {epoch.epoch_id: epoch for epoch in am.historical_research_epochs()}
     promoted = promote_challenger(
         registry,
         challenger_id=challenger.model_id,
-        epoch=refreshed[challenger.source_epoch],
+        epoch=source,
         approved_by="reviewer",
         approved_at="2026-08-21",
-        objective=load_research_objective(research / "objective.yaml"),
+        objective=objective,
     )
     assert promoted.champion is not None
     assert promoted.champion.model_id == challenger.model_id
@@ -175,9 +178,6 @@ def test_run_arb_regenerates_the_research_memory_it_claims_to(tmp_path):
     for name, text in written.items():
         current = yaml.safe_load(text)
         historical = yaml.safe_load(before[name])
-        if name.endswith(".epoch.yaml"):
-            assert current["evaluation"].pop("champion_complexity") == 1.0
-            assert current["evaluation"].pop("challenger_complexity") == 1.1
         assert current == historical
     with pytest.raises(FileExistsError):
         runner.run_arb(tmp_path)
@@ -248,3 +248,40 @@ def test_channel_rollup_check_is_computed_not_asserted(monkeypatch):
     check = am.channel_rollup_check(**params)
     assert check.result == "fail"
     assert "2.00% gap" in check.details
+
+
+def test_committed_outputs_match_their_generator():
+    """F085/F088: the committed markdown and research epochs are generated, so a
+    stale one is a claim the code no longer supports. Refresh them with
+    `python3 examples/arb/run_arb.py --replace-epochs`."""
+    import arb_model as am
+    import run_arb as ra
+    import yaml
+
+    generated = {
+        "reconciliation.md": ra.phase_a(),
+        "historical-holdout.md": ra.phase_b(),
+        "forecast-briefing.md": ra.phase_c(),
+        "sensitivity.md": ra.phase_d(),
+    }
+    for name, text in generated.items():
+        committed = (EXAMPLE / "output" / name).read_text(encoding="utf-8")
+        assert committed.replace("\r\n", "\n") == text.replace("\r\n", "\n"), name
+
+    for epoch in am.historical_research_epochs():
+        path = EXAMPLE / ".fpa" / "research" / f"{epoch.epoch_id}.epoch.yaml"
+        committed = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert committed == epoch.model_dump(mode="json"), epoch.epoch_id
+
+
+def test_replay_refuses_to_overwrite_a_committed_epoch(tmp_path, monkeypatch):
+    # F085: the guard stays on by default; --replace-epochs is the documented
+    # opt-in for regenerating this example.
+    import run_arb as ra
+
+    monkeypatch.setattr(ra, "OUT", tmp_path / "output")
+    monkeypatch.setattr(ra, "RESEARCH", tmp_path / "research")
+    ra.run_arb()
+    with pytest.raises(FileExistsError):
+        ra.run_arb()
+    ra.run_arb(replace_epochs=True)

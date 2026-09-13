@@ -25,7 +25,9 @@ Map the real numbers onto the existing engine structure.
    - debt → `debt[]` (`term_loan` with `monthly_principal`, or interest-only `loc`)
    - balance-sheet rhythm → `working_capital(dso_days, dpo_days, dio_days)` and `opening_balances`
 3. **Write** the company model and config under `models/generated/`. Validate
-   config with `pyfpa.load_config(path)`, which raises on any bad field.
+   config with `pyfpa.load_config(path)`, which raises on a missing required
+   field, an out-of-range value, and any key the schema does not define, so a
+   misspelt field cannot fall back to its default unreported.
 4. **Create a runnable command** such as
    `python3 models/generated/run_forecast.py`. Keep the runner thin and make its
    output locations explicit.

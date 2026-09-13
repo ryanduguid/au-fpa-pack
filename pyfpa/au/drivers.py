@@ -41,14 +41,45 @@ RBA_SERIES = {
     "twi": ("f11.1-data.csv", "FXRTWI"),
 }
 
-# ABS Indicator API dataflow identifiers for the headline series useful
-# in FP&A driver models. Keys map to ABS dataflow ids.
+# ABS Indicator API dataflow identifiers for the headline series useful in FP&A
+# driver models, with the frequency each key promises. Indicator API ids carry
+# the _H suffix; the unsuffixed forms (CPI, WPI, RT, LF) belong to the separate
+# Data API. Checked against the dataflowId enum in the ABS Indicator API
+# description and the ABS Data API user guide updates on 13 September 2026:
+# https://raw.githubusercontent.com/apigovau/api-descriptions/master/abs/indicator.openapi.yaml
+# https://www.abs.gov.au/statistics/application-programming-interfaces-apis/data-api-user-guide/updates
+#
+# CPI_H became monthly in November 2025, when CPI_M and CPI_M_H ceased;
+# quarterly CPI returned as CPI_Q_H in April 2026. Retail Trade ceased with the
+# June 2025 period: RT_H is history, not a live driver. The Monthly Household
+# Spending Indicator (HSI_M_H) is the ABS replacement publication, but it
+# measures household spending rather than retail turnover, so it is not mapped
+# here as a substitute.
 ABS_DATAFLOWS = {
-    "cpi_monthly": "CPI_M",
-    "cpi_quarterly": "CPI_H",
-    "wpi": "WPI",
-    "retail_trade": "RT",
-    "labour_force": "LF",
+    "cpi_monthly": "CPI_H",
+    "cpi_quarterly": "CPI_Q_H",
+    "wpi": "WPI_H",
+    "retail_trade": "RT_H",
+    "labour_force": "LF_H",
+}
+
+# Expected observation frequency per key, so a monthly dataflow cannot be
+# returned under a quarterly name (or the reverse).
+ABS_FREQUENCIES = {
+    "cpi_monthly": "M",
+    "cpi_quarterly": "Q",
+    "wpi": "Q",
+    "retail_trade": "M",
+    "labour_force": "M",
+}
+
+# Keys the ABS no longer updates. Their history is still usable when labelled.
+ABS_CEASED = {
+    "retail_trade": (
+        "Retail Trade, Australia ceased with the June 2025 period and RT_H is no "
+        "longer updated. Use it as history, and assess the Monthly Household "
+        "Spending Indicator separately: it measures a different concept."
+    ),
 }
 
 _UA = "au-fpa-pack (github.com/ryanduguid/au-fpa-pack)"
@@ -199,6 +230,12 @@ def fetch_abs_series(
     if not data:
         raise ValueError("no ABS observations match the selected dimensions")
     frequency = "Q" if any("Q" in k for k in data) else "M"
+    expected_frequency = ABS_FREQUENCIES[name]
+    if frequency != expected_frequency:
+        raise ValueError(
+            f"ABS dataflow {dataflow} returned {frequency} observations for {name!r}, "
+            f"which is {expected_frequency}: the dataflow's frequency has changed"
+        )
 
     return DriverSeries(
         name=name,

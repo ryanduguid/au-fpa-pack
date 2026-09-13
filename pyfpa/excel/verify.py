@@ -5,6 +5,7 @@ the runtime library works without it.
 """
 from __future__ import annotations
 
+import datetime as dt
 import math
 from pathlib import Path
 from types import ModuleType
@@ -33,14 +34,32 @@ def _load_formulas() -> ModuleType:
     return module
 
 
+def _period_label(value: object, freq: str | None) -> str:
+    """Normalise a Model-sheet header cell to the label form ``expected`` uses.
+
+    The kernel exporter writes ``str(period)``; a company exporter may write the
+    month's start datetime instead. Both are compared on the same footing.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, (dt.datetime, dt.date)) and freq:
+        return str(pd.Period(value, freq=freq))
+    return str(value).strip()
+
+
 def verify_workbook(
     path: str | Path,
     expected: pd.DataFrame,
     *,
     rel_tol: float = 1e-6,
 ) -> VerifyReport:
-    """Evaluate the workbook's formulas in Python and compare every Model-sheet
-    line that matches a column of ``expected``, month by month.
+    """Evaluate the workbook's formulas in Python and compare every column of
+    ``expected`` against the Model sheet, month by month.
+
+    Every column of ``expected`` is required: a line the workbook does not carry
+    is a failure, not a skipped check. The Model sheet's header row must also
+    name the same periods as ``expected``, in the same order, so a workbook built
+    for other months cannot pass on position alone.
 
     NaN or unevaluated cells are failures, never skipped.
 
@@ -63,8 +82,20 @@ def verify_workbook(
     max_dev = 0.0
     lines = 0
 
+    freq = expected.index.freqstr if isinstance(expected.index, pd.PeriodIndex) else None
+    for m_idx, period in enumerate(expected.index):
+        want_label = str(period)
+        got_label = _period_label(
+            model_ws.cell(row=1, column=2 + m_idx).value, freq
+        )
+        if got_label != want_label:
+            failures.append(
+                f"month {m_idx + 1}: workbook header {got_label!r} vs expected {want_label!r}"
+            )
+
     for line in expected.columns:
         if line not in labels:
+            failures.append(f"{line}: required output missing from the Model sheet")
             continue
         lines += 1
         row = labels[line]

@@ -12,10 +12,10 @@ Filed in these 10-Ks:
 - FY2023 (period end 2023-12-29): accession 000142492924000006
 - FY2024 (period end 2025-01-03): accession 000142492925000007
 - FY2025 (period end 2026-01-02): accession 000142492926000012
-- Q1 FY2026 (period end 2026-04-03): latest 10-Q (most recent quarterly value per concept)
+- Q1 FY2026 (period end 2026-04-03): fiscal Q1 10-Q facts for FY2026
 
-`quarterly.csv` holds the 2 most recent Q1 net-sales prints (the FY2026
-forecast anchor), selected as the ~90-day periods starting in early January.
+`quarterly.csv` holds the fixed FY2025 and FY2026 Q1 net-sales comparison.
+Selection requires the fiscal year, Q1 filing period and start after the prior year-end.
 
 ## Revolving borrowings and unallocated corporate expense
 

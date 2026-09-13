@@ -3,7 +3,17 @@ from __future__ import annotations
 from typing import Literal
 
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+class _ConfigModel(BaseModel):
+    """Base for the config contract: an unrecognised key is a mistake.
+
+    Accepting extras let a misspelt optional field fall back to its default
+    without a word, so a config that looked applied was quietly ignored.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
 
 def _reject_reserved_name(v: str) -> str:
@@ -15,7 +25,7 @@ def _reject_reserved_name(v: str) -> str:
     return name
 
 
-class Channel(BaseModel):
+class Channel(_ConfigModel):
     name: str
     annual_revenue: float = Field(ge=0)
     growth_rate: float = Field(default=0.0, gt=-1)  # annual YoY
@@ -37,7 +47,7 @@ class Channel(BaseModel):
         return v
 
 
-class OpexLine(BaseModel):
+class OpexLine(_ConfigModel):
     name: str
     kind: Literal["fixed", "variable"]
     monthly_amount: float = 0.0       # used when kind == "fixed"
@@ -49,7 +59,7 @@ class OpexLine(BaseModel):
         return _reject_reserved_name(v)
 
 
-class DebtInstrument(BaseModel):
+class DebtInstrument(_ConfigModel):
     name: str
     kind: Literal["term_loan", "loc"]
     opening_balance: float = Field(ge=0)
@@ -65,13 +75,13 @@ class DebtInstrument(BaseModel):
         return name
 
 
-class WorkingCapitalConfig(BaseModel):
+class WorkingCapitalConfig(_ConfigModel):
     dso_days: float = Field(ge=0)
     dpo_days: float = Field(ge=0)
     dio_days: float = Field(ge=0)
 
 
-class OpeningBalances(BaseModel):
+class OpeningBalances(_ConfigModel):
     cash: float = 0.0
     ar: float = 0.0
     ap: float = 0.0
@@ -79,7 +89,7 @@ class OpeningBalances(BaseModel):
     nol: float = Field(default=0.0, ge=0)  # net operating loss carryforward
 
 
-class EntityConfig(BaseModel):
+class EntityConfig(_ConfigModel):
     name: str
     start_month: str
     horizon_months: int = Field(default=12, ge=1, le=120)
