@@ -85,6 +85,12 @@ def divest(
         }
         for col in _CASH_COLUMNS:
             out.at[label, col] = float(updates[col])
+        # The kernel forecast carries cogs too; the sold unit's cogs is its
+        # revenue less gross profit, so revenue - cogs = gross_profit still holds.
+        if "cogs" in out.columns:
+            out.at[label, "cogs"] = float(
+                row["cogs"] - (carve_out.revenue - carve_out.gross_profit)
+            )
 
     out["ending_cash"] = out["change_in_cash"].cumsum() + opening_cash
     return out

@@ -243,3 +243,34 @@ def test_regression_guard_disabled_by_default():
         _guard_checks(),
     )
     assert result.regression_guard_passed is True
+
+
+@pytest.mark.parametrize(
+    ("champion", "challenger"),
+    [(0.20, float("nan")), (float("nan"), 0.10), (float("inf"), 0.10)],
+)
+def test_non_finite_metrics_are_rejected(champion, challenger):
+    # A NaN or infinite metric previously scored as a full improvement and
+    # could qualify a challenger for promotion.
+    with pytest.raises(ValueError, match="must be finite"):
+        evaluate_challenger(
+            _objective(),
+            {"cash_error": champion, "bias_control": 0.80},
+            {"cash_error": challenger, "bias_control": 0.88},
+            _checks(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("direction", "challenger", "expected"),
+    [
+        ("higher", 1.0, 1.0), ("higher", 0.0, 0.0), ("higher", -1.0, -1.0),
+        ("lower", 1.0, -1.0), ("lower", 0.0, 0.0), ("lower", -1.0, 1.0),
+    ],
+)
+def test_zero_baseline_scores_the_sign_of_the_move(direction, challenger, expected):
+    objective = ResearchObjective(
+        metrics=[MetricObjective(name="m", weight=1.0, direction=direction)]
+    )
+    result = evaluate_challenger(objective, {"m": 0.0}, {"m": challenger}, [])
+    assert result.per_metric_improvement["m"] == expected

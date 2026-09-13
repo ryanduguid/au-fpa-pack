@@ -228,3 +228,23 @@ def test_arb_workspace_passes_agent_toolbelt_diagnostics():
         check=False,
     )
     assert result.returncode == 0, result.stdout
+
+
+def test_channel_rollup_check_is_computed_not_asserted(monkeypatch):
+    import arb_model as am
+
+    params = dict(export_growth=0.164, other_growth=0.0, margin_delta=-0.015)
+    assert am.channel_rollup_check(**params).result == "pass"
+
+    # An engine whose revenue no longer matches the channel sales must fail
+    # the hard check instead of reporting a literal pass.
+    real = am.cashflow_from_config
+
+    def inflated(cfg):
+        frame = real(cfg)
+        return frame.assign(revenue=frame["revenue"] * 1.02)
+
+    monkeypatch.setattr(am, "cashflow_from_config", inflated)
+    check = am.channel_rollup_check(**params)
+    assert check.result == "fail"
+    assert "2.00% gap" in check.details

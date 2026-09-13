@@ -6,9 +6,14 @@ its output is compared to the reported figures. This proves the accounting
 mechanics reproduce known outcomes; it is **not** an independent forecast
 validation because the target-year drivers are inputs. Tolerance: 1%.
 
+`operating_cash_flow_before_tax` is a constructed proxy on both sides:
+segment Adjusted EBITDA plus the balance-sheet working-capital cash
+movement. It is not the reported cash-flow statement, which also carries
+interest and other operating adjustments.
+
 ## FY2024
 
-| Line | Model | Reported | Variance | Tie |
+| Line | Model | Reported or proxy | Variance | Tie |
 |---|--:|--:|--:|:--:|
 | net_sales | $1,393.9M | $1,393.9M | -0.00% | yes |
 | gross_profit | $423.6M | $423.6M | -0.00% | yes |
@@ -19,7 +24,7 @@ validation because the target-year drivers are inputs. Tolerance: 1%.
 
 ## FY2025
 
-| Line | Model | Reported | Variance | Tie |
+| Line | Model | Reported or proxy | Variance | Tie |
 |---|--:|--:|--:|:--:|
 | net_sales | $1,467.3M | $1,467.3M | +0.00% | yes |
 | gross_profit | $443.2M | $443.2M | +0.00% | yes |

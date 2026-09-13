@@ -31,8 +31,11 @@ The channel-level forecast tells you the business is healthy; it doesn't tell yo
    skus = pyfpa.load_skus("examples/ridgeline/skus.yaml")   # or build [Sku(...)] inline
    df = pyfpa.sku_profitability(skus)
    ```
-   `df` is sorted by gross profit (desc), indexed by SKU, with columns: `units, revenue,
-   cogs, gross_profit, gross_margin, revenue_share, cumulative_revenue_pct`.
+   `df` is sorted by revenue (desc) so the Pareto columns read top-down, indexed by SKU,
+   with columns: `units, revenue, cogs, gross_profit, gross_margin, revenue_share,
+   cumulative_revenue_pct`. For a profit ranking, re-sort it:
+   `df.sort_values("gross_profit", ascending=False)`. A high-revenue SKU can sit at the
+   top of the revenue order while contributing less gross profit than a smaller one.
 
 2. **Find the 80/20**:
    ```python
@@ -40,7 +43,7 @@ The channel-level forecast tells you the business is healthy; it doesn't tell yo
    ```
 
 3. **Read the signals**:
-   - **Top of the list** (high gross profit) - protect and push these.
+   - **Top of the gross-profit order** (after re-sorting by `gross_profit`) - protect and push these.
    - **High revenue, low `gross_margin`** - reprice or renegotiate cost; they're buying share with your margin.
    - **Low `revenue_share` AND low margin** - candidates to cut (carrying cost without contribution).
    - **The Pareto tail** - if the bottom SKUs add complexity (SKUs to manage, inventory to hold) without margin, rationalize them.
@@ -49,5 +52,5 @@ The channel-level forecast tells you the business is healthy; it doesn't tell yo
 
 ## Judgement checks (see fpa-cfo-judgment)
 
-- `gross_margin` here is **per-unit price minus unit cost** - it excludes channel fees, returns, and fulfilment. A D2C SKU and a wholesale SKU at the same listed margin are not equally profitable once channel economics hit.
+- `gross_margin` here is **gross profit divided by revenue, as a fraction** (`0.05` means 5%), built from listed price and unit cost only - it excludes channel fees, returns, and fulfilment. A D2C SKU and a wholesale SKU at the same listed margin are not equally profitable once channel economics hit.
 - A 'high-margin' SKU with tiny volume may not be worth the operational complexity it adds. Weigh contribution dollars, not just the percentage.

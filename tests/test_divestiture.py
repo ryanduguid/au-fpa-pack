@@ -115,3 +115,16 @@ def test_leverage_annualises_short_and_long_forecasts():
     for months in (6, 24):
         frame = pd.DataFrame({"ebitda": [30.0] * months})
         assert net_debt_to_ebitda(frame, debt_balance=360) == pytest.approx(1)
+
+
+def test_divest_removes_sold_units_cogs_when_column_present():
+    # Kernel forecasts carry cogs; the sold unit's cogs is revenue less gross
+    # profit (20 - 8 = 12), so revenue - cogs must still equal gross_profit.
+    base = _base_forecast().assign(cogs=60.0)
+    out = divest(base, _carveout(), sale_month=6, proceeds=0.0,
+                 annual_rate=0.0, tax_rate=0.0)
+    assert (out["cogs"].iloc[:6] == 60.0).all()
+    assert (out["cogs"].iloc[6:] == 48.0).all()
+    identity = out["revenue"] - out["cogs"] - out["gross_profit"]
+    assert identity.abs().max() == pytest.approx(0.0)
+    assert (base["cogs"] == 60.0).all()
