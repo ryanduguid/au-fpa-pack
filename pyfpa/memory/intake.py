@@ -114,16 +114,24 @@ _REQUIRED_KEYS = frozenset(_QUESTIONS_BY_KEY)
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if text.startswith("---"):
-        parts = text.split("---", 2)
-        if len(parts) != 3:
-            raise ValueError("missing closing frontmatter delimiter")
-        _, frontmatter, body = parts
-        data = yaml.safe_load(frontmatter) or {}
-        if not isinstance(data, dict):
-            raise ValueError("frontmatter must be a mapping")
-        return data, body.strip()
-    return {}, text.strip()
+    """Read a leading YAML frontmatter block delimited by whole ``---`` lines.
+
+    Only a line that is exactly ``---`` opens or closes the block, so three
+    hyphens inside a field value (``Division---A``) and an indented ``---``
+    inside a folded scalar are ordinary characters, not a delimiter.
+    """
+    lines = text.split("\n")
+    if not lines or lines[0].rstrip() != "---":
+        return {}, text.strip()
+    for close in range(1, len(lines)):
+        if lines[close].rstrip() == "---":
+            break
+    else:
+        raise ValueError("missing closing frontmatter delimiter")
+    data = yaml.safe_load("\n".join(lines[1:close])) or {}
+    if not isinstance(data, dict):
+        raise ValueError("frontmatter must be a mapping")
+    return data, "\n".join(lines[close + 1:]).strip()
 
 
 def save_intake(intake: Intake, path: str | Path) -> None:

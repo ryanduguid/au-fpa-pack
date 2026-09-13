@@ -17,7 +17,7 @@ interest and other operating adjustments.
 |---|--:|--:|--:|:--:|
 | net_sales | $1,393.9M | $1,393.9M | -0.00% | yes |
 | gross_profit | $423.6M | $423.6M | -0.00% | yes |
-| adjusted_ebitda | $223.4M | $223.4M | +0.00% | yes |
+| adjusted_ebitda | $223.4M | $223.4M | -0.00% | yes |
 | depreciation_amortization | $83.6M | $83.6M | -0.00% | yes |
 | capex | $44.0M | $44.0M | +0.00% | yes |
 | operating_cash_flow_before_tax | $227.4M | $227.4M | -0.00% | yes |

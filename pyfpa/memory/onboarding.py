@@ -101,6 +101,24 @@ def render_architecture_proposal(
     )
 
 
+_PROFILE_TITLE_SUFFIX = " Business Profile"
+
+
+def is_seeded_business_profile(text: str) -> bool:
+    """True when the profile is still the empty one `openfpa init` writes.
+
+    The seed is a fact-free render, so reproducing it exactly from its own title
+    establishes that nobody has written anything into it yet.
+    """
+    first_line = text.partition("\n")[0]
+    if not (first_line.startswith("# ") and first_line.endswith(_PROFILE_TITLE_SUFFIX)):
+        return False
+    name = first_line[2: -len(_PROFILE_TITLE_SUFFIX)]
+    if not name:
+        return False
+    return text == render_business_profile(Intake(business_name=name))
+
+
 def write_onboarding_outputs(
     intake: Intake,
     workspace: str | Path,
@@ -108,7 +126,12 @@ def write_onboarding_outputs(
     *,
     overwrite: bool = False,
 ) -> tuple[Path, Path]:
-    """Write the business profile and architecture proposal after intake is ready."""
+    """Write the business profile and architecture proposal after intake is ready.
+
+    `openfpa init` seeds an empty `business-profile.md`, so the first render
+    replaces that untouched seed. A profile carrying any recorded fact, and an
+    existing architecture decision, still need an explicit `overwrite`.
+    """
     if not intake_ready(intake):
         raise ValueError("intake is not ready for architecture proposal")
     workspace = Path(workspace)
@@ -117,14 +140,19 @@ def write_onboarding_outputs(
     decisions.mkdir(exist_ok=True)
     profile_path = workspace / "business-profile.md"
     proposal_path = decisions / "initial-model-architecture.md"
+    replace_seed = profile_path.exists() and is_seeded_business_profile(
+        profile_path.read_text(encoding="utf-8")
+    )
     if not overwrite:
-        for path in (profile_path, proposal_path):
-            if path.exists():
-                raise FileExistsError(f"onboarding output already exists: {path}")
+        if proposal_path.exists():
+            raise FileExistsError(f"onboarding output already exists: {proposal_path}")
+        if profile_path.exists() and not replace_seed:
+            raise FileExistsError(f"onboarding output already exists: {profile_path}")
     for path, text in (
         (profile_path, render_business_profile(intake)),
         (proposal_path, render_architecture_proposal(intake, proposal)),
     ):
-        with path.open("w" if overwrite else "x", encoding="utf-8") as output:
+        mode = "w" if overwrite or (path is profile_path and replace_seed) else "x"
+        with path.open(mode, encoding="utf-8") as output:
             output.write(text)
     return profile_path, proposal_path

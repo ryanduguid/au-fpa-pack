@@ -47,6 +47,8 @@ evaluation:
     working_capital_balance_error: 0.09797380493889486
   weighted_improvement: 0.6151956078597884
   complexity_cost: 0.0010000000000000009
+  champion_complexity: 1.0
+  challenger_complexity: 1.1
   objective_gain: 0.6141956078597884
   hard_checks_passed: true
   regression_guard_passed: true

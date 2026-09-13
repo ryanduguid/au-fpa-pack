@@ -6,15 +6,31 @@ publisher revises a series.
 
 ## Sources
 
-| Series | Source | Key | Cadence |
-|--------|--------|-----|---------|
-| Cash rate target | RBA F1 | `cash_rate_target` | daily, stored monthly |
-| AUD/USD | RBA F11.1 | `aud_usd` | daily, stored monthly |
-| Trade-weighted index | RBA F11.1 | `twi` | daily, stored monthly |
-| CPI | ABS Indicator API | `cpi_monthly` / `cpi_quarterly` | M / Q |
-| Wage Price Index | ABS Indicator API | `wpi` | Q |
-| Retail trade | ABS Indicator API | `retail_trade` | M |
-| Labour force | ABS Indicator API | `labour_force` | M |
+| Series | Source | Key | Dataflow | Cadence |
+|--------|--------|-----|----------|---------|
+| Cash rate target | RBA F1 | `cash_rate_target` | F1 `FIRMMCRTD` | daily, stored monthly |
+| AUD/USD | RBA F11.1 | `aud_usd` | F11.1 `FXRUSD` | daily, stored monthly |
+| Trade-weighted index | RBA F11.1 | `twi` | F11.1 `FXRTWI` | daily, stored monthly |
+| CPI | ABS Indicator API | `cpi_monthly` | `CPI_H` | M |
+| CPI | ABS Indicator API | `cpi_quarterly` | `CPI_Q_H` | Q |
+| Wage Price Index | ABS Indicator API | `wpi` | `WPI_H` | Q |
+| Retail trade (historical) | ABS Indicator API | `retail_trade` | `RT_H` | M, ceased |
+| Labour force | ABS Indicator API | `labour_force` | `LF_H` | M |
+
+Indicator API dataflow ids carry the `_H` suffix; the unsuffixed `CPI`, `WPI`,
+`RT` and `LF` belong to the separate Data API. `CPI_H` became monthly in
+November 2025, when `CPI_M` and `CPI_M_H` ceased, and quarterly CPI returned as
+`CPI_Q_H` in April 2026.
+
+**Retail trade is history, not a live driver.** Retail Trade, Australia ceased
+with the June 2025 period and `RT_H` is no longer updated. The ABS replacement
+publication is the Monthly Household Spending Indicator (`HSI_M_H`), which
+measures household spending rather than retail turnover, so assess it as a
+different concept rather than a drop-in substitute.
+
+`fetch_abs_series` checks that each key returns the frequency in this table and
+raises when it does not, so a monthly dataflow cannot arrive under a quarterly
+name.
 
 RBA tables are public CSV downloads, no key. The ABS Indicator API
 requires a key: request from api.data@abs.gov.au, then provide via the

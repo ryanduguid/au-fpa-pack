@@ -75,3 +75,57 @@ def test_verify_fails_cleanly_on_excel_error_cell(tmp_path):
     report = verify_workbook(path, cashflow_from_config(cfg))
     assert not report.passed
     assert any("error" in f.lower() for f in report.failures)
+
+
+def test_verify_fails_when_a_required_output_is_missing(tmp_path):
+    # F070: renaming a required line used to remove it from the comparison, so a
+    # workbook missing that output still reported passed.
+    from openpyxl import load_workbook
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    expected = cashflow_from_config(cfg)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    labels = {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+    row = labels["ending_cash"]
+    model.cell(row=row, column=1, value="ending_cash_renamed")
+    for m in range(len(expected.index)):
+        model.cell(row=row, column=2 + m, value=-1_000_000.0)
+    wb.save(path)
+    report = verify_workbook(path, expected)
+    assert not report.passed
+    assert any("ending_cash: required output missing" in f for f in report.failures)
+
+
+def test_verify_fails_when_the_expected_periods_do_not_match(tmp_path):
+    # F070: months were compared by position, so a request for a different year
+    # passed against an unchanged workbook.
+    import pandas as pd
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    expected = cashflow_from_config(cfg)
+    shifted = expected.copy()
+    shifted.index = pd.period_range("2027-01", periods=len(expected.index), freq="M")
+    report = verify_workbook(path, shifted)
+    assert not report.passed
+    assert any("workbook header" in f for f in report.failures)
+    # Control: the same frame on its own periods still verifies.
+    assert verify_workbook(path, expected).passed
+
+
+def test_verify_accepts_datetime_month_headers(tmp_path):
+    # A company exporter may write month start datetimes rather than period
+    # strings; the period check must read both.
+    from openpyxl import load_workbook
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    expected = cashflow_from_config(cfg)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    for m, period in enumerate(expected.index):
+        model.cell(row=1, column=2 + m, value=period.start_time.to_pydatetime())
+    wb.save(path)
+    assert verify_workbook(path, expected).passed

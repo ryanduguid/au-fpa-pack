@@ -227,3 +227,57 @@ def test_live_rba_table_still_matches_the_committed_sample_layout():
     assert series.series_id == "FIRMMCRTD"
     assert series.units == "Per cent"
     assert len(series.data) > 100
+
+
+def test_abs_dataflow_ids_are_the_documented_indicator_api_ones():
+    """F090: every key pointed at a Data API or discontinued id.
+
+    Checked on 13 September 2026 against the dataflowId enum in the ABS
+    Indicator API description (CPI_H, CPI_Q_H, LF_H, RT_H, WPI_H are listed;
+    CPI_M, CPI, WPI, RT and LF are not) and the ABS Data API user guide
+    updates, which record CPI_M/CPI_M_H ceasing in November 2025, quarterly CPI
+    returning as CPI_Q_H in April 2026, and RT_H no longer being updated.
+    """
+    assert drivers.ABS_DATAFLOWS == {
+        "cpi_monthly": "CPI_H",
+        "cpi_quarterly": "CPI_Q_H",
+        "wpi": "WPI_H",
+        "retail_trade": "RT_H",
+        "labour_force": "LF_H",
+    }
+    assert set(drivers.ABS_FREQUENCIES) == set(drivers.ABS_DATAFLOWS)
+    assert all(identifier.endswith("_H") for identifier in drivers.ABS_DATAFLOWS.values())
+    assert "retail_trade" in drivers.ABS_CEASED
+
+
+def test_abs_rejects_a_frequency_the_key_does_not_promise(monkeypatch):
+    # F090: cpi_quarterly accepted monthly observations and returned them under
+    # the quarterly name.
+    raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-01,AUS,4.0\n2026-02,AUS,4.1\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="returned M observations"):
+        fetch_abs_series("cpi_quarterly", api_key="synthetic-unused")
+    # Control: the monthly key accepts the same observations.
+    assert fetch_abs_series("cpi_monthly", api_key="synthetic-unused").frequency == "M"
+
+
+def test_abs_rejects_a_single_observation_of_the_wrong_frequency(monkeypatch):
+    # A quarterly response carrying one monthly period passed the aggregate
+    # check and folded that month into an existing quarter.
+    raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n2026-02,AUS,4.1\n2026-Q2,AUS,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="returned M observations"):
+        fetch_abs_series("wpi", api_key="synthetic-unused")
+
+
+def test_abs_dataflow_id_reaches_the_request_url(monkeypatch):
+    seen = {}
+
+    def capture(url, headers=None, timeout=60):
+        seen["url"] = url
+        return b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n2026-Q2,AUS,4.1\n"
+
+    monkeypatch.setattr(drivers, "_fetch", capture)
+    series = fetch_abs_series("wpi", api_key="synthetic-unused")
+    assert seen["url"].endswith("/data/WPI_H/csv")
+    assert series.series_id == "WPI_H"

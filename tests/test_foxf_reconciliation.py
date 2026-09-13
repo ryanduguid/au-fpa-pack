@@ -393,3 +393,69 @@ def test_leverage_uses_total_debt_and_closing_balances():
     closing_cash = float(forecast["ending_cash"].iloc[-1])
     run_rate = float(forecast["ebitda"].iloc[-12:].sum())
     assert hold == pytest.approx((closing_debt - closing_cash) / run_rate)
+
+
+def test_segment_footnote_parses_with_a_declared_html_parser(monkeypatch):
+    """F086: pull_segments calls pandas.read_html, which needs an installed HTML
+    parser. The other parser tests replace read_html, so they pass whether or not
+    one is declared. This one goes through the real call."""
+    import pull_edgar as pe
+
+    html = """
+    <table>
+      <tr><td>label</td><td>q4</td><td>q1prev</td><td>FY2025</td><td>FY2024</td><td>FY2023</td></tr>
+      <tr><td>PVG | Operating Segments</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>Net sales</td><td></td><td></td><td>$100</td><td>90</td><td>80</td></tr>
+      <tr><td>Adjusted EBITDA</td><td></td><td></td><td>20</td><td>18</td><td>16</td></tr>
+      <tr><td>Aftermarket Applications Group | Operating Segments</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>Net sales</td><td></td><td></td><td>200</td><td>190</td><td>180</td></tr>
+      <tr><td>Adjusted EBITDA</td><td></td><td></td><td>40</td><td>38</td><td>36</td></tr>
+      <tr><td>SSG | Operating Segments</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>Net sales</td><td></td><td></td><td>300</td><td>290</td><td>280</td></tr>
+      <tr><td>Adjusted EBITDA</td><td></td><td></td><td>60</td><td>58</td><td>56</td></tr>
+    </table>
+    """
+    monkeypatch.setattr(pe, "_curl", lambda url: html.encode())
+    segments = pe.pull_segments().set_index(["segment", "metric"])
+    assert sorted({s for s, _ in segments.index}) == ["AAG", "PVG", "SSG"]
+    assert float(segments.loc[("PVG", "net_sales"), "FY2025"]) == 100.0
+    assert float(segments.loc[("SSG", "adjusted_ebitda"), "FY2023"]) == 56.0
+
+
+@requires_foxf_data
+def test_committed_outputs_match_their_generator():
+    """F085/F088: the committed markdown, research epochs and source guide are
+    generated artefacts, so a stale one is a claim the code no longer supports.
+    `python3 run_foxf.py --replace-epochs` is the documented way to refresh them."""
+    import foxf_model as fm
+    import run_foxf as rf
+    import yaml
+
+    forecast, segs = fm.build_forecast()
+    divest_md, _, _ = rf.phase_d(forecast)
+    generated = {
+        "reconciliation.md": rf.phase_a(),
+        "historical-holdout.md": rf.phase_b(),
+        "forecast-briefing.md": rf.phase_c(forecast, segs),
+        "divestiture.md": divest_md,
+    }
+    for name, text in generated.items():
+        committed = (EXAMPLE / "output" / name).read_text(encoding="utf-8")
+        assert committed.replace("\r\n", "\n") == text.replace("\r\n", "\n"), name
+
+    for epoch in fm.historical_research_epochs():
+        path = EXAMPLE / ".fpa" / "research" / f"{epoch.epoch_id}.epoch.yaml"
+        committed = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert committed == epoch.model_dump(mode="json"), epoch.epoch_id
+
+
+def test_committed_source_guide_matches_its_generator(tmp_path, monkeypatch):
+    # F088: SOURCES.md described automatic latest-quarter selection after the
+    # selector was fixed to FY2025 and FY2026 Q1.
+    import pull_edgar as pe
+
+    monkeypatch.setattr(pe, "DATA", tmp_path)
+    pe.write_sources()
+    generated = (tmp_path / "SOURCES.md").read_text(encoding="utf-8")
+    committed = (EXAMPLE / "data" / "SOURCES.md").read_text(encoding="utf-8")
+    assert committed.replace("\r\n", "\n") == generated.replace("\r\n", "\n")

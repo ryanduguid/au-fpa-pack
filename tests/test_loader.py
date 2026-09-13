@@ -89,3 +89,56 @@ def test_growth_cannot_reduce_revenue_below_zero():
             seasonality=[1.0] * 12,
             cogs_pct=0.5,
         )
+
+
+_MISSPELLABLE_YAML = """
+name: Two Year Co.
+start_month: 2026-01
+horizon_months: 24
+tax_rate: 0.0
+channels:
+  - name: Wholesale
+    annual_revenue: 1200.0
+    {growth_key}: 0.10
+    seasonality: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    cogs_pct: 0.5
+opex: []
+debt: []
+working_capital:
+  dso_days: 0
+  dpo_days: 0
+  dio_days: 0
+opening_balances:
+  cash: 0
+"""
+
+
+def test_misspelt_optional_field_is_rejected(tmp_path):
+    # F077: growth_rtae used to load silently, leaving the channel at zero
+    # growth while the config looked applied.
+    path = tmp_path / "misspelt.yaml"
+    path.write_text(_MISSPELLABLE_YAML.format(growth_key="growth_rtae"), encoding="utf-8")
+    with pytest.raises(ValidationError, match="growth_rtae"):
+        load_config(path)
+
+
+def test_correctly_named_optional_field_still_applies(tmp_path):
+    # Control: the same config under the real field name grows year 2 by 10%.
+    from pyfpa.models.revenue import revenue_from_config
+
+    path = tmp_path / "correct.yaml"
+    path.write_text(_MISSPELLABLE_YAML.format(growth_key="growth_rate"), encoding="utf-8")
+    cfg = load_config(path)
+    revenue = revenue_from_config(cfg)["total"]
+    assert round(float(revenue.iloc[:12].sum())) == 1200
+    assert round(float(revenue.iloc[12:].sum())) == 1320
+
+
+def test_unknown_top_level_key_is_rejected(tmp_path):
+    path = tmp_path / "extra.yaml"
+    path.write_text(
+        _MISSPELLABLE_YAML.format(growth_key="growth_rate") + "tax_ratee: 0.3\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValidationError, match="tax_ratee"):
+        load_config(path)

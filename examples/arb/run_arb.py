@@ -5,10 +5,11 @@ Phase B replays 2 FY2025 champion/challenger holdout epochs.
 Phase C forecasts FY2026-FY2027 from the August 2025 4E view.
 Phase D labels a Thai Baht / US-tariff COGS sensitivity.
 
-Run:  python3 examples/arb/run_arb.py
+Run:  python3 examples/arb/run_arb.py --output-dir <dir>
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -150,13 +151,22 @@ def phase_d() -> str:
     return "\n".join(lines)
 
 
-def run_arb(output_dir: str | Path | None = None) -> dict:
+def run_arb(
+    output_dir: str | Path | None = None,
+    *,
+    replace_epochs: bool = False,
+) -> dict:
     """Run Phases A-D and return the FY2026 headline figures.
 
     ``output_dir`` takes the 4 markdown files and the research memory
     together, so a caller that redirects it writes nothing into the tracked
     example. Omitting it keeps the committed layout: markdown under
     ``output/``, memory under ``.fpa/research/``.
+
+    Research epochs are written exclusively, so replaying into the committed
+    layout stops at the epochs this example already ships. ``replace_epochs``
+    rewrites them in place; it exists to regenerate this example, and a real
+    company workspace should never use it.
     """
     out = Path(output_dir) if output_dir is not None else OUT
     research = RESEARCH if output_dir is None else out / ".fpa" / "research"
@@ -170,7 +180,7 @@ def run_arb(output_dir: str | Path | None = None) -> dict:
     # tells the next agent to read prior epochs before repeating a hypothesis.
     save_research_objective(am.HOLDOUT_OBJECTIVE, research / "objective.yaml")
     for epoch in am.historical_research_epochs():
-        save_epoch(epoch, research)
+        save_epoch(epoch, research, overwrite=replace_epochs)
     forecast, _ = am.build_forecast()
     return {
         "fy2026_revenue": round(float(forecast.iloc[:12]["revenue"].sum())),
@@ -179,7 +189,18 @@ def run_arb(output_dir: str | Path | None = None) -> dict:
 
 
 if __name__ == "__main__":
-    figures = run_arb()
-    print("Wrote Phase A-D markdown to examples/arb/output/")
+    parser = argparse.ArgumentParser(description=run_arb.__doc__)
+    parser.add_argument(
+        "--output-dir",
+        help="write the markdown and research memory here instead of the tracked example",
+    )
+    parser.add_argument(
+        "--replace-epochs",
+        action="store_true",
+        help="rewrite existing research epochs instead of refusing to overwrite them",
+    )
+    args = parser.parse_args()
+    figures = run_arb(args.output_dir, replace_epochs=args.replace_epochs)
+    print(f"Wrote Phase A-D markdown to {args.output_dir or 'examples/arb/output/'}")
     for key, value in figures.items():
         print(f"  {key}: {value}")

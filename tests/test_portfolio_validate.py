@@ -82,3 +82,14 @@ def test_unrecoverable_actuals_do_not_count_as_validation(tmp_path):
     result = validate_prior("working_capital.dio_days", clients)
     assert result.n_folds == 0
     assert not result.validated
+
+
+def test_repeated_workspaces_cannot_fill_the_folds(tmp_path):
+    # F080: one client listed three times used to report 3 folds, zero mean
+    # degradation and validated=True, although every peer was a copy of the
+    # held-out client.
+    import pytest
+
+    client = _make_client(tmp_path, "a", 45.0)
+    with pytest.raises(ValueError, match="same workspace twice"):
+        validate_prior("working_capital.dio_days", [client, client, client])
