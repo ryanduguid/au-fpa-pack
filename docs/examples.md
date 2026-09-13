@@ -4,7 +4,7 @@
 
 [`examples/lumbridge-services/`](../examples/lumbridge-services/) is a synthetic
 Newcastle NSW maintenance business with OSRS references. It reconciles source
-accounts, monthly pre-tax profit and thirteen weeks of dated bank cash. A
+accounts, monthly pre-tax profit and 13 weeks of dated bank cash. A
 45-day receipt delay changes cash and receivables without changing profit.
 
 ```bash
@@ -36,7 +36,7 @@ source-traced SEC data for Fox Factory Holding Corp.
 python3 examples/foxfactory/run_foxf.py
 ```
 
-The example has four distinct phases:
+The example has 4 distinct phases:
 
 1. **Actual-driver reproduction.** The engine reproduces known accounting
    mechanics using reported drivers. This validates arithmetic, not forecast

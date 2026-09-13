@@ -62,7 +62,7 @@ def load_corrections(directory: str | Path) -> list[Correction]:
 def apply_corrections(cfg: EntityConfig, corrections: list[Correction]) -> EntityConfig:
     """Return a NEW config with every `applied` + `parametric` correction's override
     written in. `open`, `structural`, and `context` corrections are ignored (the
-    latter two are routed by the skill, not applied to the model). Input unmutated."""
+    latter 2 are routed by the skill, not applied to the model). Input unmutated."""
     data = cfg.model_dump()
     for correction in corrections:
         if correction.status == "applied" and correction.type == "parametric" and correction.override:

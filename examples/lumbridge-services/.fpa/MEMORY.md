@@ -1,4 +1,4 @@
-# Lumbridge Services FP&A Memory
+# Lumbridge Services FP&A memory
 
 - `intake.md`: onboarding facts, evidence, confidence, and open questions
 - `business-profile.md`: synthetic business assumptions derived from intake

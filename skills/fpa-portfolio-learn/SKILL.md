@@ -1,18 +1,18 @@
 ---
 name: fpa-portfolio-learn
-description: Use when you run FP&A for several clients and want your practice to compound - mines patterns that generalize across your same-type clients, validates them by leave-one-out cross-client backtesting, and promotes ratified priors and skills into a local library that seeds every new client. All local; nothing leaves your machine.
+description: Use when you run FP&A for several clients and want your practice to compound - mines patterns that generalise across your same-type clients, validates them by leave-one-out cross-client backtesting, and promotes ratified priors and skills into a local library that seeds every new client. All local; nothing leaves your machine.
 ---
 
-# Portfolio Learn (Loop B)
+# Portfolio learn (Loop B)
 
 ## Overview
 
 Loop A makes the model better at one client. This makes your *practice* compound:
-client #10 starts smarter than client #1 because your library carries what generalized
-across #1–9. Everything is local - your own book, on your own machine.
+client #10 starts smarter than client #1 because your library carries what generalised
+across #1 to 9. Everything is local - your own book, on your own machine.
 
 **Core principle:** self-improving, never self-ratifying - propose, you accept. The
-objective metric is cross-client: does a pattern learned on some clients fail to
+objective metric is cross-client: does a pattern learnt on some clients fail to
 degrade the *others*' backtest?
 
 ## Setup

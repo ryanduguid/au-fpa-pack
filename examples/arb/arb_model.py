@@ -429,7 +429,7 @@ def build_forecast() -> tuple[pd.DataFrame, dict[str, list[Segment]]]:
 
 
 def cost_pressure_sensitivity() -> pd.DataFrame:
-    """Labeled THB / US-tariff sensitivity. Not a kernel FX engine.
+    """Labelled THB / US-tariff sensitivity. Not a kernel FX engine.
 
     Holds FY2026 operating opex in dollars so extra materials cost hits EBITDA
     instead of being absorbed by the GP-minus-EBITDA opex identity.

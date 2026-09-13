@@ -32,7 +32,7 @@ unpromoted pending human approval.
 
 **Phase C - forecast** ([`output/forecast-briefing.md`](output/forecast-briefing.md)
 + `output/foxf-forecast.xlsx`). Segment-level (PVG / AAG / SSG → consolidated)
-FY2026–FY2027, anchored to the reported Q1 FY2026 print.
+FY2026 to FY2027, anchored to the reported Q1 FY2026 print.
 
 **Phase D - Marucci divestiture sensitivity**
 ([`output/divestiture.md`](output/divestiture.md)). What selling Marucci does to
@@ -42,7 +42,7 @@ free cash flow and leverage across sale timings and proceeds.
 
 This is the honest part - surfaced, not hidden.
 
-1. **No segment layer in the base engine.** Fox reports three segments and, under
+1. **No segment layer in the base engine.** Fox reports 3 segments and, under
    ASU 2023-07, discloses segment **Adjusted EBITDA** (not gross profit or
    operating income). The `fpa-learn-business` phase generates a bespoke
    [`segment-rollup`](skills/generated/segment-rollup/SKILL.md) skill; the engine
@@ -50,12 +50,12 @@ This is the honest part - surfaced, not hidden.
 2. **The $557M FY2025 goodwill impairment** (non-cash) drove a GAAP net loss even
    as revenue recovered. The lean engine models the operating business; the
    impairment is shown as a documented bridge, not forced through the engine.
-3. **Discrete tax benefits.** Fox booked tax benefits in FY2024–FY2025 that the
+3. **Discrete tax benefits.** Fox booked tax benefits in FY2024 to FY2025 that the
    engine's positive-income tax model doesn't replicate - bridged, not reconciled.
 4. **Marucci is not disclosed standalone.** It sits inside SSG, so Phase D rests on
    estimates anchored to the acquisition disclosures (Fox paid $567M). It is
    presented as a **labelled sensitivity**, not as precision.
-5. **Monthly engine vs quarterly reporting.** Forecast runs at annual resolution
+5. **Monthly engine versus quarterly reporting.** Forecast runs at annual resolution
    (anchored to Q1); intra-year quarterly phasing is a deferred extension.
 6. **Limited holdout history.** Three annual observations are enough to
    demonstrate champion/challenger discipline, but not to claim statistical
@@ -78,4 +78,4 @@ This is the honest part - surfaced, not hidden.
 | `.fpa/mappings/registry.yaml` | Explicit source-field to normalised-model mappings |
 | `skills/generated/segment-rollup/` | The bespoke self-extension skill |
 | `data/` | Committed actuals + source trail |
-| `output/` | Generated reproduction, holdout, forecast, sensitivity, and Excel artifacts |
+| `output/` | Generated reproduction, holdout, forecast, sensitivity, and Excel artefacts |

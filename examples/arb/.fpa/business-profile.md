@@ -1,4 +1,4 @@
-# Business Profile - ARB Corporation Limited (ASX: ARB)
+# Business profile - ARB Corporation Limited (ASX: ARB)
 
 Grounded in the FY2025 Appendix 4E. Figures trace to `data/SOURCES.md`.
 

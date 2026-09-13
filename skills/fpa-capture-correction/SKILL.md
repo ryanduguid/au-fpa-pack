@@ -3,7 +3,7 @@ name: fpa-capture-correction
 description: Use when a human reviewing a forecast catches something off ("December always spikes", "you're double-counting deferred revenue", "that Q3 number was a one-time contract") - captures it as a durable, typed correction in the company's memory so future forecasts are grounded by it.
 ---
 
-# Capture a Correction (Operate)
+# Capture a correction (operate)
 
 ## Overview
 
@@ -15,25 +15,25 @@ that grounds every future forecast.
 **Core principle:** the human is the authority; capture, confirm interpretation once,
 then it persists. Everything is plain markdown the user owns.
 
-## The three correction types
+## The 3 correction types
 
-- **parametric** - a concrete driver fix ("December runs ~2× a normal month"). Becomes
+- **parametric** - a concrete driver fix ('December runs ~2× a normal month'). Becomes
   an `override` (a config path + value) applied to every future forecast via
   `pyfpa.apply_corrections`.
-- **structural** - a methodology fix ("you're double-counting deferred revenue"). A
+- **structural** - a methodology fix ('you're double-counting deferred revenue'). A
   *pre-ratified* structural proposal (the human authored it) - route it to
   **fpa-learn-business** to generate the skill/model change; do NOT wait for backtest misses.
-- **context** - a one-time-item note ("that Q3 spike was a one-off contract"). Annotates so
-  **fpa-cfo-judgment**'s one-time screen keeps the backtest from "learning" a one-off.
+- **context** - a one-time-item note ('that Q3 spike was a one-off contract'). Annotates so
+  **fpa-cfo-judgment**'s one-time screen keeps the backtest from 'learning' a one-off.
 
 ## Workflow
 
 1. **Classify** the correction (parametric / structural / context).
-2. **Identify the target** - the driver path (e.g. `channels[*].seasonality[11]`,
+2. **Identify the target** - the driver path (for example, `channels[*].seasonality[11]`,
    `working_capital.dio_days`), line, or profile area. For parametric, draft the concrete
    `override: {path, value}`.
 3. **Write** the correction with `pyfpa.save_correction`. Set `slug` to a
-   `<date>-<short-name>` string (e.g. `2026-06-08-december-seasonality`) - `save_correction`
+   `<date>-<short-name>` string (for example, `2026-06-08-december-seasonality`) - `save_correction`
    uses the whole slug as the filename (`.fpa/corrections/<slug>.md`), so keep the date in
    it. Include frontmatter (`type`, `target`, `status`, `date`, `override`) and a markdown
    body (`**Was off:** … **Correction:** … **Why:** [[…]]`), linking to the assumption/profile

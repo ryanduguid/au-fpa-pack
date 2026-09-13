@@ -86,7 +86,7 @@ def verify_workbook(
             got = float(raw)
             want = float(expected[line].iloc[m_idx])
             # Hybrid tolerance: relative above magnitude 1, absolute below it,
-            # so zero-valued lines (e.g. tax with full NOL cover) stay checkable.
+            # so zero-valued lines (for example, tax with full NOL cover) stay checkable.
             denom = max(abs(want), 1.0)
             dev = abs(got - want) / denom
             max_dev = max(max_dev, dev)

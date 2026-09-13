@@ -173,7 +173,7 @@ def pull_segments() -> pd.DataFrame:
     """Segment net sales + Adjusted EBITDA from the FY2025 10-K segment footnote.
 
     Fox reports segment Adjusted EBITDA (ASU 2023-07), not segment gross profit or
-    operating income. The footnote table carries all three fiscal years.
+    operating income. The footnote table carries all 3 fiscal years.
     """
     url = f"https://www.sec.gov/Archives/edgar/data/1424929/{TENK[2025]}/{SEG_REPORT}"
     html = _curl(url).decode()
@@ -183,7 +183,7 @@ def pull_segments() -> pd.DataFrame:
     def money(v) -> float:
         return float(str(v).replace("$", "").replace(",", "").replace("(", "-").replace(")", "").strip())
 
-    # Walk the long-form footnote: a segment header row (e.g. "PVG | Operating Segments")
+    # Walk the long-form footnote: a segment header row (for example, "PVG | Operating Segments")
     # is followed by its "Net sales" and "Adjusted EBITDA" rows.
     seg_map = {
         "PVG": "PVG",

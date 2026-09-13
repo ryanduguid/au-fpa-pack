@@ -22,7 +22,7 @@ def _parse_amount(raw: str | None) -> float:
 
 
 def read_pl_csv(path: str | Path) -> dict[str, float]:
-    """Parse a two-column (Account, Amount) P&L export into {account: amount}."""
+    """Parse a 2-column (Account, Amount) P&L export into {account: amount}."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"P&L CSV not found: {p}")

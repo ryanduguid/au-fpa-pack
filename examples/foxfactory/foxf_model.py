@@ -58,13 +58,13 @@ def q1_values() -> tuple[float, float]:
 
 
 def q1_yoy() -> float:
-    """Reported Q1 FY2026 vs Q1 FY2025 net-sales growth - the FY2026 forecast anchor."""
+    """Reported Q1 FY2026 versus Q1 FY2025 net-sales growth - the FY2026 forecast anchor."""
     prev, curr = q1_values()
     return curr / prev - 1
 
 
 def segments_for_year(fy: str) -> list[Segment]:
-    """Actual segments for a fiscal year column (e.g. 'FY2024') as net sales +
+    """Actual segments for a fiscal year column (for example, 'FY2024') as net sales +
     Adjusted-EBITDA margin."""
     df = segment_table()
     out = []
@@ -114,7 +114,7 @@ def opening_balances(prior_fy: str) -> OpeningBalances:
 def reconciliation_config(fy: str, prior_fy: str, *, start_month: str) -> EntityConfig:
     """Build an EntityConfig from a fiscal year's ACTUAL drivers, for Phase A.
 
-    Models the *normalized* operating company (excludes the goodwill impairment
+    Models the *normalised* operating company (excludes the goodwill impairment
     and discrete tax items, which the lean engine does not model - these are
     shown as a documented bridge to GAAP net income, not forced through it).
     """
@@ -215,7 +215,7 @@ HOLDOUT_OBJECTIVE = ResearchObjective(
     hard_checks=["holdout separation", "segment rollup", "working capital continuity"],
     min_improvement=0.02,
     complexity_penalty=0.01,
-    # No single holdout metric may regress more than 50 percent versus the
+    # No single holdout metric may regress more than 50% versus the
     # champion, however good the weighted aggregate looks. A challenger that
     # multiplies the EBITDA error twentyfold is not a better model.
     max_metric_regression=0.50,
@@ -446,7 +446,7 @@ def historical_research_epochs() -> list[ResearchEpoch]:
 # Phase C - forecast (FY2026 + FY2027), segment-level
 # --------------------------------------------------------------------------- #
 # Assumptions are explicit and defensible. FY2026 net-sales growth is anchored to
-# the reported Q1 FY2026 print (+3.8% YoY vs Q1 FY2025; the segment blend below is
+# the reported Q1 FY2026 print (+3.8% YoY versus Q1 FY2025; the segment blend below is
 # +3.6%). Adjusted-EBITDA margins step modestly off the FY2025 actuals as volume
 # recovers and the FY2024-25 cost actions annualize. These are the only judgement
 # inputs in Phase C; everything else is mechanical.
@@ -456,9 +456,9 @@ FORECAST = {
         "growth": {"PVG": 0.04, "AAG": 0.05, "SSG": 0.02},
         "margin": {"PVG": 0.130, "AAG": 0.125, "SSG": 0.210},
         "cogs_pct": 0.6979,          # hold FY2025 blended gross margin (30.2%)
-        "da": 88_000_000.0,          # eases as Marucci intangibles amortize
+        "da": 88_000_000.0,          # eases as Marucci intangibles amortise
         "capex": 42_000_000.0,
-        "tax_rate": 0.22,            # normalized effective rate (FY actuals distorted by benefits)
+        "tax_rate": 0.22,            # normalised effective rate (FY actuals distorted by benefits)
     },
     "FY2027": {
         "start_month": "2027-01",
@@ -470,7 +470,7 @@ FORECAST = {
         "tax_rate": 0.22,
     },
 }
-# Effective all-in cash rate on the term loan; ~$25M/yr scheduled amortization.
+# Effective all-in cash rate on the term loan; ~$25M/yr scheduled amortisation.
 DEBT_RATE = 0.08
 DEBT_AMORT_PER_YEAR = 25_000_000.0
 
@@ -487,7 +487,7 @@ def forecast_year(base: list[Segment], fy: str, debt_open: float,
                   opening: OpeningBalances) -> tuple[
                       pd.DataFrame, list[Segment], float, OpeningBalances
                   ]:
-    """Build one forecast year and return its modeled closing balances."""
+    """Build one forecast year and return its modelled closing balances."""
     a = FORECAST[fy]
     segs = _grow(base, a["growth"], a["margin"])
     revenue = sum(s.net_sales for s in segs)
@@ -542,12 +542,12 @@ def build_forecast() -> tuple[pd.DataFrame, dict[str, list[Segment]]]:
 # --------------------------------------------------------------------------- #
 # Marucci sits inside SSG and is NOT reported standalone, so these are estimates
 # anchored to the acquisition disclosures (paid $567M Nov-2023; $279M intangibles).
-# This is the most assumption-heavy part of the exercise - a labeled sensitivity.
+# This is the most assumption-heavy part of the exercise - a labelled sensitivity.
 MARUCCI = {
     "revenue": 300_000_000.0,       # est. standalone net sales (grew from ~$285M at deal)
     "gross_margin": 0.50,           # branded sports equipment runs richer than Fox blended
     "ebitda_margin": 0.25,          # => ~$75M Adjusted EBITDA
-    "da": 22_000_000.0,             # amortization of the $279M acquired intangibles
+    "da": 22_000_000.0,             # amortisation of the $279M acquired intangibles
     "capex": 5_000_000.0,
 }
 DEFAULT_PROCEEDS = 300_000_000.0    # user default: a markdown from the $567M paid
@@ -583,7 +583,7 @@ def _run_rate_leverage(frame: pd.DataFrame, debt_balance: float) -> float:
 
 def divestiture_grid(forecast: pd.DataFrame, debt_balance: float,
                      proceeds: float = DEFAULT_PROCEEDS) -> pd.DataFrame:
-    """FCF and leverage impact of selling Marucci at each sale-timing, vs hold.
+    """FCF and leverage impact of selling Marucci at each sale-timing, versus hold.
 
     ``two_yr_fcf`` is cumulative free cash flow over the 24-month forecast.
     ``net_debt_to_ebitda`` uses run-rate (final-year) EBITDA; selling retires
@@ -606,7 +606,7 @@ def divestiture_grid(forecast: pd.DataFrame, debt_balance: float,
     return pd.DataFrame(rows).set_index("scenario")
 
 
-# Proceeds cases: at-cost (what Fox paid), the user default markdown, and two
+# Proceeds cases: at-cost (what Fox paid), the user default markdown, and 2
 # EV/EBITDA exit multiples on estimated Marucci EBITDA.
 PROCEEDS_CASES = (
     ("At cost (~$567M paid)", 567_194_000.0),

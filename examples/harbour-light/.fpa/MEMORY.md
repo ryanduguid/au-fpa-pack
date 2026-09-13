@@ -1,4 +1,4 @@
-# Harbour Light Pty Ltd FP&A Memory
+# Harbour Light Pty Ltd FP&A memory
 
 - `intake.md`: onboarding facts for the synthetic example
 - `business-profile.md`: Xero channels, payroll, BAS window

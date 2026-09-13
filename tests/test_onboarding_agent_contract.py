@@ -12,10 +12,10 @@ def test_codex_and_claude_share_onboarding_contract():
     agents_normalised = " ".join(agents.lower().split())
     skill_normalised = " ".join(skill.lower().split())
     assert "inspect supplied local files before asking questions" in agents_normalised
-    assert "`pyfpa.next_intake_questions`, in rounds of at most three related questions" in agents_normalised
+    assert "`pyfpa.next_intake_questions`, in rounds of at most 3 related questions" in agents_normalised
     assert "inspect local evidence first" in skill_normalised
     assert "files, documentation, and existing model code before asking questions" in skill_normalised
-    assert "`openfpa intake-next <company-root>` and ask that related round of at most three questions" in skill_normalised
+    assert "`openfpa intake-next <company-root>` and ask that related round of at most 3 questions" in skill_normalised
     assert "until the user approves the architecture proposal" in agents_normalised
     assert "stop for approval" in skill_normalised
     assert "narrow" in agents.lower()
@@ -33,7 +33,7 @@ def test_research_contract_allows_autonomous_epochs_but_not_promotion():
     assert "only promotion to the active champion requires human approval" in " ".join(skill.split())
     assert "autonomously discard weak or failed challengers" in " ".join(agents.split())
     assert "ai may generate, test, and discard challengers autonomously" in " ".join(skill.split())
-    assert "five challengers" in skill
+    assert "5 challengers" in skill
     assert "after scoring closed periods, run `openfpa scorecard-render" in " ".join(
         agents.split()
     )

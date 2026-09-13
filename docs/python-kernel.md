@@ -17,22 +17,22 @@ print(pyfpa.to_briefing_md(monthly, title="My Company", runway=runway))
 
 The base kernel includes:
 
-- monthly P&L and indirect cash-flow modelling;
-- 13-week direct-method cash forecasting;
-- revenue, COGS, operating-expense, debt, tax, and working-capital primitives;
-- reconciliation, segment, SKU, and divestiture analysis helpers;
+- monthly P&L and indirect cash-flow modelling
+- 13-week direct-method cash forecasting
+- revenue, COGS, operating-expense, debt, tax, and working-capital primitives
+- reconciliation, segment, SKU, and divestiture analysis helpers
 - CSV ingestion and Markdown or Excel reporting: static value export via
   `forecast_to_excel`, and a live-formula model workbook via `model_to_excel`
   (named assumption cells, real formulas, verified against the engine in CI);
-- forecast snapshots, scoring, and holdout backtests;
-- workspace, intake, correction, experiment, retrieval, and research records;
+- forecast snapshots, scoring, and holdout backtests
+- workspace, intake, correction, experiment, retrieval, and research records
 - experimental cross-company prior and skill mining.
 
 `EntityConfig` is a starting point; it does not prescribe every model. A company
 with cohorts, projects, contracts, fleets, stores, or complex inventory may need
 a different generated model.
 
-The `model_to_excel` function compiles an `EntityConfig` into a two-sheet workbook:
+The `model_to_excel` function compiles an `EntityConfig` into a 2-sheet workbook:
 an Assumptions sheet of named, editable driver cells and a Model sheet where every
 P&L and cash-flow line is a real formula referencing those names. The `verify_workbook`
 function evaluates the workbook with a Python formula engine and compares every line

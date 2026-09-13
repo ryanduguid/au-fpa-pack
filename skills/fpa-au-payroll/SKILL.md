@@ -3,7 +3,7 @@ name: fpa-au-payroll
 description: Use when forecasting payroll costs for an Australian employer - superannuation guarantee, state payroll tax, workers compensation, leave provisions, headcount plans with start dates and vacancies.
 ---
 
-# Australian Payroll Cost Forecasting
+# Australian payroll cost forecasting
 
 Use when a company's payroll runs under Australian law: superannuation
 guarantee, state/territory payroll tax, workers compensation, leave

@@ -27,7 +27,7 @@ def holdout_backtest(
     weights: Mapping[str, float] | None = None,
 ) -> ScoreResult:
     """Fit on all but the last `holdout` periods, predict the holdout, and score
-    predicted vs the held-out actuals. The business-specific `build_cfg_fn`
+    predicted versus the held-out actuals. The business-specific `build_cfg_fn`
     (fit actuals -> a config that forecasts the holdout window) is supplied by the
     caller; this harness only owns the split and the scoring. Nothing is scored on
     data it was fit on."""

@@ -28,7 +28,7 @@ def run_cli(capsys):
 
     Shelling out to a fresh interpreter hid the CLI from coverage. The console
     script contract is what a subprocess establishes, so tests/test_cli.py keeps
-    two subprocess tests for that and nothing else.
+    2 subprocess tests for that and nothing else.
     """
 
     def _run(*args: str) -> CliResult:

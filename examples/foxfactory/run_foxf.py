@@ -1,7 +1,7 @@
 """Fox Factory worked example - full pipeline.
 
 Phase A reproduces audited FY2024/FY2025 operating mechanics from actual drivers.
-Phase B replays two FY2025 champion/challenger holdout epochs.
+Phase B replays 2 FY2025 champion/challenger holdout epochs.
 Phase C forecasts FY2026-FY2027 at the segment level, anchored to Q1 FY2026.
 Phase D models a Marucci-divestiture FCF/leverage sensitivity.
 

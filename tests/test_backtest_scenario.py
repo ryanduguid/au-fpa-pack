@@ -3,7 +3,7 @@ from pyfpa.backtest.score import score_forecast
 
 
 def test_persistent_cash_overstatement_is_flagged():
-    # Across three closes the model predicts ending cash above actual every time
+    # Across 3 closes the model predicts ending cash above actual every time
     # (a real collections lag the model doesn't capture) -> structural trigger.
     closes = [
         ({"ending_cash": 100.0}, {"ending_cash": 90.0}),

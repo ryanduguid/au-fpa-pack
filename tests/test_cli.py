@@ -22,7 +22,7 @@ def test_project_registers_openfpa_console_script():
 
 
 # The rest of this file drives the CLI in-process through the `run_cli` fixture,
-# which is what lets coverage see pyfpa/cli.py and pyfpa/cli_commands/. The two
+# which is what lets coverage see pyfpa/cli.py and pyfpa/cli_commands/. The 2
 # tests below stay on subprocess because they establish the part an in-process
 # call cannot: that a fresh interpreter and the installed console script both
 # reach `main` and return its exit code.

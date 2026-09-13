@@ -38,18 +38,18 @@ command also works as `python3 -m pyfpa.cli <command>`.
 
 The CLI can:
 
-- initialise and validate the workspace;
-- inventory local files and likely financial artefacts;
-- profile CSV, TSV, and Excel tables without changing them;
-- register source provenance, coverage, entities, and currencies;
-- persist exact source-to-model mappings and deliberate ignores;
-- reconcile account-amount CSV files while surfacing duplicates and unmapped values;
-- scaffold company connector bundles from redacted fixtures;
-- execute fixture-mode connector contracts and compare golden mapped totals;
-- show unresolved intake questions;
-- expose source, mapping, model, and research status;
-- run deterministic checks and reports;
-- provide structured context for the AI to continue the work;
+- initialise and validate the workspace
+- inventory local files and likely financial artefacts
+- profile CSV, TSV, and Excel tables without changing them
+- register source provenance, coverage, entities, and currencies
+- persist exact source-to-model mappings and deliberate ignores
+- reconcile account-amount CSV files while surfacing duplicates and unmapped values
+- scaffold company connector bundles from redacted fixtures
+- execute fixture-mode connector contracts and compare golden mapped totals
+- show unresolved intake questions
+- expose source, mapping, model, and research status
+- run deterministic checks and reports
+- provide structured context for the AI to continue the work
 - support non-interactive automation where the operation is deterministic.
 
 The AI should still decide what questions matter, what data path to use, what

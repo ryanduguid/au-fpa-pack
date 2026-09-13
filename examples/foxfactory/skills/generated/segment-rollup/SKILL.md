@@ -3,11 +3,11 @@ name: segment-rollup
 description: Use when modelling a multi-segment company that discloses segment net sales and segment Adjusted EBITDA (ASU 2023-07) but not segment COGS or operating income - rolls segment P&Ls into a consolidated forecast and reconciles total segment Adjusted EBITDA to the disclosed total. Generated for Fox Factory (PVG/AAG/SSG).
 ---
 
-# Segment Roll-Up (generated for Fox Factory)
+# Segment roll-up (generated for Fox Factory)
 
 ## Why this skill exists
 
-The standard openfpa skills model a single entity. Fox Factory reports **three
+The standard openfpa skills model a single entity. Fox Factory reports **3
 segments** (PVG, AAG, SSG) and, under ASU 2023-07, discloses **net sales and
 Adjusted EBITDA per segment - but not segment COGS or operating income**
 (`.fpa/business-profile.md`). The base engine has no segment concept, so this
@@ -55,5 +55,5 @@ consolidated P&L + indirect cash flow (revenue → … → FCF)
 ## Guardrail
 
 This skill lives in the **client's** `skills/generated/` namespace - it is specific
-to a three-segment, Adjusted-EBITDA-reporting company and must never be promoted
+to a 3-segment, Adjusted-EBITDA-reporting company and must never be promoted
 into the public openfpa template.

@@ -3,7 +3,7 @@ name: fpa-au-xero
 description: Use when onboarding an Australian company whose books are in Xero - request reports, detect GST-inclusive exports, map chart of accounts and tracking categories, reconcile to BAS and payroll before modelling.
 ---
 
-# Xero Australia Onboarding
+# Xero Australia onboarding
 
 Use when a company's accounting system is Xero (AU). The recipe at
 `docs/recipes/xero-au.md` is the canonical walkthrough; this skill is
@@ -33,8 +33,8 @@ the operating loop.
    GST/PAYG clearing -> liability.*. GST-free sales map separately
    (revenue.gst_free) so `pyfpa.au.monthly_gst` gets the right
    taxable share.
-5. **Reconcile**: `reconcile-source` must pass. Then two AU ties:
-   (a) P&L revenue vs BAS G1, reconciling GST basis and timing, with GST
+5. **Reconcile**: `reconcile-source` must pass. Then 2 AU ties:
+   (a) P&L revenue versus BAS G1, reconciling GST basis and timing, with GST
    on sales tied separately to 1A; (b) wages/super/payroll tax vs
    `pyfpa.au.payroll_forecast` for a matching month. Record
    differences as corrections, not adjustments in the fixture.

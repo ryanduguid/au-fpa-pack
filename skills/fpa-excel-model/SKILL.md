@@ -3,7 +3,7 @@ name: fpa-excel-model
 description: Use when the user wants their model in Excel with real working formulas - "export this to Excel", "a workbook I can hand my board", "something that recalculates when I change an assumption". Produces a live-formula workbook generated from the model structure and verified against the engine before delivery.
 ---
 
-# Live-Formula Excel Model (Operate)
+# Live-formula Excel model (operate)
 
 ## Overview
 

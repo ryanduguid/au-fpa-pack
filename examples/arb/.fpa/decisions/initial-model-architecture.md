@@ -1,4 +1,4 @@
-# Initial Model Architecture
+# Initial model architecture
 
 **Status:** Approved for the ARB Corporation public example.
 
@@ -8,12 +8,12 @@ Demonstrate a source-traced ASX workflow with separate accounting
 reproduction, historical holdout, forward forecast, and a labelled cost-pressure
 sensitivity.
 
-## Data Access
+## Data access
 
 - Committed CSV extracts from the FY2025 Appendix 4E PDF.
 - `data/SOURCES.md` preserves the filing trail. No live scrape.
 
-## Model Components
+## Model components
 
 - Consolidated kernel for revenue, materials-as-COGS, working capital, cash.
 - Three sales channels. Channel EBITDA allocated from consolidated EBIT + D&A.
@@ -24,5 +24,5 @@ sensitivity.
 ## Validation
 
 - Source totals versus SOURCES.md.
-- FY2025 actual-driver reproduction at 1 percent tolerance.
+- FY2025 actual-driver reproduction at 1% tolerance.
 - Holdout rejects uniform export-rate growth.

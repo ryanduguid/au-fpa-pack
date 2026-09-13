@@ -13,7 +13,7 @@ def reconcile(
     *,
     tolerance: float = 0.01,
 ) -> pd.DataFrame:
-    """Compare modeled vs actual line items.
+    """Compare modelled versus actual line items.
 
     ``variance = model - actual``, ``variance_pct = variance / actual``
     (undefined when actual is 0). A line is within tolerance when
@@ -22,11 +22,11 @@ def reconcile(
     Parameters
     ----------
     model:
-        Mapping of line-item name to modeled value.
+        Mapping of line-item name to modelled value.
     actual:
         Mapping of line-item name to actual value. Drives the output rows.
     tolerance:
-        Fractional threshold for ``within_tolerance`` (default 1 %).
+        Fractional threshold for ``within_tolerance`` (default 1%).
 
     Returns
     -------

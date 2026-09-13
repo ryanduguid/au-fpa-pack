@@ -1,12 +1,12 @@
 ---
 name: sku-profitability
-description: Use when analyzing which products make or lose money, ranking SKUs by margin or contribution, running a Pareto/80-20 on a product line, or deciding which SKUs to cut, reprice, or push in a product business.
+description: Use when analysing which products make or lose money, ranking SKUs by margin or contribution, running a Pareto/80-20 on a product line, or deciding which SKUs to cut, reprice, or push in a product business.
 ---
 
-# SKU Profitability
+# SKU profitability
 
 > **Generated skill (example).** This is the kind of bespoke skill `fpa-learn-business`
-> proposes when the business profile says *"product company with a discrete SKU set."*
+> proposes when the business profile says *'product company with a discrete SKU set.'*
 > It lives in `skills/generated/` - in a real engagement it would be written into the
 > client's repo after human approval, citing the profile facts that justify it (here:
 > a limited-SKU D2C brand where per-product economics drive the mix decision).
@@ -19,7 +19,7 @@ The channel-level forecast tells you the business is healthy; it doesn't tell yo
 
 ## When to use
 
-- "Which products actually make money?" / "what should we cut?"
+- 'Which products actually make money?' / 'what should we cut?'
 - Product-mix, pricing, or assortment-rationalization decisions
 - Any product business with a discrete SKU set (especially limited-SKU brands)
 
@@ -47,7 +47,7 @@ The channel-level forecast tells you the business is healthy; it doesn't tell yo
 
 4. **Recommend** in business terms: which SKUs to push, reprice, or discontinue, and the margin impact of each move.
 
-## Judgment checks (see fpa-cfo-judgment)
+## Judgement checks (see fpa-cfo-judgment)
 
-- `gross_margin` here is **per-unit price minus unit cost** - it excludes channel fees, returns, and fulfillment. A D2C SKU and a wholesale SKU at the same listed margin are not equally profitable once channel economics hit.
-- A "high-margin" SKU with tiny volume may not be worth the operational complexity it adds. Weigh contribution dollars, not just the percentage.
+- `gross_margin` here is **per-unit price minus unit cost** - it excludes channel fees, returns, and fulfilment. A D2C SKU and a wholesale SKU at the same listed margin are not equally profitable once channel economics hit.
+- A 'high-margin' SKU with tiny volume may not be worth the operational complexity it adds. Weigh contribution dollars, not just the percentage.

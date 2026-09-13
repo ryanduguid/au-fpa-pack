@@ -32,7 +32,7 @@ def test_changed_line_coverage_is_scoped_and_fail_closed() -> None:
 
 
 def test_no_tracked_file_is_covered_by_an_ignore_rule() -> None:
-    """Generated artifacts stay out of the index.
+    """Generated artefacts stay out of the index.
 
     A committed file that .gitignore also claims is rewritten by every
     documented example run, so `git add -A` sweeps an unreviewable binary diff

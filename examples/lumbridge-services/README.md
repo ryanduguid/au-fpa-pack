@@ -49,7 +49,7 @@ net transactions on the same day and do not establish intraday liquidity.
 | [payments.csv](data/payments.csv) | Explicit future bank payments | Supplier, payroll, super, tax and loan cash dates |
 | [assumptions.json](data/assumptions.json) | Declared synthetic assumptions | Period, jurisdiction, rates and cash buffer |
 
-The two Xero files use the parser's normalised `Code,Account,Amount` layout,
+The 2 Xero files use the parser's normalised `Code,Account,Amount` layout,
 with tracking on revenue. They are fabricated fixtures in a supported format,
 not unedited exports captured from a live Xero account. Income and assets
 are positive; expenses, liabilities and equity are negative.
@@ -71,7 +71,7 @@ extend the example and its liability reconciliation before trusting the results.
   uses invoice-basis GST. Net GST accrues at $4,200 a month. The $12,600
   opening GST balance is paid on 28 October. December's $12,600 GST liability
   remains unpaid at the horizon; it is not spendable surplus.
-- Gross wages are $24,000 monthly. The three salaries total $288,000 a year,
+- Gross wages are $24,000 monthly. The 3 salaries total $288,000 a year,
   all assumed qualifying earnings for 12% SG. Super is $2,880 per month and
   cash is scheduled with net wages on 28 October, 27 November and 24 December.
   The example does not prove when a super fund receives a contribution.
@@ -85,7 +85,7 @@ extend the example and its liability reconciliation before trusting the results.
   case refuses a payroll-tax liability without a corresponding cash schedule.
 - Workers compensation is a scenario estimate of 2% of gross wages,
   $480 monthly, paid monthly. It is not an insurer quote or statutory rate.
-- Leave provisions add $2,254.15 monthly, using four weeks annual leave and
+- Leave provisions add $2,254.15 monthly, using 4 weeks annual leave and
   a 1.7% long-service leave accrual assumption. No leave is taken this quarter.
   These are incremental unused-leave provisions, not another cash wage payment.
 - Opening and monthly supplier payables remain $13,200 including GST.
