@@ -12,11 +12,11 @@ proceeds are excluded from FCF; they reduce net debt for the leverage line.
 
 | Scenario | 2-yr Free Cash Flow | Net debt / EBITDA |
 |---|--:|--:|
-| Hold Marucci | $239.6M | 2.09x |
-| Sell at 6mo | $180.2M | 1.27x |
-| Sell at 12mo | $200.0M | 1.27x |
-| Sell at 18mo | $219.8M | 1.05x |
-| Sell at 24mo | $239.6M | 0.89x |
+| Hold Marucci | $131.4M | 2.51x |
+| Sell at 6mo | $72.0M | 2.06x |
+| Sell at 12mo | $91.8M | 1.90x |
+| Sell at 18mo | $111.6M | 1.31x |
+| Sell at 24mo | $131.4M | 0.95x |
 
 Selling Marucci *lowers* 2-year FCF (you give up its cash generation) but also
 *lowers leverage* (proceeds retire debt). The later the sale, the more Marucci
@@ -29,10 +29,10 @@ Marucci EBITDA (~$75.0M). More proceeds retire more debt.
 
 | Sale price | Proceeds | 2-yr Free Cash Flow | Net debt / EBITDA |
 |---|--:|--:|--:|
-| At cost (~$567M paid) | $567.2M | $216.7M | net cash |
-| Default markdown | $300.0M | $200.0M | 1.27x |
-| 8x EBITDA | $600.0M | $218.7M | net cash |
-| 12x EBITDA | $900.0M | $237.4M | net cash |
+| At cost (~$567M paid) | $567.2M | $108.5M | net cash |
+| Default markdown | $300.0M | $91.8M | 1.90x |
+| 8x EBITDA | $600.0M | $110.5M | net cash |
+| 12x EBITDA | $900.0M | $112.9M | net cash |
 
 Whether the deleveraging is worth the lost FCF - and at what price - is the
 capital-allocation question this sensitivity frames.

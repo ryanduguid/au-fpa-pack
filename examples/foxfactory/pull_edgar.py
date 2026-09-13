@@ -148,6 +148,11 @@ def pull_balance_sheet() -> pd.DataFrame:
         for fy in (2022, *FYS):
             cells[f"FY{fy}"] = instant(tag, fy, required=fy in FYS)
         rows.append(cells)
+    # The drawn revolver is not carried in LongTermDebt. These balances are transcribed
+    # from the FY2025 10-K debt note (US$150M at FY2025, US$153M at FY2024), not pulled
+    # from an XBRL concept, so a refresh keeps them rather than dropping the row.
+    rows.append({"line": "revolving_borrowings", "FY2022": None, "FY2023": None,
+                 "FY2024": 153_000_000.0, "FY2025": 150_000_000.0})
     return pd.DataFrame(rows)
 
 

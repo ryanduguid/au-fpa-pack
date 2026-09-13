@@ -459,6 +459,10 @@ FORECAST = {
         "da": 88_000_000.0,          # eases as Marucci intangibles amortise
         "capex": 42_000_000.0,
         "tax_rate": 0.22,            # normalised effective rate (FY actuals distorted by benefits)
+        # Unallocated corporate expense sits between segment Adjusted EBITDA and
+        # consolidated Adjusted EBITDA (FY2025 10-K segment reconciliation: $57.3M).
+        # Held flat at the FY2025 actual; an assumption, not a forecast of the line.
+        "corporate_expense": 57_338_000.0,
     },
     "FY2027": {
         "start_month": "2027-01",
@@ -468,11 +472,18 @@ FORECAST = {
         "da": 82_000_000.0,
         "capex": 42_000_000.0,
         "tax_rate": 0.22,
+        "corporate_expense": 57_338_000.0,
     },
 }
-# Effective all-in cash rate on the term loan; ~$25M/yr scheduled amortisation.
+# Effective all-in cash rate on the debt; ~$25M/yr scheduled term-loan amortisation.
 DEBT_RATE = 0.08
 DEBT_AMORT_PER_YEAR = 25_000_000.0
+
+
+def total_debt(fy: str) -> float:
+    """Term loan plus drawn revolver at the fiscal year end (both from the balance sheet)."""
+    bs = balance_sheet()
+    return float(bs.loc["long_term_debt_total", fy]) + float(bs.loc["revolving_borrowings", fy])
 
 
 def _grow(segments: list[Segment], growth: dict, margin: dict) -> list[Segment]:
@@ -492,16 +503,22 @@ def forecast_year(base: list[Segment], fy: str, debt_open: float,
     segs = _grow(base, a["growth"], a["margin"])
     revenue = sum(s.net_sales for s in segs)
     gross_profit = revenue * (1 - a["cogs_pct"])
-    adj_ebitda = float(roll_up_segments(segs)["adjusted_ebitda"])
+    segment_ebitda = float(roll_up_segments(segs)["adjusted_ebitda"])
+    # Consolidated EBITDA is the segment total less unallocated corporate expense,
+    # so the opex line carries both the segment opex and the corporate line.
     cfg = EntityConfig(
         name=f"Fox Factory {fy} (forecast)",
         start_month=a["start_month"],
         horizon_months=12,
         tax_rate=a["tax_rate"],
         channels=segments_to_channels(segs, cogs_pct=a["cogs_pct"]),
-        opex=[OpexLine(name="adjusted_opex", kind="fixed",
-                       monthly_amount=(gross_profit - adj_ebitda) / 12)],
-        debt=[DebtInstrument(name="term_loan", kind="term_loan",
+        opex=[
+            OpexLine(name="segment_opex", kind="fixed",
+                     monthly_amount=(gross_profit - segment_ebitda) / 12),
+            OpexLine(name="corporate_expense", kind="fixed",
+                     monthly_amount=a["corporate_expense"] / 12),
+        ],
+        debt=[DebtInstrument(name="term_loan_and_revolver", kind="term_loan",
                              opening_balance=debt_open, annual_rate=DEBT_RATE,
                              monthly_principal=DEBT_AMORT_PER_YEAR / 12)],
         working_capital=wc_days("FY2025"),
@@ -526,8 +543,7 @@ def build_forecast() -> tuple[pd.DataFrame, dict[str, list[Segment]]]:
     """FY2026 + FY2027 consolidated monthly forecast (24 months) plus the
     per-year segment views. Base = FY2025 actuals."""
     base = segments_for_year("FY2025")
-    bs = balance_sheet()
-    debt0 = float(bs.loc["long_term_debt_total", "FY2025"])
+    debt0 = total_debt("FY2025")
     open26 = opening_balances("FY2025")
 
     f26, segs26, debt_end26, open27 = forecast_year(base, "FY2026", debt0, open26)
@@ -577,8 +593,15 @@ def proceeds_from_multiple(multiple: float) -> float:
 
 
 def _run_rate_leverage(frame: pd.DataFrame, debt_balance: float) -> float:
-    """Net debt / run-rate (final 12 months) EBITDA - annualized, not 2-year."""
-    return net_debt_to_ebitda(frame.iloc[-12:], debt_balance=debt_balance)
+    """Net debt at the forecast end / run-rate (final 12 months) EBITDA.
+
+    ``debt_balance`` is the opening debt (less any sale proceeds already applied);
+    the modelled principal repayments and the closing cash balance are taken from
+    the frame so the ratio is measured at one date, the end of the forecast.
+    """
+    closing_debt = debt_balance - float(frame["principal"].sum())
+    closing_cash = float(frame["ending_cash"].iloc[-1])
+    return net_debt_to_ebitda(frame.iloc[-12:], debt_balance=closing_debt, cash=closing_cash)
 
 
 def divestiture_grid(forecast: pd.DataFrame, debt_balance: float,

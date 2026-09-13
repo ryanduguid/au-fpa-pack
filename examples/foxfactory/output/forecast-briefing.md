@@ -11,10 +11,10 @@ off FY2025.
 |---|--:|--:|
 | Net sales | $1,520.5M | $1,576.2M |
 | Gross profit | $459.4M | $480.7M |
-| Adjusted EBITDA | $236.7M | $250.3M |
-| Net income | $84.1M | $100.9M |
-| Operating cash flow | $156.2M | $167.4M |
-| Free cash flow | $114.2M | $125.4M |
+| Adjusted EBITDA | $179.4M | $193.0M |
+| Net income | $30.0M | $46.8M |
+| Operating cash flow | $102.1M | $113.3M |
+| Free cash flow | $60.1M | $71.3M |
 
 ## Segment net sales & Adjusted EBITDA
 

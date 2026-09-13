@@ -17,6 +17,17 @@ Filed in these 10-Ks:
 `quarterly.csv` holds the 2 most recent Q1 net-sales prints (the FY2026
 forecast anchor), selected as the ~90-day periods starting in early January.
 
+## Revolving borrowings and unallocated corporate expense
+
+`revolving_borrowings` in `balance_sheet.csv` is transcribed from the FY2025 10-K debt
+note, not pulled from an XBRL concept: US$150M drawn at FY2025 and US$153M at FY2024.
+`LongTermDebt` carries the term loan only, so total debt is the two rows added
+(US$673.5M at FY2025, US$705.1M at FY2024). `pull_edgar.py` re-emits the transcribed row.
+
+The forecast's `corporate_expense` assumption (US$57.3M a year, held flat) is the FY2025
+unallocated corporate expense from the segment reconciliation below, which sits between
+segment Adjusted EBITDA (US$225.7M) and consolidated Adjusted EBITDA (US$168.4M).
+
 ## Segment net sales + Adjusted EBITDA
 
 FY2025 10-K segment footnote: https://www.sec.gov/Archives/edgar/data/1424929/000142492926000012/R106.htm

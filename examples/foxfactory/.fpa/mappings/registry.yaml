@@ -80,6 +80,11 @@ mappings:
   target: balance_sheet.goodwill
   status: mapped
   rationale: Normalized field used by the Fox worked example.
+- source_id: foxf-balance-sheet
+  source_value: revolving_borrowings
+  target: balance_sheet.revolving_borrowings
+  status: mapped
+  rationale: Normalized field used by the Fox worked example.
 - source_id: foxf-cash-flow
   source_value: operating_cash_flow
   target: cash_flow.operating_cash_flow

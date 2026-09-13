@@ -54,8 +54,8 @@ the headline loss is non-cash and must be separated from operating performance.
 
 ## Financing
 
-Term loan + revolver, ~$524M total debt at FY2025 (down from $552M FY2024 as Fox
-deleverages). Effective all-in interest cost ~10% including fees; ~$25M/yr
+Term loan + revolver, ~$674M total debt at FY2025: $523.5M term loan plus $150M drawn
+on the revolver (down from ~$705M at FY2024 as Fox deleverages). Effective all-in interest cost ~10% including fees; ~$25M/yr
 scheduled amortisation. Deleveraging is a stated priority post-Marucci.
 
 ## What keeps the CFO up at night
