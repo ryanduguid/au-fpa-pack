@@ -80,10 +80,13 @@ openfpa mapping-register . \
   --source-value "Product Revenue" \
   --target income_statement.product_revenue
 
+# --expected-json is required: reviewed target-to-total control figures from an
+# independent source. Mapping coverage alone does not reconcile the export.
 openfpa reconcile-source . \
   --source-id monthly-pl \
   --account-column Account \
-  --amount-column Amount
+  --amount-column Amount \
+  --expected-json '{"income_statement.product_revenue": 100000}'
 
 openfpa connector-scaffold . \
   --name accounting-pl \

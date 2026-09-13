@@ -3,8 +3,10 @@
 Rates and thresholds live in YAML data files under ``pyfpa/au/data/``,
 each entry carrying ``from`` (effective date), the value, and a
 ``source_url``. Nothing statutory is hardcoded in engine modules; a
-forecast for FY2027 and a backtest against FY2024 both resolve the rate
-that applied at the time.
+forecast for FY2027 and a backtest against FY2025 both resolve the rate
+that applied at the time. Each table's earliest ``from`` date bounds the
+backtest: payroll-tax entries start on 1 July 2024 (1 July 2025 for VIC
+and NT), and a lookup before a table's first entry raises ``ValueError``.
 """
 
 from __future__ import annotations

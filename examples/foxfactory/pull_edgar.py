@@ -20,7 +20,7 @@ CIK = "0001424929"
 UA = "openfpa-research jeff.brines@gmail.com"
 DATA = Path(__file__).parent / "data"
 
-# Fox's fiscal year ends on the Sunday closest to Dec 31 (52/53-week year).
+# Fox's fiscal year ends on the Friday closest to Dec 31 (52/53-week year).
 FY_END = {2022: "2022-12-30", 2023: "2023-12-29", 2024: "2025-01-03", 2025: "2026-01-02"}
 FYS = (2023, 2024, 2025)
 

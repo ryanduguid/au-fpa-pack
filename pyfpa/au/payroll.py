@@ -6,8 +6,10 @@ workers compensation, and leave provisions.
 
 Forecast-grade simplifications, stated openly:
 
-- SG is applied to gross wages + bonuses as a proxy for ordinary time
-  earnings; the quarterly maximum contribution base is not modelled.
+- SG is applied to gross wages + bonuses as a proxy for the SG earnings
+  base (ordinary time earnings before 1 July 2026, qualifying earnings from
+  that date); the maximum contribution base (quarterly before 1 July 2026,
+  annual from that date) is not modelled.
 - Contractor status determines leave provisions, not SG eligibility.
   Establish SG eligibility separately, including the labour-contract rules.
 - Outside SA, payroll tax applies the jurisdiction's marginal rate to taxable wages

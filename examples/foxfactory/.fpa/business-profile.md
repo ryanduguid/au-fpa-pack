@@ -8,7 +8,7 @@
 
 Fox Factory Holding Corp. designs and manufactures premium ride-dynamics products
 (suspension, components) and, since 2023, premium baseball/softball equipment.
-52/53-week fiscal year ending the Sunday nearest Dec 31. Reports in 3 segments.
+52/53-week fiscal year ending the Friday nearest Dec 31. Reports in 3 segments.
 
 ## Segments (ASU 2023-07: net sales + Adjusted EBITDA disclosed; no segment COGS)
 
