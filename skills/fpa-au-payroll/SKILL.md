@@ -57,8 +57,8 @@ a generated model; load the table.
   ungrouped SA-only employer with a steady full-year wage run rate. Mixed
   SA/interstate wages are refused. Use an entity-specific calculator for
   grouping, apportionment, part-year adjustments and annual reconciliation.
-- SG quarterly maximum contribution base not modelled (only matters
-  for salaries above ~$260k).
+- SG maximum contribution base not modelled (quarterly before 1 July 2026,
+  annual from that date; only matters for salaries above ~$260k).
 - PAYG withholding timing is not split out; `total_cash` assumes wages
   and withholding leave in the wage month. Add a lag in a generated
   skill if the company remits monthly/quarterly with material timing.

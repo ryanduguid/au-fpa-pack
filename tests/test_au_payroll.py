@@ -125,7 +125,8 @@ def test_staggered_sa_interstate_payroll_requires_apportionment(months, first, s
 
 
 def test_above_threshold_pays_payroll_tax(months):
-    # 40 x 150k in NSW: ~6.17m taxable wages incl super, well above threshold.
+    # 40 x 150k in NSW: 6m salaries + 12% SG = 6.72m taxable wages incl super,
+    # well above threshold.
     roles = [
         Role(name=f"Role {i}", annual_salary=150000, jurisdiction="NSW") for i in range(40)
     ]
@@ -166,7 +167,8 @@ def test_bonus_attracts_super(months):
 
 
 def test_sg_rate_change_at_fy_boundary():
-    # FY2025 spans the 11.5% -> 12% step on 1 July 2025.
+    # June 2025 (FY2025) to July 2025 (FY2026) crosses the 11.5% -> 12% step
+    # on 1 July 2025.
     months = pd.period_range("2025-06", periods=2, freq="M")
     roles = [Role(name="Engineer", annual_salary=120000)]
     frame = payroll_forecast(roles, months, PayrollAssumptions(payroll_tax_registered=False))

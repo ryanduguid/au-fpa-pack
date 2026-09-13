@@ -70,7 +70,7 @@ The annual cash change is $46,886.40 of non-cash leave plus $5,780.00 of
 net GST cash movement. Opening GST of $3,850.00 plus $38,520.00 accrued less
 $32,740.00 settled leaves $9,630.00 payable. Tests independently check these
 amounts, the Xero mappings, quarterly dates and weekly bank movements.
-The workbook verifier compares all 27 output lines with the monthly model.
+The workbook verifier compares every monthly-model column with the workbook, twelve months each.
 
 In the input-edit scenario, increasing opening GST by $1,000 raises July
 settlements by $1,000 and lowers all monthly closing cash balances by $1,000;
