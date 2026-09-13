@@ -347,6 +347,16 @@ def test_tracking_comparison_refuses_missing_extra_or_bad_amounts(tmp_path, amou
         read_xero_report(source, tracking_comparison=True)
 
 
+def test_tracking_comparison_refuses_full_width_posting_without_amounts(tmp_path):
+    source = tmp_path / "blank-posting.csv"
+    source.write_text(
+        "Profit and Loss\nAccount,Eastside,North\nTrading Income,,\n"
+        "Other income,10,20\nSales,,\n"
+    )
+    with pytest.raises(ValueError, match="has no amounts"):
+        read_xero_report(source, tracking_comparison=True)
+
+
 def test_tracking_comparison_mode_refuses_other_layouts(tmp_path):
     source = tmp_path / "flat.csv"
     source.write_text("Account,Amount,Tracking Option\nSales,120,North\n")

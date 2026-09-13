@@ -202,6 +202,8 @@ def _read_report_layout(
         section_row = blank_amounts and label.casefold() in _SECTION_LABELS
         if tracking_comparison and not section_row and len(raw) != len(header):
             raise ValueError(f"tracking row {label!r} has the wrong number of columns in {path}")
+        if tracking_comparison and not section_row and blank_amounts:
+            raise ValueError(f"tracking row {label!r} has no amounts in {path}")
         if blank_amounts:
             if label.casefold() in _SECTION_LABELS and sum(bool(cell) for cell in cells[:amount_idx]) == 1:
                 sign = -1.0 if _NEGATE_SECTION.search(label) else 1.0
@@ -290,4 +292,3 @@ def detect_gst_inclusive(
             return True
         return None
     return None
-
