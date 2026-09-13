@@ -98,6 +98,16 @@ _SECTION_LABELS = {
 # "Rent (Sydney)" keeps its parenthetical as part of the name.
 _CODE_SUFFIX = re.compile(r"^(?P<name>.+) \((?P<code>[A-Za-z0-9]{1,10})\)$")
 
+# English AU report headings: year, month/year or day/month/year. Tracking
+# comparisons use option names in these columns and must not lose all but one.
+_PERIOD_COLUMN = re.compile(
+    r"(?:\d{4}|(?:\d{1,2} )?"
+    r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    r" \d{4})",
+    re.IGNORECASE,
+)
+
 
 def _split_code(label: str) -> tuple[str, str]:
     match = _CODE_SUFFIX.match(label)
@@ -125,7 +135,9 @@ def _read_flat_layout(rows: list[list[str]], fields: list[str]) -> list[XeroRow]
     return parsed
 
 
-def _read_report_layout(rows: list[list[str]], path: Path) -> list[XeroRow]:
+def _read_report_layout(
+    rows: list[list[str]], path: Path, *, tracking_comparison: bool = False
+) -> list[XeroRow]:
     """The layout Xero exports from Reports, saved as CSV.
 
     Observed on the Demo Company (AU) Excel exports of the Profit and Loss
@@ -157,6 +169,26 @@ def _read_report_layout(rows: list[list[str]], path: Path) -> list[XeroRow]:
     amount_idx = name_idx + 1
     if amount_idx >= len(header) or not header[amount_idx]:
         raise ValueError(f"no period column after 'Account' in {path}")
+    columns = header[amount_idx:]
+    if tracking_comparison:
+        if rows[0][0].strip().casefold() != "profit and loss" or name_idx != 0:
+            raise ValueError("tracking_comparison requires the standard P&L report layout")
+        folded = [column.casefold() for column in columns]
+        if (
+            any(not column or column in {"total", "(untracked)"} for column in folded)
+            or len(set(folded)) != len(folded)
+        ):
+            raise ValueError(f"ambiguous tracking columns {columns} in {path}")
+        amount_indices = range(amount_idx, len(header))
+    elif any(_PERIOD_COLUMN.fullmatch(column) is None for column in columns):
+        raise ValueError(
+            f"unsupported report columns {columns} in {path}; "
+            "export a standard report with year, month or date headings. "
+            "For P&L tracking comparisons, set tracking_comparison=True after checking "
+            "the source settings, or reshape to Code,Account,Amount,Tracking Option."
+        )
+    else:
+        amount_indices = range(amount_idx, amount_idx + 1)
     sign = 1.0
     parsed: list[XeroRow] = []
     for raw in rows[header_idx + 1 :]:
@@ -164,20 +196,33 @@ def _read_report_layout(rows: list[list[str]], path: Path) -> list[XeroRow]:
         label = cells[name_idx] or (cells[0] if name_idx else "")
         if not label:
             continue
-        if all(cell == "" for cell in cells[amount_idx:]):
+        if label.startswith("Total ") or label.lower() in _DERIVED_ROWS:
+            continue
+        blank_amounts = all(cell == "" for cell in cells[amount_idx:])
+        section_row = blank_amounts and label.casefold() in _SECTION_LABELS
+        if tracking_comparison and not section_row and len(raw) != len(header):
+            raise ValueError(f"tracking row {label!r} has the wrong number of columns in {path}")
+        if tracking_comparison and not section_row and blank_amounts:
+            raise ValueError(f"tracking row {label!r} has no amounts in {path}")
+        if blank_amounts:
             if label.casefold() in _SECTION_LABELS and sum(bool(cell) for cell in cells[:amount_idx]) == 1:
                 sign = -1.0 if _NEGATE_SECTION.search(label) else 1.0
             continue
-        if label.startswith("Total ") or label.lower() in _DERIVED_ROWS:
-            continue
         code, account = _split_code(label)
-        parsed.append(
-            XeroRow(code=code, account=account, amount=sign * _parse_amount(cells[amount_idx]))
-        )
+        for index in amount_indices:
+            option = header[index] if tracking_comparison else ""
+            parsed.append(
+                XeroRow(
+                    code=code,
+                    account=account,
+                    amount=sign * _parse_amount(cells[index]),
+                    tracking_option="" if option.casefold() == "unassigned" else option,
+                )
+            )
     return parsed
 
 
-def read_xero_report(path: str | Path) -> XeroReport:
+def read_xero_report(path: str | Path, *, tracking_comparison: bool = False) -> XeroReport:
     """Parse a Xero CSV export into an XeroReport.
 
     Two layouts are accepted. A flat file whose first row carries the
@@ -185,6 +230,13 @@ def read_xero_report(path: str | Path) -> XeroReport:
     blank), and the report layout Xero exports from Reports, recognised by
     its title rows above a header containing "Account". See
     ``_read_report_layout`` for what the second one skips and normalises.
+
+    Set tracking_comparison=True only for a standard P&L with one tracking
+    option per amount column. This preserves all options, including names
+    that resemble dates, and maps Unassigned to untracked. The default reads
+    the first period only. Report settings must establish which mode applies;
+    column names alone cannot do so. Flat files already carry Tracking Option
+    and do not accept this flag.
     """
     p = Path(path)
     if not p.exists():
@@ -195,9 +247,11 @@ def read_xero_report(path: str | Path) -> XeroReport:
         raise ValueError(f"no rows parsed from {p}")
     fields = [c.strip() for c in rows[0]]
     if "Account" in fields and "Amount" in fields:
+        if tracking_comparison:
+            raise ValueError("tracking_comparison requires the standard P&L report layout")
         parsed = _read_flat_layout(rows, fields)
     else:
-        parsed = _read_report_layout(rows, p)
+        parsed = _read_report_layout(rows, p, tracking_comparison=tracking_comparison)
     if not parsed:
         raise ValueError(f"no rows parsed from {p}")
     return XeroReport(rows=parsed)
@@ -238,4 +292,3 @@ def detect_gst_inclusive(
             return True
         return None
     return None
-

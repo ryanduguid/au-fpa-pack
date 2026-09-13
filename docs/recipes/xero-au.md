@@ -8,14 +8,20 @@ connector is generated per company and uses host-managed OAuth.
 
 ## What to request from the client
 
-From Xero, Accounting > Reports, one CSV each:
+From Xero, Reporting > All reports, obtain these reports:
 
 1. **Profit and Loss** - the modelling period, monthly if the forecast
-   needs monthly actuals. Include tracking columns when departments or
-   business units matter (Tracking Category > include in report).
+   needs monthly actuals. Keep a separate tracking comparison when departments
+   or business units matter; select tracking mode as described below.
 2. **Balance Sheet** - as at the model's opening date.
 3. **Account Transactions** (optional) - for GST verification on
    specific accounts when the P&L/BS don't tie to the BAS.
+
+The P&L and Balance Sheet export menus observed in Demo Company (AU) on
+13 September 2026 offered Excel, PDF and Google Sheets, with no CSV option.
+Choose Excel, let Excel recalculate, then save the required worksheet as
+CSV UTF-8. Keep the original workbook and record the conversion in the source
+manifest. The reader accepts CSV, not an `.xlsx` renamed to `.csv`.
 
 Ask whether reports were run GST-inclusive or GST-exclusive. Xero
 defaults to exclusive; BAS-cash modelling breaks if an inclusive
@@ -50,18 +56,48 @@ The raw export loads as it comes from Reports (observed on the Demo
 Company (AU) Excel exports of the Profit and Loss and Balance Sheet,
 5 September 2026, saved as CSV): three title rows, a blank row, then a
 header whose account column is `Account` (column B on the Balance
-Sheet). The reader takes the first period column after `Account` and
-ignores comparative columns, so export one period per file rather than
-a compare-periods layout. Section rows, `Total <section>` subtotals and
-the derived Gross Profit, Net Profit and Net Assets rows are dropped.
+Sheet). In its default period mode, the reader requires English year,
+month/year or day/month/year headings, takes the first period column after
+`Account` and ignores subsequent period columns. Export one period per file
+when loading monthly actuals. Other headings are refused unless tracking
+mode is explicitly selected below. Section rows, `Total <section>` subtotals
+and the derived Gross Profit, Net Profit and Net Assets rows are dropped.
 Xero writes natural balances (expenses and liabilities positive); the
 reader negates rows under expense, cost, liability and equity sections
 so income and assets come out positive, matching the flat
 `Code,Account,Amount` shape the fixtures use. Account codes appear only
 when the report is set to show them, as `Sales (200)`, and are split
-off. Export CSV or save the workbook from Excel first: every total in
-the `.xlsx` is a formula whose cached value is 0, which any non-Excel
-reader of the total rows would take at face value.
+off. Save the workbook as CSV from Excel first: totals in
+the `.xlsx` are formulas whose cached values are 0, which a reader relying
+on those cached values would take at face value.
+
+Xero's **Compare Region** export puts tracking options across columns, for
+example `Account,Eastside,North,South,West Coast,Unassigned` (observed
+13 September 2026). Confirm the source is a single-period P&L with one option
+per amount column, then load it directly:
+
+```python
+report = read_xero_report("data/xero_pl_regions.csv", tracking_comparison=True)
+regional_accounts = report.by_tracking()
+combined_accounts = report.by_account()
+```
+
+This mode normalises every option's posting accounts and maps `Unassigned`
+to `(untracked)`. Reconcile every option and the combined total before use.
+The default period mode remains separate: names such as `2026` could be a
+year or a tracking option, so the CSV header cannot establish the mode.
+Tracking mode refuses duplicate or blank option names, a `Total` column,
+the reserved `(untracked)` label, malformed amounts and incomplete posting
+rows. Custom totals, renamed derived rows and multi-category layouts are
+outside this observed contract.
+
+Existing flat `Code,Account,Amount,Tracking Option` files still load without
+the flag. Their amounts must already be signed, with one row per posting
+account and option and an empty option for unassigned amounts.
+
+An empty report containing only derived totals is refused with `no rows parsed`.
+Confirm the selected period and source completeness before treating it as a
+zero-activity period; the reader does not create zero actuals from that error.
 
 Untracked rows land under `(untracked)` - if the entity tracks
 departments, any `(untracked)` balance on revenue or direct costs is a
