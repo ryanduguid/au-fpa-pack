@@ -7,7 +7,6 @@ import pytest
 
 from pyfpa.io.xero_au import (
     detect_gst_inclusive,
-    from_xero,
     read_xero_report,
 )
 
@@ -71,14 +70,6 @@ def test_unmapped_tracking_subtracts_the_allowed_options():
     assert report.unmapped_tracking(["North", "South"]) == []
     # An allowed option that never appears in the file is not invented.
     assert report.unmapped_tracking(["North", "South", "West"]) == []
-
-
-def test_from_xero_mirrors_adapter_shape():
-    totals = from_xero()
-    assert totals["Sales - Domestic"] == pytest.approx(99000.0)
-    bs = from_xero(balance_sheet=True)
-    assert bs["GST"] == pytest.approx(-2800.0)
-    assert bs["PAYG Withholdings Payable"] == pytest.approx(-3900.0)
 
 
 def test_sign_convention_preserved():

@@ -263,7 +263,3 @@ def _validate_workspace(opened: Workspace) -> WorkspaceReport:
 
     return _report(checks)
 
-
-def validate_workspace(root: str | Path) -> WorkspaceReport:
-    """Compatibility wrapper around :meth:`Workspace.validate`."""
-    return Workspace.open(root).validate()

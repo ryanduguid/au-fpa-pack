@@ -11,6 +11,14 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from pyfpa.io.pl_csv import _parse_amount
 
+
+def required_text(value: str) -> str:
+    """Strip a text field and reject an empty result."""
+    value = value.strip()
+    if not value:
+        raise ValueError("value must not be empty")
+    return value
+
 SourceKind = Literal[
     "local_file",
     "shared_folder",
@@ -37,10 +45,7 @@ class SourceRecord(BaseModel):
     @field_validator("location", "entity", "extraction_method")
     @classmethod
     def validate_required_text(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("value must not be empty")
-        return value
+        return required_text(value)
 
     @field_validator("currency")
     @classmethod
