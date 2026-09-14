@@ -5,7 +5,7 @@
 - **Repository**: https://github.com/ryanduguid/au-fpa-pack
 - **Names**: the distribution is `au-fpa-pack`, the import is `pyfpa`, the console script is `openfpa`.
 - **Upstream**: openfpa by Jeff Brines / Guiderail (https://github.com/JeffBrines/openfpa). MIT licensed; both attributions are retained in LICENSE.
-- **Install**: `uv sync --locked --extra dev` from a clone. Not published to PyPI, and no release is tagged yet.
+- **Install**: `pip install au-fpa-pack` for the published 0.1.1, or `uv sync --locked --extra dev` from a clone for development. Version 0.1.1 also has an immutable GitHub release.
 - **Python**: tested on 3.11, 3.12 and 3.13.
 
 ## What is here
