@@ -247,7 +247,10 @@ def test_regression_guard_disabled_by_default():
 
 @pytest.mark.parametrize(
     ("champion", "challenger"),
-    [(0.20, float("nan")), (float("nan"), 0.10), (float("inf"), 0.10)],
+    [
+        (0.20, float("nan")), (float("nan"), 0.10), (float("inf"), 0.10),
+        (-1e308, 1e308),
+    ],
 )
 def test_non_finite_metrics_are_rejected(champion, challenger):
     # A NaN or infinite metric previously scored as a full improvement and
