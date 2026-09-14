@@ -32,11 +32,14 @@ def test_start_week_beyond_horizon_is_empty():
 
 def test_misspelt_weekly_field_is_rejected():
     # F077: end_wek used to load silently, leaving the flow running to the
-    # horizon instead of the week the author meant.
+    # horizon instead of the week the author meant. A config arrives as a
+    # mapping, so validate one rather than passing a keyword mypy would catch.
     with pytest.raises(ValidationError):
-        WeeklyFlow(name="x", amount=10.0, start_week=1, recurrence="weekly", end_wek=3)
+        WeeklyFlow.model_validate(
+            {"name": "x", "amount": 10.0, "start_week": 1, "recurrence": "weekly", "end_wek": 3}
+        )
 
 
 def test_misspelt_weekly_config_field_is_rejected():
     with pytest.raises(ValidationError):
-        Cash13Config(opening_cash=100.0, weeks=13, reciepts=[])
+        Cash13Config.model_validate({"opening_cash": 100.0, "weeks": 13, "reciepts": []})
