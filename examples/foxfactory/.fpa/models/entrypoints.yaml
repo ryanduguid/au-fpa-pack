@@ -3,10 +3,11 @@ entrypoints:
 - name: foxf-pipeline
   kind: forecast
   description: Run Fox actual-driver reproduction, historical holdout, forward forecast,
-    and Marucci sensitivity.
+    and Marucci sensitivity, replacing demonstration epochs.
   command:
   - python3
   - run_foxf.py
+  - --replace-epochs
   working_directory: .
   inputs:
   - data/income_statement.csv

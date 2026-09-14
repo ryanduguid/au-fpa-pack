@@ -561,9 +561,9 @@ def main(*, replace_epochs: bool = False) -> None:
             kind="forecast",
             description=(
                 "Run Fox actual-driver reproduction, historical holdout, "
-                "forward forecast, and Marucci sensitivity."
+                "forward forecast, and Marucci sensitivity, replacing demonstration epochs."
             ),
-            command=["python3", "run_foxf.py"],
+            command=["python3", "run_foxf.py", "--replace-epochs"],
             inputs=[
                 "data/income_statement.csv",
                 "data/balance_sheet.csv",

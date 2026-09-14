@@ -41,8 +41,11 @@ consolidated P&L + indirect cash flow (revenue → … → FCF)
    channels. The blended COGS% is applied to every segment (segment COGS isn't
    disclosed), so the channels sum back to consolidated COGS by construction.
 4. Feed the channels into a consolidated `EntityConfig` and run
-   `cashflow_from_config`. Set the single `adjusted_opex` line to
-   `gross_profit − total_adjusted_ebitda` so engine EBITDA ties to segment Adj EBITDA.
+   `cashflow_from_config`. Set `segment_opex` to
+   `gross_profit − total_adjusted_ebitda`, then add a separate `corporate_expense`
+   line. Consolidated EBITDA equals segment Adjusted EBITDA less corporate expense.
+   `forecast_year` carries FY2025 corporate expense of US$57.338 million forward
+   as an explicit annual forecast assumption, not a reported future cost.
 5. Keep the goodwill impairment and discrete tax items **out** of the engine and
    in a documented bridge to GAAP net income - the lean engine models the
    operating business, not one-time non-cash charges.
