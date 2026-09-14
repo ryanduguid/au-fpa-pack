@@ -109,9 +109,32 @@ def test_foxf_pipeline_is_registered_for_agent_discovery():
     entrypoint = next(item for item in registry.entrypoints if item.name == "foxf-pipeline")
 
     assert entrypoint.kind == "forecast"
-    assert entrypoint.command == ["python3", "run_foxf.py"]
+    assert entrypoint.command == ["python3", "run_foxf.py", "--replace-epochs"]
     assert "output/foxf-forecast.xlsx" in entrypoint.outputs
     assert (EXAMPLE / ".fpa" / "decisions" / "initial-model-architecture.md").exists()
+
+
+@requires_foxf_data
+def test_registered_pipeline_replays_demonstration_history(tmp_path):
+    from pyfpa.memory.entrypoints import load_entrypoint_registry
+
+    example = tmp_path / "foxfactory"
+    shutil.copytree(EXAMPLE, example, ignore=shutil.ignore_patterns("__pycache__"))
+    registry_path = example / ".fpa" / "models" / "entrypoints.yaml"
+    entrypoint = next(item for item in load_entrypoint_registry(registry_path).entrypoints
+                      if item.name == "foxf-pipeline")
+    # Use this test environment's interpreter on every platform.
+    result = subprocess.run([sys.executable, *entrypoint.command[1:]], cwd=example,
+                            capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    regenerated = next(item for item in load_entrypoint_registry(registry_path).entrypoints
+                       if item.name == "foxf-pipeline")
+    assert regenerated.command == entrypoint.command
+    assert (example / "output" / "foxf-forecast.xlsx").exists()
+    protected = subprocess.run([sys.executable, "run_foxf.py"], cwd=example,
+                               capture_output=True, text=True, check=False)
+    assert protected.returncode != 0
+    assert "FileExistsError" in protected.stderr
 
 
 def test_foxf_sources_and_mappings_are_registered():
