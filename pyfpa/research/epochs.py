@@ -111,6 +111,8 @@ def evaluate_challenger(
                 raw_improvement = (champion - challenger) / denominator
             else:
                 raw_improvement = (challenger - champion) / denominator
+        if not math.isfinite(raw_improvement):
+            raise ValueError(f"metric {metric.name!r} improvement must be finite")
         # The guard inspects the RAW improvement: the clamp below bounds the
         # score, but must not launder a catastrophic single-metric regression
         # into a passable aggregate.
