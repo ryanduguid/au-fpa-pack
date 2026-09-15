@@ -7,6 +7,11 @@ entrypoints:
   command:
   - python3
   - run_arb.py
+  # The outputs below are the committed ones, and the two research epochs beside
+  # them already exist, so a replay without this flag stops at save_epoch with
+  # FileExistsError. This is the regeneration command README.md documents; replay
+  # into a scratch tree with --output-dir instead.
+  - --replace-epochs
   working_directory: .
   inputs:
   - data/income_statement.csv

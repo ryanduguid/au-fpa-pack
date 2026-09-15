@@ -98,6 +98,13 @@ def test_fetch_abs_requires_key(monkeypatch):
         fetch_abs_series("cpi_monthly")
 
 
+def test_fetch_abs_takes_no_key_argument(monkeypatch):
+    # The key is host-environment only, so a caller must have no way to pass one.
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    with pytest.raises(TypeError):
+        fetch_abs_series("wpi", api_key="synthetic-unused")  # type: ignore[call-arg]
+
+
 def test_fetch_abs_unknown_dataflow_rejected(monkeypatch):
     monkeypatch.setenv("ABS_API_KEY", "test-key")
     with pytest.raises(ValueError, match="unknown ABS dataflow"):
@@ -105,15 +112,17 @@ def test_fetch_abs_unknown_dataflow_rejected(monkeypatch):
 
 
 def test_abs_rejects_ambiguous_periods_in_either_order(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     rows = ["2026-Q1,AUS,4.0,Percent", "2026-Q1,NSW,3.0,Percent"]
     for ordered in (rows, rows[::-1]):
         raw = "TIME_PERIOD,REGION,OBS_VALUE,UNIT_MEASURE\n" + "\n".join(ordered)
         monkeypatch.setattr(drivers, "_fetch", lambda *args, raw=raw, **kwargs: raw.encode())
         with pytest.raises(ValueError, match="ambiguous|duplicate"):
-            fetch_abs_series("wpi", api_key="synthetic-unused")
+            fetch_abs_series("wpi")
 
 
 def test_abs_rejects_disjoint_series_even_with_partial_selection(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = (
         b"TIME_PERIOD,REGION,INDUSTRY,OBS_VALUE,UNIT_MEASURE\n"
         b"2026-Q1,AUS,MINING,4.0,Percent\n2026-Q2,AUS,RETAIL,3.0,Percent\n"
@@ -121,26 +130,28 @@ def test_abs_rejects_disjoint_series_even_with_partial_selection(monkeypatch):
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
     for selection in (None, {"REGION": "AUS"}):
         with pytest.raises(ValueError, match="ambiguous"):
-            fetch_abs_series("wpi", api_key="synthetic-unused", dimensions=selection)
+            fetch_abs_series("wpi", dimensions=selection)
 
 
 def test_abs_allows_observation_status_changes_within_one_series(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = (
         b"TIME_PERIOD,REGION,OBS_VALUE,OBS_STATUS\n"
         b"2026-Q1,AUS,4.0,F\n2026-Q2,AUS,3.0,P\n"
     )
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
-    assert fetch_abs_series("wpi", api_key="synthetic-unused").data == {"2026Q1": 4.0, "2026Q2": 3.0}
+    assert fetch_abs_series("wpi").data == {"2026Q1": 4.0, "2026Q2": 3.0}
 
 
 def test_abs_explicit_selection_preserves_units_and_dimensions(tmp_path, monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = (
         "TIME_PERIOD,REGION,OBS_VALUE,UNIT_MEASURE\n"
         "2026-Q1,AUS,4.0,Percent\n2026-Q1,NSW,3.0,Percent\n"
         "2026-Q2,AUS,4.1,Percent\n"
     )
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw.encode())
-    series = fetch_abs_series("wpi", api_key="synthetic-unused", dimensions={"REGION": "AUS"})
+    series = fetch_abs_series("wpi", dimensions={"REGION": "AUS"})
     assert series.data == {"2026Q1": 4.0, "2026Q2": 4.1}
     assert series.units == "Percent"
     assert series.dimensions == {"REGION": "AUS"}
@@ -149,10 +160,11 @@ def test_abs_explicit_selection_preserves_units_and_dimensions(tmp_path, monkeyp
 
 @pytest.mark.parametrize("dimensions", [{"REGION": "VIC"}, {"UNKNOWN": "AUS"}])
 def test_abs_rejects_selection_without_observations(monkeypatch, dimensions):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n"
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
     with pytest.raises(ValueError, match="dimension|observations"):
-        fetch_abs_series("wpi", api_key="synthetic-unused", dimensions=dimensions)
+        fetch_abs_series("wpi", dimensions=dimensions)
 
 
 def test_fetch_rba_parses_the_committed_f1_sample(monkeypatch):
@@ -253,24 +265,27 @@ def test_abs_dataflow_ids_are_the_documented_indicator_api_ones():
 def test_abs_rejects_a_frequency_the_key_does_not_promise(monkeypatch):
     # F090: cpi_quarterly accepted monthly observations and returned them under
     # the quarterly name.
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-01,AUS,4.0\n2026-02,AUS,4.1\n"
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
     with pytest.raises(ValueError, match="returned M observations"):
-        fetch_abs_series("cpi_quarterly", api_key="synthetic-unused")
+        fetch_abs_series("cpi_quarterly")
     # Control: the monthly key accepts the same observations.
-    assert fetch_abs_series("cpi_monthly", api_key="synthetic-unused").frequency == "M"
+    assert fetch_abs_series("cpi_monthly").frequency == "M"
 
 
 def test_abs_rejects_a_single_observation_of_the_wrong_frequency(monkeypatch):
     # A quarterly response carrying one monthly period passed the aggregate
     # check and folded that month into an existing quarter.
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n2026-02,AUS,4.1\n2026-Q2,AUS,4.2\n"
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
     with pytest.raises(ValueError, match="returned M observations"):
-        fetch_abs_series("wpi", api_key="synthetic-unused")
+        fetch_abs_series("wpi")
 
 
 def test_abs_dataflow_id_reaches_the_request_url(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     seen = {}
 
     def capture(url, headers=None, timeout=60):
@@ -278,6 +293,6 @@ def test_abs_dataflow_id_reaches_the_request_url(monkeypatch):
         return b"TIME_PERIOD,REGION,OBS_VALUE\n2026-Q1,AUS,4.0\n2026-Q2,AUS,4.1\n"
 
     monkeypatch.setattr(drivers, "_fetch", capture)
-    series = fetch_abs_series("wpi", api_key="synthetic-unused")
+    series = fetch_abs_series("wpi")
     assert seen["url"].endswith("/data/WPI_H/csv")
     assert series.series_id == "WPI_H"

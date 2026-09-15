@@ -22,6 +22,24 @@ from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
 from pyfpa.portfolio.validate import ValidationResult
 
 
+def _child(directory: Path, name: str) -> Path:
+    """`directory / name` when it stays a direct child, else ValueError.
+
+    A business type and a skill name reach the filesystem from portfolio YAML,
+    which nothing else constrains, so a value such as `../../settings` promoted
+    a file outside the library subtree. Resolving both sides also catches an
+    absolute path and a nested one; `load_library` only ever globs direct
+    children, so a nested write could not be read back either.
+    """
+    directory = directory.resolve()
+    path = (directory / name).resolve()
+    if path.parent != directory:
+        raise ValueError(
+            f"unsafe library name {name!r}: it must name a direct child of {directory.name}/"
+        )
+    return path
+
+
 def _log(library: Path, line: str) -> None:
     library.mkdir(parents=True, exist_ok=True)
     log = library / "library-log.md"
@@ -106,7 +124,7 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
     priors_dir = library / "priors"
     priors_dir.mkdir(parents=True, exist_ok=True)
-    path = priors_dir / f"{candidate.business_type}.yaml"
+    path = _child(priors_dir, f"{candidate.business_type}.yaml")
     doc = read_yaml(path) if path.exists() else None
     doc = doc or {"type": candidate.business_type, "priors": []}
     doc["priors"].append({
@@ -138,8 +156,9 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
     approval, findings = check_promotion_approval(library, candidate, tree=tree)
     library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
-    dest = library / "skills" / candidate.name
-    dest.parent.mkdir(parents=True, exist_ok=True)
+    skills_dir = library / "skills"
+    skills_dir.mkdir(parents=True, exist_ok=True)
+    dest = _child(skills_dir, candidate.name)
     # Not copytree: it would re-read the client's directory and follow links.
     dest.mkdir()
     for relative, data in tree:

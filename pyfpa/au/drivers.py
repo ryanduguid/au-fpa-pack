@@ -166,18 +166,20 @@ def fetch_rba_series(name: str) -> DriverSeries:
 
 
 def fetch_abs_series(
-    name: str, api_key: str | None = None, *, dimensions: dict[str, str] | None = None,
+    name: str, *, dimensions: dict[str, str] | None = None,
 ) -> DriverSeries:
     """Fetch one ABS Indicator API dataflow as a DriverSeries.
 
-    Key resolution: explicit `api_key` argument, else ``ABS_API_KEY``
-    environment variable. Raises RuntimeError when neither exists.
-    Filter dimension columns explicitly when a dataflow contains multiple
+    The key comes from ``ABS_API_KEY`` in the host environment and nowhere else,
+    as skills/fpa-au-drivers/SKILL.md requires: no key handling in code, full
+    stop. There is deliberately no argument for it, so no caller can route a
+    credential through source or configuration. Raises RuntimeError when it is
+    unset. Filter dimension columns explicitly when a dataflow contains multiple
     series. Duplicate periods are rejected, never resolved by row order.
     """
     if name not in ABS_DATAFLOWS:
         raise ValueError(f"unknown ABS dataflow {name!r}; expected one of {sorted(ABS_DATAFLOWS)}")
-    key = api_key or os.environ.get("ABS_API_KEY")
+    key = os.environ.get("ABS_API_KEY")
     if not key:
         raise RuntimeError(
             "ABS Indicator API requires a key: set ABS_API_KEY in the host "

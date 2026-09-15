@@ -175,7 +175,10 @@ def test_arb_pipeline_is_registered_for_agent_discovery():
     registry = load_entrypoint_registry(EXAMPLE / ".fpa" / "models" / "entrypoints.yaml")
     entrypoint = next(item for item in registry.entrypoints if item.name == "arb-pipeline")
     assert entrypoint.kind == "forecast"
-    assert entrypoint.command == ["python3", "run_arb.py"]
+    # The flag is part of the contract, not decoration: the entrypoint declares the
+    # committed outputs, and the two research epochs beside them already exist, so a
+    # replay without it stops at save_epoch with FileExistsError.
+    assert entrypoint.command == ["python3", "run_arb.py", "--replace-epochs"]
 
 
 def test_arb_income_statement_mapping_covers_every_source_row():
