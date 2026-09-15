@@ -68,6 +68,10 @@ def fy_summary(frame: pd.DataFrame, by: str = "fy") -> pd.DataFrame:
 
     `by` is one of 'fy', 'quarter', 'half'. Row order follows the calendar.
     """
+    # groupby(sort=False) below orders groups by first appearance, so sort the
+    # periods first. Sorting the labels instead would not work: "FY2027 Q1"
+    # sorts before "FY2026 Q3" alphabetically.
+    frame = frame.sort_index()
     if by == "fy":
         keys = [fy_label(p) for p in frame.index]
     elif by == "quarter":

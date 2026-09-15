@@ -60,7 +60,7 @@ def test_quarterly_bas_dates_match_ato_fy2027_cycle():
     assert schedule["due_date"].tolist() == [
         date(2026, 7, 28),  # opening GST balances, synthetic settlement assumption
         date(2026, 10, 28),
-        date(2027, 2, 28),
+        date(2027, 3, 1),  # 28 February 2027 is a Sunday; the ATO allows the Monday
         date(2027, 4, 28),
         date(2027, 7, 28),
     ]

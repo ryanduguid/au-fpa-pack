@@ -110,26 +110,39 @@ def phase_b() -> str:
 
 
 def phase_c() -> str:
+    # build_forecast returns both years and README.md calls Phase C an FY2026 to
+    # FY2027 forecast, so report both. Reporting FY2026 alone left the second
+    # forecast year with no way for a reader to inspect it.
     forecast, segs = am.build_forecast()
-    fy26 = forecast.iloc[:12]
-    briefing = to_briefing_md(fy26, title="ARB Corporation FY2026 forecast")
-    extra = [
-        "",
-        "## Channel mix (FY2026)",
-        "",
-        "| Channel | Net sales |",
-        "|---|--:|",
-    ]
-    for segment in segs["FY2026"]:
-        extra.append(f"| {segment.name} | ${segment.net_sales:,.0f} |")
-    extra += [
+    years = {"FY2026": forecast.iloc[:12], "FY2027": forecast.iloc[12:]}
+    sections = [to_briefing_md(
+        forecast, title="ARB Corporation FY2026 to FY2027 forecast"
+    ).rstrip("\n")]
+    for year, frame in years.items():
+        sections.append("\n".join([
+            "",
+            f"## {year}",
+            "",
+            f"- **Revenue:** ${frame['revenue'].sum():,.0f}",
+            f"- **EBITDA:** ${frame['ebitda'].sum():,.0f}",
+            f"- **Net income:** ${frame['net_income'].sum():,.0f}",
+            f"- **Ending cash:** ${frame['ending_cash'].iloc[-1]:,.0f}",
+            "",
+            f"### Channel mix ({year})",
+            "",
+            "| Channel | Net sales |",
+            "|---|--:|",
+            *(f"| {segment.name} | ${segment.net_sales:,.0f} |"
+              for segment in segs[year]),
+        ]))
+    sections.append("\n".join([
         "",
         "Assumptions are in `arb_model.FORECAST`. This is the August 2025 4E",
         "view, not a later refresh. Property capex is stepped down because the",
         "board said FY2026 property investment would be significantly lower.",
         "",
-    ]
-    return briefing + "\n".join(extra)
+    ]))
+    return "\n".join(sections)
 
 
 def phase_d() -> str:

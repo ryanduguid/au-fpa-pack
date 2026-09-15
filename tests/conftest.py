@@ -1,4 +1,7 @@
+import os
+import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
@@ -61,3 +64,27 @@ def sample_config() -> EntityConfig:
         working_capital=WorkingCapitalConfig(dso_days=30, dpo_days=30, dio_days=0),
         opening_balances=OpeningBalances(cash=500.0, ar=0.0, ap=0.0, inventory=0.0),
     )
+
+
+@pytest.fixture
+def directory_link():
+    """Create a directory link, as a junction on Windows and a symlink elsewhere.
+
+    Windows needs Developer Mode or elevation for a symlink, so a junction is the
+    portable way to plant one in a test.
+    """
+
+    def _link(link: Path, target: Path) -> None:
+        if os.name == "nt":
+            completed = subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if completed.returncode != 0:
+                pytest.fail(f"could not create test junction: {completed.stderr}")
+            return
+        link.symlink_to(target, target_is_directory=True)
+
+    return _link

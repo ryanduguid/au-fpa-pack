@@ -64,5 +64,7 @@ def test_formula_vocabulary_is_restricted(tmp_path):
     for row in model.iter_rows(min_row=2, min_col=2):
         for cell in row:
             if isinstance(cell.value, str) and cell.value.startswith("="):
-                for fn in re.findall(r"([A-Z]{2,})\s*\(", cell.value):
+                # [A-Z]{2,} needs two letters immediately before "(", so LOG10(,
+                # T.INV( and N( all slipped past the guard that exists to block them.
+                for fn in re.findall(r"([A-Z][A-Z0-9.]*)\s*\(", cell.value):
                     assert fn in allowed, f"forbidden function {fn} in {cell.value}"

@@ -36,16 +36,21 @@ naive P&L-to-cash bridge misses entirely.
    ```
 
 4. Reconcile: management P&L (GST-exclusive) versus bank cash (GST-inclusive).
-   Receipts in the cash model should run ~1.1x taxable revenue; the
-   difference accumulates as a GST liability until BAS settlement.
+   Receipts in the cash model should run ~1.1x taxable revenue. That uplift is
+   the output GST collected, and it is a reconciliation check, not the BAS
+   settlement. The settlement is the net position: output GST less the input
+   tax credits on GST-bearing purchases. Take it from the `net_gst` amount in
+   `schedule`, or a purchase-heavy entity's BAS payment is overstated.
 
 ## Due dates
 
-Original due dates only (28 Oct / 28 Feb / 28 Apr / 28 Jul quarterly;
-21st following month for monthly). Agent lodgment program extensions
-are NOT modelled; forecasting on original dates is conservative for
-payments. If the company relies on agent extensions for cash, override
-due dates in a generated company skill.
+The quarterly cycle is 28 Oct / 28 Feb / 28 Apr / 28 Jul, and monthly is the
+21st of the following month. A due date on a weekend moves to the following
+Monday, which is the ATO's next-business-day concession. Public holidays are
+NOT modelled: they differ by state and the pack carries no holiday calendar.
+Agent lodgment program extensions are NOT modelled either; forecasting on the
+standard dates is conservative for payments. If the company relies on agent
+extensions for cash, override due dates in a generated company skill.
 
 ## Pitfalls
 

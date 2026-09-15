@@ -6,7 +6,9 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field
 
-_TOKEN = re.compile(r"[a-z0-9][a-z0-9_-]+")
+# One character is a token too: a query such as "P&L" splits to "p" and "l",
+# and requiring two characters dropped both, leaving nothing to retrieve on.
+_TOKEN = re.compile(r"[a-z0-9][a-z0-9_-]*")
 _IGNORED_FILES = {"index.yaml", "context-pack.md"}
 
 

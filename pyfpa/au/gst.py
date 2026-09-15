@@ -10,12 +10,16 @@ Categories: `taxable_sales_pct` covers GST-free (exports, basic food,
 health) and input-taxed (financial supplies, residential rent) revenue
 by exclusion; likewise `creditable_purchases_pct` for acquisitions
 without input tax credits.
+
+A due date on a weekend moves to the following Monday, which is the ATO's
+next-business-day concession. Public holidays are not modelled: they differ
+by state and this module carries no holiday calendar.
 """
 
 from __future__ import annotations
 
 import math
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum
 from typing import Any
 
@@ -91,20 +95,32 @@ def monthly_gst(
     return frame
 
 
+def _next_business_day(due: date) -> date:
+    """Move a weekend due date to the following Monday.
+
+    The ATO allows lodgment and payment on the next business day when a due
+    date falls on a weekend or public holiday, and these dates drive cash
+    timing. Public holidays are not modelled: they differ by state and this
+    module carries no holiday calendar, so a due date on one is left as is.
+    """
+    shift = {5: 2, 6: 1}.get(due.weekday(), 0)
+    return due + timedelta(days=shift)
+
+
 def _quarter_due_date(quarter_end: pd.Period) -> date:
-    """Original due date for the quarterly BAS ending at `quarter_end`."""
+    """Due date for the quarterly BAS ending at `quarter_end`."""
     rules = load_gst_bas_data()["quarterly_due"]
     key = f"{quarter_end.month:02d}"
     rule = rules[key]  # {'month': int, 'day': int} relative to quarter end
     due_year = quarter_end.year + (1 if rule["month"] < quarter_end.month else 0)
-    return date(due_year, rule["month"], rule["day"])
+    return _next_business_day(date(due_year, rule["month"], rule["day"]))
 
 
 def _month_due_date(month: pd.Period) -> date:
-    """Original due date for the monthly BAS for `month` (21st following)."""
+    """Due date for the monthly BAS for `month` (21st following)."""
     day = int(load_gst_bas_data()["monthly_due_day"])
     following = month + 1
-    return date(following.year, following.month, day)
+    return _next_business_day(date(following.year, following.month, day))
 
 
 def bas_schedule(
@@ -114,8 +130,10 @@ def bas_schedule(
     """BAS settlement events from a monthly net_gst series.
 
     Returns a frame with columns period_label, due_date, amount.
-    Quarterly cycles sum months into Sep/Dec/Mar/Jun quarters; partial
-    trailing quarters are excluded (their BAS falls beyond the series).
+    Quarterly cycles sum months into Sep/Dec/Mar/Jun quarters; a trailing
+    quarter that ends after the series is excluded, because its BAS falls
+    beyond the series. A leading partial quarter settles the months the
+    series actually holds, so its GST cash is not lost.
     Positive amount = payment to ATO; negative = refund.
     Missing values, duplicate months and non-monthly indexes are rejected.
     """
@@ -132,10 +150,12 @@ def bas_schedule(
                 }
             )
     else:
+        last_month = net_gst.index.max()
         for quarter, amounts in net_gst.groupby(net_gst.index.asfreq("Q-JUN")):
-            if len(amounts) < 3:
-                continue  # incomplete quarter; BAS not yet determinable
             quarter_end = quarter.asfreq("M", how="end")
+            if quarter_end > last_month:
+                continue  # quarter still open; BAS not yet determinable
+
             rows.append(
                 {
                     "period_label": str(quarter),

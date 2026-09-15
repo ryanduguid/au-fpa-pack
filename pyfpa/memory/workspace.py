@@ -250,14 +250,23 @@ def initialize_workspace(
     """Create a company `.fpa` workspace without overwriting existing memory."""
     opened = Workspace.open(company_root)
     workspace = opened.memory
+    # mkdir(exist_ok=True) and the seed writes follow an existing symlink or reparse
+    # point, so an attacker-placed .fpa or subdirectory would put workspace files
+    # outside company_root. Check the chain before every directory and every write.
+    opened.assert_safe_existing_chain(workspace)
     workspace.mkdir(parents=True, exist_ok=True)
     for directory in WORKSPACE_DIRS:
-        (workspace / directory).mkdir(exist_ok=True)
+        target = workspace / directory
+        opened.assert_safe_existing_chain(target)
+        target.mkdir(exist_ok=True)
     for namespace in _GENERATED_NAMESPACES:
-        opened.generated_path(namespace).mkdir(parents=True, exist_ok=True)
+        target = opened.generated_path(namespace)
+        opened.assert_safe_existing_chain(target)
+        target.mkdir(parents=True, exist_ok=True)
 
     for relative, seed in _SEED_FILES:
         target = workspace / relative
+        opened.assert_safe_existing_chain(target)
         if not target.exists():
             seed(target, business_name)
     return workspace

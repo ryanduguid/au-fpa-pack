@@ -1,4 +1,3 @@
-import os
 import runpy
 import subprocess
 from pathlib import Path
@@ -88,20 +87,6 @@ def manifest_values() -> dict:
         "fixture_path": "fixtures/source.csv",
         "expected_totals": {"revenue.product": 100.0},
     }
-
-
-def directory_link(link: Path, target: Path) -> None:
-    if os.name == "nt":
-        completed = subprocess.run(
-            ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        if completed.returncode != 0:
-            pytest.fail(f"could not create test junction: {completed.stderr}")
-        return
-    link.symlink_to(target, target_is_directory=True)
 
 
 def test_connector_manifest_rejects_unsafe_fixture_paths():
@@ -294,6 +279,7 @@ def test_scaffold_overwrite_restores_original_bundle_when_swap_fails(
 def test_scaffold_overwrite_rejects_linked_workspace_ancestors(
     tmp_path,
     linked_part,
+    directory_link,
 ):
     company_root = tmp_path / "company"
     company_root.mkdir()

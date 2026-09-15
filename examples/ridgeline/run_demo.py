@@ -36,7 +36,7 @@ def run_demo(output_dir: str | Path) -> dict:
     runway = pyfpa.runway_summary(cash13)
 
     briefing = to_briefing_md(monthly, title=_TITLE, runway=runway)
-    (out / "briefing.md").write_text(briefing)
+    (out / "briefing.md").write_text(briefing, encoding="utf-8")
     forecast_to_excel(monthly, out / "forecast.xlsx")
 
     cfg = pyfpa.load_config(_HERE / "config.yaml")

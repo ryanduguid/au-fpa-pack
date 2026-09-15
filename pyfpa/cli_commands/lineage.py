@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -38,11 +39,21 @@ def _expected_from_json(value: str | None) -> dict[str, float] | None:
             result[key] = amount
         return result
     expected = json.loads(value, object_pairs_hook=unique_pairs)
+
+    def _is_amount(amount: Any) -> bool:
+        # bool is a subclass of int, so `true` would pass as the number 1. Python's
+        # json also accepts the NaN and Infinity literals, which are not totals.
+        return (
+            isinstance(amount, (int, float))
+            and not isinstance(amount, bool)
+            and math.isfinite(amount)
+        )
+
     if not isinstance(expected, dict) or any(
-        not isinstance(key, str) or not isinstance(amount, (int, float))
+        not isinstance(key, str) or not _is_amount(amount)
         for key, amount in expected.items()
     ):
-        raise ValueError("--expected-json must be a JSON object of numeric totals")
+        raise ValueError("--expected-json must be a JSON object of finite numeric totals")
     return {key: float(amount) for key, amount in expected.items()}
 
 

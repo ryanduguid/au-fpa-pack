@@ -88,8 +88,8 @@ facts:
 - key: financing
   topic: finance_structure
   question: What debt, credit lines, covenants, or other financing is in place?
-  answer: Fox uses a term loan and revolver and ended FY2025 with about $524M of total
-    debt.
+  answer: Fox uses a term loan and revolver and ended FY2025 with about $674M of total
+    debt, being a $523.5M term loan plus $150M drawn on the revolver.
   status: inferred
   confidence: 0.85
   source_type: local_file

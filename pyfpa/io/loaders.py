@@ -26,15 +26,9 @@ def write_yaml(path: str | Path, data: Any) -> None:
 
 def load_cash13_config(path: str | Path) -> Cash13Config:
     """Load and validate a Cash13Config from a YAML file."""
-    p = Path(path)
-    with p.open() as f:
-        raw = yaml.safe_load(f)
-    return Cash13Config.model_validate(raw)
+    return Cash13Config.model_validate(read_yaml(path))
 
 
 def load_skus(path: str | Path) -> list[Sku]:
     """Load a list of Sku from a YAML file with a top-level `skus:` list."""
-    p = Path(path)
-    with p.open() as f:
-        raw = yaml.safe_load(f)
-    return [Sku.model_validate(item) for item in raw["skus"]]
+    return [Sku.model_validate(item) for item in read_yaml(path)["skus"]]
