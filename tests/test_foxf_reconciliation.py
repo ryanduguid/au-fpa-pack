@@ -215,16 +215,25 @@ def test_foxf_workspace_passes_agent_toolbelt_diagnostics():
 # pull_edgar.py - a failed EDGAR fetch must abort, never blank a committed CSV.
 # All offline: `_curl` is replaced, so no test here touches the network.
 # --------------------------------------------------------------------------- #
+def _dashed(accession: str) -> str:
+    """EDGAR reports accn with separators; pull_edgar records it without them."""
+    return f"{accession[:10]}-{accession[10:12]}-{accession[12:]}"
+
+
 def _fake_concept_doc(tag: str) -> bytes:
     """A well-formed companyconcept payload satisfying annual/instant/quarter."""
     import pull_edgar as pe
 
     rows = [
-        {"form": "10-K", "fy": fy, "start": pe.FY_END[fy - 1], "end": pe.FY_END[fy],
+        {"form": "10-K", "fy": fy, "accn": _dashed(pe.TENK[fy]),
+         "start": pe.FY_END[fy - 1], "end": pe.FY_END[fy],
          "val": 1_000_000 + fy}
         for fy in pe.FYS
     ]
-    rows += [{"end": pe.FY_END[fy], "val": 2_000_000 + fy} for fy in (2022, *pe.FYS)]
+    rows += [
+        {"end": pe.FY_END[fy], "accn": _dashed(pe._accession(fy)), "val": 2_000_000 + fy}
+        for fy in (2022, *pe.FYS)
+    ]
     rows += [
         {"form": "10-Q", "fy": 2025, "fp": "Q1", "start": "2025-01-04", "end": "2025-04-04", "val": 300_000},
         {"form": "10-Q", "fy": 2026, "fp": "Q1", "start": "2026-01-03", "end": "2026-04-03", "val": 310_000},
@@ -244,6 +253,7 @@ def test_curl_uses_fail_so_an_http_error_body_is_never_parsed_as_data(monkeypatc
     # Replace pull_edgar's own name for the module, not stdlib subprocess.run,
     # which other tests in this file call.
     monkeypatch.setattr(pe, "subprocess", SimpleNamespace(run=fake_run))
+    monkeypatch.setenv(pe.UA_ENV, "au-fpa-pack tests fabricated@example.invalid")
     with pytest.raises(RuntimeError, match="curl failed"):
         pe._curl("https://data.sec.gov/whatever")
     assert "--fail" in seen["argv"]
@@ -279,11 +289,65 @@ def test_main_leaves_committed_csvs_untouched_when_a_late_pull_fails(monkeypatch
 
     monkeypatch.setattr(pe, "_curl", fake_curl)
     monkeypatch.setattr(pe, "DATA", data)
+    monkeypatch.setenv(pe.UA_ENV, "au-fpa-pack tests fabricated@example.invalid")
     with pytest.raises(RuntimeError, match="curl failed"):
         pe.main()
 
     assert {p.name: p.read_bytes() for p in data.glob("*.csv")} == before
     assert not (data / "SOURCES.md").exists()
+
+
+def test_the_pull_refuses_to_start_without_a_contact_user_agent(monkeypatch):
+    # SEC requires a contact address in the User-Agent, and hard-coding one made
+    # every runner's requests claim to be that person. Fail before the first request.
+    import pull_edgar as pe
+
+    monkeypatch.delenv(pe.UA_ENV, raising=False)
+    with pytest.raises(RuntimeError, match=pe.UA_ENV):
+        pe.user_agent()
+    monkeypatch.setenv(pe.UA_ENV, "   ")
+    with pytest.raises(RuntimeError, match=pe.UA_ENV):
+        pe.user_agent()
+    with pytest.raises(SystemExit, match=pe.UA_ENV):
+        pe.main()
+    monkeypatch.setenv(pe.UA_ENV, "au-fpa-pack research fabricated@example.invalid")
+    assert pe.user_agent() == "au-fpa-pack research fabricated@example.invalid"
+
+
+def test_facts_come_from_the_accession_the_audit_trail_records(monkeypatch):
+    # The loops kept the last matching fact, so a comparative in a later filing,
+    # or an amendment, could replace the value SOURCES.md claims to source.
+    import pull_edgar as pe
+
+    rows = json.loads(_fake_concept_doc("sales"))["units"]["USD"]
+    monkeypatch.setattr(pe, "_concept", lambda tag: list(rows))
+    assert pe.annual("sales", 2024) == 1_000_000 + 2024
+    assert pe.instant("sales", 2024) == 2_000_000 + 2024
+
+    foreign = [
+        {"form": "10-K", "fy": 2024, "accn": "0001424929-99-000001",
+         "start": pe.FY_END[2023], "end": pe.FY_END[2024], "val": 7},
+        {"end": pe.FY_END[2024], "accn": "0001424929-99-000001", "val": 9},
+    ]
+    monkeypatch.setattr(pe, "_concept", lambda tag: [*rows, *foreign])
+    assert pe.annual("sales", 2024) == 1_000_000 + 2024
+    assert pe.instant("sales", 2024) == 2_000_000 + 2024
+
+    conflicting = {"form": "10-K", "fy": 2024, "accn": _dashed(pe.TENK[2024]),
+                   "start": pe.FY_END[2023], "end": pe.FY_END[2024], "val": 5}
+    monkeypatch.setattr(pe, "_concept", lambda tag: [*rows, conflicting])
+    with pytest.raises(RuntimeError, match="expected one value"):
+        pe.annual("sales", 2024)
+
+
+def test_the_opening_column_is_sourced_from_the_first_recorded_ten_k(monkeypatch):
+    # EDGAR carries FY2022 only as a comparative, in the FY2023 10-K.
+    import pull_edgar as pe
+
+    assert pe._accession(2022) == pe.TENK[2023]
+    rows = json.loads(_fake_concept_doc("sales"))["units"]["USD"]
+    monkeypatch.setattr(pe, "_concept", lambda tag: list(rows))
+    assert pe.instant("sales", 2022) == 2_000_000 + 2022
 
 
 def test_quarter_selection_is_fixed_and_rejects_conflicting_facts(monkeypatch):

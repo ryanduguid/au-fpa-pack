@@ -10,15 +10,36 @@ Usage:  python3 examples/foxfactory/pull_edgar.py
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 from io import StringIO
 from pathlib import Path
 
 import pandas as pd
 
 CIK = "0001424929"
-UA = "openfpa-research jeff.brines@gmail.com"
+UA_ENV = "SEC_USER_AGENT"
 DATA = Path(__file__).parent / "data"
+
+
+def user_agent() -> str:
+    """The SEC contact string, from the environment.
+
+    SEC requires a descriptive User-Agent carrying a real contact address, and
+    the address identifies whoever runs the pull. Hard-coding one address makes
+    every other runner's requests claim to be that person, so the value comes
+    from the environment and there is no default.
+    """
+    value = os.environ.get(UA_ENV, "").strip()
+    if not value:
+        raise RuntimeError(
+            f"Set {UA_ENV} to a descriptive SEC User-Agent that includes your own "
+            f'contact address, for example: {UA_ENV}="au-fpa-pack research '
+            'you@example.com". See https://www.sec.gov/os/accessing-edgar-data.'
+        )
+    return value
+
 
 # Fox's fiscal year ends on the Friday closest to Dec 31 (52/53-week year).
 FY_END = {2022: "2022-12-30", 2023: "2023-12-29", 2024: "2025-01-03", 2025: "2026-01-02"}
@@ -38,7 +59,14 @@ def _curl(url: str) -> bytes:
     # exit instead of an error body that would parse as missing data. -S keeps
     # the reason on stderr.
     result = subprocess.run(
-        ["curl", "-sS", "--fail", "-H", f"User-Agent: {UA}", url],
+        [
+            "curl", "-sS", "--fail",
+            # Bounded so a stalled SEC endpoint cannot hang the pull.
+            "--connect-timeout", "10",
+            "--max-time", "60",
+            "-H", f"User-Agent: {user_agent()}",
+            url,
+        ],
         capture_output=True,
         check=False,
     )
@@ -59,14 +87,49 @@ def _concept(tag: str) -> list[dict]:
         raise RuntimeError(f"no USD units for concept {tag}: got {list(doc)}") from e
 
 
+def _accession(fy: int) -> str:
+    """The 10-K accession that SOURCES.md records for `fy`, without separators.
+
+    FY2022 is the opening balance-sheet column only. EDGAR carries it as a
+    comparative in the FY2023 10-K, which is the accession the audit trail
+    already names for that column.
+    """
+    return TENK.get(fy) or TENK[fy + 1]
+
+
+def _from_accession(rows: list[dict], accession: str) -> list[dict]:
+    """Keep only the facts filed under `accession`.
+
+    Without this, a later filing that repeats the period as a comparative, or
+    an amendment, can silently replace the value while SOURCES.md still records
+    the original accession.
+    """
+    return [r for r in rows if str(r.get("accn", "")).replace("-", "") == accession]
+
+
+def _one_value(rows: list[dict], what: str) -> float | None:
+    """The single distinct value in `rows`, or None when there are none.
+
+    Several facts can legitimately repeat one value. Two different values for
+    the same period in the same filing mean the selection is wrong, so raise
+    rather than let array order decide.
+    """
+    values = {float(r["val"]) for r in rows}
+    if len(values) > 1:
+        raise RuntimeError(f"{what}: expected one value, got {sorted(values)}")
+    return next(iter(values), None)
+
+
 def annual(tag: str, fy: int) -> float:
     """Full-year (10-K, ~365-day) value for a duration concept in fiscal year `fy`."""
-    value = None
-    for r in _concept(tag):
-        if r.get("form") == "10-K" and r.get("fy") == fy and r.get("start"):
-            span = (pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])).days
-            if 350 <= span <= 380:
-                value = float(r["val"])
+    rows = [
+        r
+        for r in _from_accession(_concept(tag), _accession(fy))
+        if r.get("form") == "10-K"
+        and r.get("start")
+        and 350 <= (pd.Timestamp(r["end"]) - pd.Timestamp(r["start"])).days <= 380
+    ]
+    value = _one_value(rows, f"FY{fy} 10-K annual value for concept {tag}")
     if value is None:
         raise RuntimeError(f"no FY{fy} 10-K annual value for concept {tag}")
     return value
@@ -79,10 +142,12 @@ def instant(tag: str, fy: int, *, required: bool = True) -> float | None:
     genuinely carries no instant fact for some tags. Every reported year
     is required so a fetch failure can never pass as an empty cell.
     """
-    value = None
-    for r in _concept(tag):
-        if r.get("end") == FY_END[fy] and not r.get("start"):
-            value = float(r["val"])
+    rows = [
+        r
+        for r in _from_accession(_concept(tag), _accession(fy))
+        if r.get("end") == FY_END[fy] and not r.get("start")
+    ]
+    value = _one_value(rows, f"value at {FY_END[fy]} for concept {tag}")
     if value is None and required:
         raise RuntimeError(f"no value at {FY_END[fy]} for concept {tag}")
     return value
@@ -277,6 +342,11 @@ def write_sources() -> None:
 
 
 def main() -> None:
+    try:
+        user_agent()
+    except RuntimeError as error:
+        # Fail before the first request rather than part-way through the pull.
+        sys.exit(str(error))
     # Pull everything first: a failed fetch must abort with the committed
     # source-traced CSVs untouched, never half-overwrite them.
     frames = {
