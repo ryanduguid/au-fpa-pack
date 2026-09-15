@@ -118,7 +118,11 @@ def test_empty_file_rejected(tmp_path):
 
 
 def test_end_to_end_lineage_pipeline(tmp_path):
-    """Fixture -> init -> source-register -> mappings -> reconcile passes."""
+    """Fixture -> init -> source-register -> mappings -> reconcile reports a difference.
+
+    Every account is mapped, so nothing is unmapped, but no expected totals were
+    supplied: reconcile must report that rather than pass on mappings alone.
+    """
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     # Reconcile needs one row per account: aggregate tracking splits first,

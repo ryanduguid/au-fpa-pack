@@ -50,8 +50,10 @@ class Channel(_ConfigModel):
 class OpexLine(_ConfigModel):
     name: str
     kind: Literal["fixed", "variable"]
-    monthly_amount: float = 0.0       # used when kind == "fixed"
-    pct_of_revenue: float = 0.0       # used when kind == "variable"
+    # Bounded like every other amount in this schema. A negative opex line would
+    # read as income in the cash model rather than a cost.
+    monthly_amount: float = Field(default=0.0, ge=0)   # used when kind == "fixed"
+    pct_of_revenue: float = Field(default=0.0, ge=0)   # used when kind == "variable"
 
     @field_validator("name")
     @classmethod

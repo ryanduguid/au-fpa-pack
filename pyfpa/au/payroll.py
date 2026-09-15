@@ -195,7 +195,10 @@ def payroll_forecast(
                     )
                 payroll_tax += max(0.0, taxable - deduction / _MONTHS_PER_YEAR) * rate
 
-        workers_comp = gross * assumptions.workers_comp_rate
+        # Every state's workers compensation wage definition includes bonuses, and
+        # the payroll tax base above already does. Excluding them here understated
+        # the premium for any role with a non-zero bonus_pct.
+        workers_comp = (gross + bonuses) * assumptions.workers_comp_rate
         frame.loc[period, "gross_wages"] = gross
         frame.loc[period, "bonuses"] = bonuses
         frame.loc[period, "super_guarantee"] = sg

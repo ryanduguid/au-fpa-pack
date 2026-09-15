@@ -11,10 +11,14 @@ the operating loop.
 
 ## Workflow
 
-1. **Request exports** per the recipe: P&L for the period (monthly
-   preferred), balance sheet at opening date, both GST-EXCLUSIVE.
-   Confirm the basis explicitly. Obtain BAS G1 total sales and 1A/1B GST
-   amounts for separate reconciliations, following the recipe.
+1. **Request exports** per the recipe: the P&L for the period (monthly
+   preferred) GST-EXCLUSIVE, and the balance sheet at the opening date AS
+   REPORTED. Xero's tax-exclusive setting applies to sales and purchase
+   transactions, not to balance sheet account balances, and the opening cash
+   bridge needs the GST and PAYG clearing balances the balance sheet reports.
+   Reconcile those control accounts separately. Confirm the P&L basis
+   explicitly. Obtain BAS G1 total sales and 1A/1B GST amounts for separate
+   reconciliations, following the recipe.
 2. **Load and inspect** with `pyfpa.io.xero_au.read_xero_report`.
    Use a CSV saved from the recalculated Excel export. For a standard P&L
    tracking comparison, confirm the source settings and select

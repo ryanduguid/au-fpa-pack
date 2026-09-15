@@ -53,7 +53,7 @@ def test_quarterly_bas_schedule_dates(net_gst):
     assert len(schedule) == 4
     assert schedule["due_date"].tolist() == [
         date(2026, 10, 28),  # Sep quarter
-        date(2027, 2, 28),   # Dec quarter
+        date(2027, 3, 1),    # Dec quarter; 28 February 2027 is a Sunday
         date(2027, 4, 28),   # Mar quarter
         date(2027, 7, 28),   # Jun quarter
     ]

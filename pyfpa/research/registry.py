@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from pyfpa.io.loaders import read_yaml, write_yaml
 from pyfpa.research.epochs import ResearchEpoch, evaluate_challenger
@@ -35,6 +35,26 @@ class ModelRegistry(BaseModel):
     challengers: list[ModelVersion] = Field(default_factory=list)
     retired: list[ModelVersion] = Field(default_factory=list)
     promotions: list[PromotionRecord] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _model_ids_are_unique(self) -> ModelRegistry:
+        """Reject a registry that names one model id twice.
+
+        register_challenger enforces this on the write path, but a hand-edited
+        or externally produced registry.yaml loads straight through. With a
+        duplicate id, promote_challenger promotes the first match and drops
+        every match, so it can promote one artifact and discard another.
+        """
+        versions = [
+            *self.challengers,
+            *self.retired,
+            *([self.champion] if self.champion else []),
+        ]
+        ids = [version.model_id for version in versions]
+        duplicates = sorted({model_id for model_id in ids if ids.count(model_id) > 1})
+        if duplicates:
+            raise ValueError(f"model ids must be unique, repeated: {duplicates}")
+        return self
 
 
 def save_model_registry(registry: ModelRegistry, path: str | Path) -> None:
@@ -87,6 +107,10 @@ def promote_challenger(
     """
     if not approved_by.strip():
         raise ValueError("promotion requires approved_by")
+    if not approved_at.strip():
+        # The promotion record is the approval evidence. A blank timestamp leaves
+        # no date to audit the decision against.
+        raise ValueError("promotion requires approved_at")
     if objective is None:
         raise ValueError("objective is required for promotion validation")
     evaluation = epoch.evaluation

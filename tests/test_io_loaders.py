@@ -68,3 +68,45 @@ def test_yaml_helpers_round_trip_non_ascii_under_a_non_utf8_locale(tmp_path, mon
         objective_path,
     )
     assert load_research_objective(objective_path).metrics[0].name == "écart moyen"
+
+
+def test_entity_sku_and_cash13_loaders_read_utf8_under_a_non_utf8_locale(
+    tmp_path, monkeypatch, sample_config
+):
+    """load_config, load_cash13_config and load_skus opened with the platform encoding.
+
+    read_yaml already stated the UTF-8 contract for the memory, research and
+    portfolio stores. These three did not share it, so a config written on one
+    machine came back mangled on another.
+    """
+    import yaml
+
+    from pyfpa.config.loader import load_config
+    from pyfpa.io.loaders import load_skus
+
+    config_path = tmp_path / "config.yaml"
+    raw = sample_config.model_dump(mode="json")
+    raw["channels"][0]["name"] = "Ngô Café"
+    config_path.write_text(
+        yaml.safe_dump(raw, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+
+    skus_path = tmp_path / "skus.yaml"
+    skus_path.write_text(
+        "skus:\n  - name: Wingbäck chair\n    units: 10\n    price: 900\n"
+        "    unit_cost: 400\n",
+        encoding="utf-8",
+    )
+
+    cash13_path = tmp_path / "cash13.yaml"
+    cash13_path.write_text(
+        "opening_cash: 1000.0\nweeks: 13\nreceipts:\n"
+        "  - name: Ngô Café receipt\n    amount: 500.0\n    start_week: 1\n",
+        encoding="utf-8",
+    )
+
+    _simulate_non_utf8_locale(monkeypatch)
+
+    assert load_config(config_path).channels[0].name == "Ngô Café"
+    assert load_skus(skus_path)[0].name == "Wingbäck chair"
+    assert load_cash13_config(cash13_path).receipts[0].name == "Ngô Café receipt"

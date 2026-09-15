@@ -1,5 +1,7 @@
 import pytest
+from pydantic import ValidationError
 
+from pyfpa.io.loaders import write_yaml
 from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.research.epochs import ResearchEpoch, evaluate_challenger
 from pyfpa.research.objective import MetricObjective, ResearchObjective
@@ -196,3 +198,32 @@ def test_promotion_rejects_stale_champion_and_forged_complexity():
     stale = registry.model_copy(update={"champion": champion.model_copy(update={"model_id": "new-champion"})})
     with pytest.raises(ValueError, match="current registry champion"):
         promote_challenger(stale, **args)
+
+
+def test_a_registry_that_names_one_model_twice_is_refused(tmp_path):
+    # register_challenger enforced this on the write path only, so a hand-edited
+    # registry.yaml loaded with duplicates and promote_challenger then promoted the
+    # first match while removing every match.
+    path = tmp_path / "registry.yaml"
+    write_yaml(path, {
+        "schema_version": 1,
+        "challengers": [
+            {"model_id": "m1", "created": "2026-09-16", "artifact": "a.py"},
+            {"model_id": "m1", "created": "2026-09-16", "artifact": "b.py"},
+        ],
+    })
+    with pytest.raises(ValidationError, match="must be unique"):
+        load_model_registry(path)
+
+
+def test_promotion_requires_an_approval_timestamp():
+    # Only approved_by was checked, so the promotion record could carry no date to
+    # audit the decision against.
+    with pytest.raises(ValueError, match="approved_at"):
+        promote_challenger(
+            ModelRegistry(),
+            challenger_id="model-v2",
+            epoch=_epoch(),
+            approved_by="Reviewer",
+            approved_at="   ",
+        )

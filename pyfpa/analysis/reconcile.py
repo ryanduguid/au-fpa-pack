@@ -51,4 +51,8 @@ def reconcile(
             "variance_pct": variance_pct,
             "within_tolerance": within,
         })
+    if not rows:
+        # An empty frame has no "line" column to index on, so build the shape
+        # explicitly: nothing to reconcile is a valid result, not a KeyError.
+        return pd.DataFrame(columns=_COLUMNS, index=pd.Index([], name="line"))
     return pd.DataFrame(rows).set_index("line")[_COLUMNS]

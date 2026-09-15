@@ -17,12 +17,14 @@ def extract_lines(forecast_df: pd.DataFrame, score_lines: Sequence[str]) -> dict
 
     `ending_cash` is a stock (take the last month); `gross_margin` is a ratio
     (Σ gross_profit / Σ revenue); every other line is a flow (sum)."""
-    revenue = float(forecast_df["revenue"].sum())
     out: dict[str, float] = {}
     for line in score_lines:
         if line == "ending_cash":
             out[line] = float(forecast_df["ending_cash"].iloc[-1])
         elif line == "gross_margin":
+            # Read revenue here, not before the loop: a score_lines without
+            # gross_margin must not require a revenue column to exist.
+            revenue = float(forecast_df["revenue"].sum())
             gp = float(forecast_df["gross_profit"].sum())
             out[line] = (gp / revenue) if revenue else 0.0
         else:
