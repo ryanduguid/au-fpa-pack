@@ -14,6 +14,10 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
 - **Xero** - report parser with tracking-category and GST-basis
   detection plus the full register/map/reconcile recipe
   (`pyfpa.io.xero_au`, [`docs/recipes/xero-au.md`](../docs/recipes/xero-au.md))
+- **Accounting depreciation** - an opt-in charge read from a calculation-evidence
+  file on disk, with the asset movement reconciled or refused and expense,
+  purchases and tax kept apart (`pyfpa.au.depreciation`,
+  [`docs/recipes/accounting-depreciation.md`](recipes/accounting-depreciation.md))
 - **Economic drivers** - RBA cash rate and exchange rates, ABS CPI/WPI/
   retail/labour series, snapshotted with provenance
   (`pyfpa.au.drivers`, [`docs/recipes/au-drivers.md`](../docs/recipes/au-drivers.md))
