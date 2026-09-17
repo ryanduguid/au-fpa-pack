@@ -164,3 +164,101 @@ def test_the_module_produces_no_tax_figure():
     assert not [name for name in dir(dep) if "tax" in name.lower() or "division40" in name.lower()]
     evidence = dep.load_evidence(GOOD)
     assert any("Division 40" in note for note in evidence.advisory_notes)
+
+
+def _resealed(tmp_path, name, mutate):
+    """The good fixture with one change, re-digested so the seal still holds.
+
+    Without this the digest check fires first and nothing downstream is
+    exercised, which is how a rejected record reached a forecast unnoticed.
+    """
+    import hashlib
+
+    record = json.loads(GOOD.read_text(encoding="utf-8"))
+    mutate(record)
+    record["calculation_sha256"] = hashlib.sha256(
+        json.dumps(record["calculation"], sort_keys=True, separators=(",", ":"),
+                   ensure_ascii=False, allow_nan=False).encode("utf-8")
+    ).hexdigest()
+    path = tmp_path / name
+    path.write_text(json.dumps(record), encoding="utf-8")
+    return path
+
+
+def test_a_producer_that_rejected_its_own_response_is_not_usable(tmp_path):
+    # A digest-valid file can carry a COMPUTED call beside a validation block
+    # that rejected it. The rejection decides, or a figure the producer refused
+    # reaches the forecast.
+    path = _resealed(
+        tmp_path, "rejected.json",
+        lambda record: record["calculation"]["validation"].update({"accepted": False}),
+    )
+    evidence = dep.load_evidence(path)
+    assert evidence.usable is False
+    assert any("did not accept" in reason for reason in evidence.refusal_reasons)
+    with pytest.raises(dep.DepreciationEvidenceError, match="did not accept"):
+        dep.straight_line_schedule(evidence, pd.period_range("2024-07", periods=12, freq="M"))
+
+
+def test_a_blocking_producer_finding_is_not_usable(tmp_path):
+    path = _resealed(
+        tmp_path, "finding.json",
+        lambda record: record["calculation"]["validation"]["findings"].append(
+            "required decimal field range_dep is absent"
+        ),
+    )
+    evidence = dep.load_evidence(path)
+    assert evidence.usable is False
+    assert any("range_dep is absent" in reason for reason in evidence.refusal_reasons)
+
+
+def test_an_observation_the_producer_did_not_block_on_stays_usable(tmp_path):
+    # The producer prefixes a non-blocking remark with `note:`. Treating one as
+    # a rejection would refuse every good file that carried a remark.
+    path = _resealed(
+        tmp_path, "note.json",
+        lambda record: record["calculation"]["validation"]["findings"].append(
+            "note: response carries unrecorded fields: numeric_mode"
+        ),
+    )
+    assert dep.load_evidence(path).usable is True
+
+
+def test_a_missing_validation_block_is_refused(tmp_path):
+    path = _resealed(
+        tmp_path, "novalidation.json",
+        lambda record: record["calculation"].pop("validation"),
+    )
+    with pytest.raises(dep.DepreciationEvidenceError, match="not a boolean"):
+        dep.load_evidence(path)
+
+
+@pytest.mark.parametrize("mutate,expected", [
+    (lambda r: r["calculation"].__setitem__("call", "COMPUTED"), "call is str"),
+    (lambda r: r["calculation"].__setitem__("normalised", 1), "normalised is int"),
+    (lambda r: r["calculation"]["normalised"].__setitem__("values", []),
+     "normalised.values is list"),
+    (lambda r: r["calculation"]["upstream"].__setitem__("advisory", "none"),
+     "advisory is str"),
+    (lambda r: r["calculation"]["upstream"]["advisory"].__setitem__("notes", 1),
+     "notes is int"),
+    (lambda r: r["calculation"]["upstream"]["advisory"].__setitem__("notes", [123]),
+     r"notes\[0\] is int"),
+    (lambda r: r["calculation"]["validation"].__setitem__("findings", "none"),
+     "findings is str"),
+])
+def test_a_scalar_where_a_block_belongs_is_an_error_not_a_traceback(tmp_path, mutate, expected):
+    # These used to escape as AttributeError or TypeError from `(x or {}).get`,
+    # which no caller catches. An evidence file is untrusted input.
+    path = _resealed(tmp_path, "malformed.json", mutate)
+    with pytest.raises(dep.DepreciationEvidenceError, match=expected):
+        dep.load_evidence(path)
+
+
+def test_an_inner_schema_that_disagrees_with_the_record_is_refused(tmp_path):
+    path = _resealed(
+        tmp_path, "innerschema.json",
+        lambda record: record["calculation"].__setitem__("schema", "something-else/9"),
+    )
+    with pytest.raises(dep.DepreciationEvidenceError, match="calculation block names schema"):
+        dep.load_evidence(path)

@@ -55,15 +55,87 @@ class DepreciationEvidence:
     source_path: Path
     calculation_sha256: str
     synthetic_input: bool
+    #: The producer's own verdict on the response it recorded, and what it
+    #: found wrong with it. A file can carry a COMPUTED call beside a
+    #: validation block that rejected it, and the rejection is the one that
+    #: decides whether a figure may be used.
+    accepted: bool = False
+    findings: tuple[str, ...] = ()
+
+    @property
+    def blocking_findings(self) -> tuple[str, ...]:
+        """The findings that stop the figure being used.
+
+        The producer prefixes an observation it did not treat as blocking
+        with `note:`, and repeating that distinction here is what keeps an
+        ordinary remark from rejecting a good file.
+        """
+        return tuple(item for item in self.findings if not item.startswith("note:"))
 
     @property
     def usable(self) -> bool:
-        return self.status == "COMPUTED" and self.charge is not None
+        return (
+            self.status == "COMPUTED"
+            and self.charge is not None
+            and self.accepted
+            and not self.blocking_findings
+        )
+
+    @property
+    def refusal_reasons(self) -> tuple[str, ...]:
+        """Why this evidence cannot support a figure. Empty when it can."""
+        if self.usable:
+            return ()
+        reasons = []
+        if self.status != "COMPUTED":
+            reasons.append(f"the recorded call status is {self.status}, not COMPUTED")
+        if self.charge is None:
+            reasons.append("the record carries no range_dep charge")
+        if not self.accepted:
+            reasons.append("the producer's own validation block did not accept the response")
+        reasons.extend(f"producer finding: {item}" for item in self.blocking_findings)
+        return tuple(reasons)
 
 
 def _canonical(payload: object) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
                       allow_nan=False).encode("utf-8")
+
+
+def _object(value: object, field: str, source: Path) -> dict[str, object]:
+    """One nested object, or an empty one. A wrong type is an error, not a crash.
+
+    An evidence file is untrusted input. `(x or {}).get(...)` reads an absent
+    block safely and raises AttributeError on a scalar, which escaped as a
+    traceback rather than as this module's own error.
+    """
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise DepreciationEvidenceError(
+            f"{source}: {field} is {type(value).__name__}, not an object."
+        )
+    return value
+
+
+def _strings(value: object, field: str, source: Path) -> tuple[str, ...]:
+    """A list of strings, or an error naming what arrived instead.
+
+    Discarding a non-string entry silently let `{"notes": [123]}` satisfy a
+    presence check and then yield no advisory text at all.
+    """
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise DepreciationEvidenceError(
+            f"{source}: {field} is {type(value).__name__}, not an array."
+        )
+    for index, item in enumerate(value):
+        if not isinstance(item, str):
+            raise DepreciationEvidenceError(
+                f"{source}: {field}[{index}] is {type(item).__name__}, not a string."
+            )
+    return tuple(value)
 
 
 def _money(value: object, field: str) -> Decimal | None:
@@ -111,10 +183,31 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
             f"{source}: calculation_sha256 {recorded} does not match the calculation block "
             f"({actual}). The file has changed since it was produced."
         )
-    call = calculation.get("call") or {}
-    values = (calculation.get("normalised") or {}).get("values") or {}
-    advisory = (calculation.get("upstream") or {}).get("advisory") or {}
-    notes = tuple(note for note in advisory.get("notes", []) if isinstance(note, str))
+    if calculation.get("schema") not in SUPPORTED_EVIDENCE_SCHEMAS:
+        # The record and its own calculation block each name a schema. A file
+        # whose inner block names a different one is a file whose fields are
+        # not the fields read below.
+        raise DepreciationEvidenceError(
+            f"{source}: the calculation block names schema "
+            f"{calculation.get('schema')!r}, not one this pack reads."
+        )
+    call = _object(calculation.get("call"), "calculation.call", source)
+    normalised = _object(calculation.get("normalised"), "calculation.normalised", source)
+    values = _object(normalised.get("values"), "calculation.normalised.values", source)
+    upstream = _object(calculation.get("upstream"), "calculation.upstream", source)
+    advisory = _object(upstream.get("advisory"), "calculation.upstream.advisory", source)
+    notes = _strings(advisory.get("notes"), "calculation.upstream.advisory.notes", source)
+    validation = _object(calculation.get("validation"), "calculation.validation", source)
+    accepted = validation.get("accepted")
+    if not isinstance(accepted, bool):
+        raise DepreciationEvidenceError(
+            f"{source}: calculation.validation.accepted is "
+            f"{type(accepted).__name__}, not a boolean. Nothing in the file says whether "
+            "the producer accepted the response."
+        )
+    findings = _strings(
+        validation.get("findings"), "calculation.validation.findings", source,
+    )
     return DepreciationEvidence(
         label=str(calculation.get("label") or source.stem),
         calculator=str(call.get("calculator") or ""),
@@ -128,6 +221,8 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
         source_path=source,
         calculation_sha256=actual,
         synthetic_input=bool(calculation.get("synthetic_input")),
+        accepted=accepted,
+        findings=findings,
     )
 
 
@@ -186,8 +281,9 @@ def straight_line_schedule(
     """
     if not evidence.usable:
         raise DepreciationEvidenceError(
-            f"{evidence.label}: evidence status is {evidence.status} and carries no charge, so "
-            "there is nothing to spread. A refusal is not a nil amount."
+            f"{evidence.label}: this evidence cannot support a figure, so there is nothing "
+            "to spread, and a refusal is not a nil amount. "
+            + "; ".join(evidence.refusal_reasons)
         )
     if len(months) == 0:
         raise DepreciationEvidenceError("no months to spread the charge across")

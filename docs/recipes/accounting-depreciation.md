@@ -44,8 +44,15 @@ read from decimal strings; a JSON number is refused, because a float has
 already lost whatever the calculator meant by it.
 
 A file recording a refusal, an outage or a contract failure loads fine and
-reports `usable` as false. It carries no charge, and asking to spread it raises
-rather than returning nil. A refusal is not a nil amount.
+reports `usable` as false. Asking to spread it raises rather than returning
+nil, because a refusal is not a nil amount, and `refusal_reasons` says why.
+
+`usable` reads four things, not one. The call has to be COMPUTED, the charge
+has to be there, the producer's own `validation.accepted` has to be true, and
+no finding it recorded may be a blocking one. A file can carry a COMPUTED call
+beside a validation block that rejected the response, and the rejection is the
+one that decides. A finding the producer prefixed with `note:` is an
+observation it did not block on, and it does not block here either.
 
 ## Checking the movement
 
