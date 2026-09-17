@@ -1,0 +1,89 @@
+{
+  "schema": "lodgeit-calculation-evidence/1",
+  "calculation_sha256": "6f2a320c57b60ee265d1ac6c7301294598f2cf4a1774459e90a1c49fed9e78d8",
+  "calculation": {
+    "schema": "lodgeit-calculation-evidence/1",
+    "label": "lumbridge-plant-fy2027-q2",
+    "synthetic_input": true,
+    "provider": {
+      "name": "lodgeit-labs",
+      "contract_snapshot": "lodgeit-calculators-2026-09-18",
+      "contract_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "call": {
+      "calculator": "urn:sbrm:calculator:depreciation:range",
+      "period": "urn:sbrm:period:depreciation:unscoped",
+      "status": "COMPUTED",
+      "http_status": 200
+    },
+    "input": {
+      "basis": "accounting",
+      "asset": {
+        "cost": 120000.0,
+        "acquisition_date": "2026-07-01",
+        "accounting_useful_life_years": 5,
+        "accounting_method": "prime_cost"
+      },
+      "from_date": "2026-10-01",
+      "to_date": "2026-12-31",
+      "day_count": "actual/actual"
+    },
+    "input_json": null,
+    "upstream": {
+      "response": {
+        "opening_wdv": "113950.68",
+        "closing_wdv": "107901.36",
+        "range_dep": "6049.32",
+        "days_in_range": 92,
+        "truncated": false,
+        "day_count": "actual/actual"
+      },
+      "manifest": {
+        "calculator": "urn:sbrm:calculator:depreciation:range",
+        "period": "urn:sbrm:period:depreciation:unscoped",
+        "rate_table_uris": [],
+        "engine": "depreciation/1.0.0",
+        "citation": "AASB 116"
+      },
+      "advisory": {
+        "figure_type": "accounting_carrying_amount",
+        "notes": [
+          "This is an ACCOUNTING figure. It is not a deduction under ITAA 1997 Division 40 and the tax figure will not equal it.",
+          "Do not carry it into a tax return."
+        ]
+      },
+      "refusal_class": null
+    },
+    "normalised": {
+      "values": {
+        "closing_wdv": "107901.36",
+        "opening_wdv": "113950.68",
+        "range_dep": "6049.32"
+      },
+      "note": "Parsed from the response's own decimal strings. The response above is unaltered."
+    },
+    "validation": {
+      "findings": [],
+      "accepted": true
+    },
+    "engine": {
+      "name": "lodgeit-calculator-adapter",
+      "version": "0.1.0"
+    },
+    "local_result": null,
+    "notes": [
+      "Fabricated plant for the Lumbridge Services example. No client asset.",
+      "120,000.00 over five years on a prime-cost basis is 24,000.00 a year. This window is 1 October to 31 December 2026, 92 days of a 365-day year, so the charge is 24,000.00 x 92 / 365 = 6049.32. The opening balance is cost less the same charge for the 92 days of July to September."
+    ],
+    "boundary": [
+      "Calculated on supplied facts. Not advice, not a lodgement and not a review sign-off.",
+      "A digest proves the bytes are the bytes. It proves nothing about whether the figure is right."
+    ]
+  },
+  "observation": {
+    "captured_at": "2026-09-18T01:40:00+00:00",
+    "elapsed_ms": 271,
+    "base_url": "https://example.invalid",
+    "note": "Observation metadata is excluded from calculation_sha256 on purpose."
+  }
+}

@@ -19,6 +19,15 @@ from pyfpa.au.calendar import (
     fy_summary,
     fy_year,
 )
+from pyfpa.au.depreciation import (
+    DepreciationEvidence,
+    DepreciationEvidenceError,
+    MovementCheck,
+    asset_movement,
+    cash_and_expense,
+    load_evidence,
+    straight_line_schedule,
+)
 from pyfpa.au.drivers import (
     DriverSeries,
     fetch_abs_series,
@@ -43,11 +52,16 @@ from pyfpa.au.rates import (
 
 __all__ = [
     "BasCycle",
+    "DepreciationEvidence",
+    "DepreciationEvidenceError",
     "DriverSeries",
     "GstAssumptions",
+    "MovementCheck",
     "PayrollAssumptions",
     "Role",
+    "asset_movement",
     "bas_schedule",
+    "cash_and_expense",
     "fetch_abs_series",
     "fetch_rba_series",
     "format_au_date",
@@ -58,6 +72,7 @@ __all__ = [
     "fy_summary",
     "fy_year",
     "gst_weekly_flows",
+    "load_evidence",
     "load_gst_bas_data",
     "load_payroll_tax_table",
     "load_snapshot",
@@ -66,4 +81,5 @@ __all__ = [
     "payroll_forecast",
     "rate_at",
     "save_snapshot",
+    "straight_line_schedule",
 ]
