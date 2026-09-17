@@ -55,10 +55,15 @@ class DepreciationEvidence:
     source_path: Path
     calculation_sha256: str
     synthetic_input: bool
+    validation_accepted: bool
 
     @property
     def usable(self) -> bool:
-        return self.status == "COMPUTED" and self.charge is not None
+        return (
+            self.status == "COMPUTED"
+            and self.charge is not None
+            and self.validation_accepted
+        )
 
 
 def _canonical(payload: object) -> bytes:
@@ -105,16 +110,47 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
     if not isinstance(calculation, dict):
         raise DepreciationEvidenceError(f"{source}: no calculation block.")
     recorded = record.get("calculation_sha256")
-    actual = hashlib.sha256(_canonical(calculation)).hexdigest()
+    try:
+        actual = hashlib.sha256(_canonical(calculation)).hexdigest()
+    except (TypeError, ValueError) as exc:
+        raise DepreciationEvidenceError(
+            f"{source}: calculation cannot be canonicalised: {exc}"
+        ) from exc
     if recorded != actual:
         raise DepreciationEvidenceError(
             f"{source}: calculation_sha256 {recorded} does not match the calculation block "
             f"({actual}). The file has changed since it was produced."
         )
-    call = calculation.get("call") or {}
-    values = (calculation.get("normalised") or {}).get("values") or {}
-    advisory = (calculation.get("upstream") or {}).get("advisory") or {}
-    notes = tuple(note for note in advisory.get("notes", []) if isinstance(note, str))
+    if calculation.get("schema") not in SUPPORTED_EVIDENCE_SCHEMAS:
+        raise DepreciationEvidenceError(
+            f"{source}: calculation schema {calculation.get('schema')!r} "
+            f"is not one this pack reads ({', '.join(SUPPORTED_EVIDENCE_SCHEMAS)})."
+        )
+
+    def mapping(value: object, field: str) -> dict:
+        if not isinstance(value, dict):
+            raise DepreciationEvidenceError(
+                f"{source}: {field} must be an object, got {type(value).__name__}."
+            )
+        return value
+
+    call = mapping(calculation.get("call"), "calculation.call")
+    normalised = mapping(calculation.get("normalised"), "calculation.normalised")
+    values = mapping(normalised.get("values"), "calculation.normalised.values")
+    upstream = mapping(calculation.get("upstream"), "calculation.upstream")
+    advisory = mapping(upstream.get("advisory"), "calculation.upstream.advisory")
+    raw_notes = advisory.get("notes")
+    if not isinstance(raw_notes, list):
+        raise DepreciationEvidenceError(
+            f"{source}: calculation.upstream.advisory.notes must be a list, "
+            f"got {type(raw_notes).__name__}."
+        )
+    validation = mapping(calculation.get("validation"), "calculation.validation")
+    if not isinstance(validation.get("accepted"), bool):
+        raise DepreciationEvidenceError(
+            f"{source}: calculation.validation.accepted must be a boolean."
+        )
+    notes = tuple(note for note in raw_notes if isinstance(note, str))
     return DepreciationEvidence(
         label=str(calculation.get("label") or source.stem),
         calculator=str(call.get("calculator") or ""),
@@ -128,6 +164,7 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
         source_path=source,
         calculation_sha256=actual,
         synthetic_input=bool(calculation.get("synthetic_input")),
+        validation_accepted=validation["accepted"],
     )
 
 
