@@ -262,3 +262,24 @@ def test_an_inner_schema_that_disagrees_with_the_record_is_refused(tmp_path):
     )
     with pytest.raises(dep.DepreciationEvidenceError, match="calculation block names schema"):
         dep.load_evidence(path)
+
+
+def test_a_nan_in_the_calculation_block_is_this_modules_error(tmp_path):
+    # json.loads accepts NaN; the canonical form refuses it. That refusal
+    # used to escape as a bare ValueError a caller catching
+    # DepreciationEvidenceError never saw.
+    path = tmp_path / "nan.json"
+    path.write_text(
+        '{"schema": "lodgeit-calculation-evidence/1", "calculation_sha256": "0",'
+        ' "calculation": {"schema": "lodgeit-calculation-evidence/1", "x": NaN}}',
+        encoding="utf-8",
+    )
+    with pytest.raises(dep.DepreciationEvidenceError, match="cannot be canonicalised"):
+        dep.load_evidence(path)
+
+
+def test_a_file_that_is_not_utf8_is_this_modules_error(tmp_path):
+    path = tmp_path / "latin1.json"
+    path.write_bytes(b'{"schema": "lodgeit-calculation-evidence/1", "note": "\xff"}')
+    with pytest.raises(dep.DepreciationEvidenceError, match="could not be read"):
+        dep.load_evidence(path)

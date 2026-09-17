@@ -6,8 +6,9 @@ socket and calls no service, which is what lets it sit inside a default model
 run: the figure was obtained once, deliberately, and the evidence of it was
 kept.
 
-Nothing imports this module unless you do. The baseline examples do not use it
-and are unchanged.
+The `pyfpa.au` package imports this module, so `import pyfpa.au` loads it. It
+opens no socket and reads no file until you call it. The baseline examples do
+not use it and are unchanged.
 
 ## Three things that stay apart
 
@@ -43,8 +44,9 @@ edited after it was produced is refused rather than quietly believed. Money is
 read from decimal strings; a JSON number is refused, because a float has
 already lost whatever the calculator meant by it.
 
-A file recording a refusal, an outage or a contract failure loads fine and
-reports `usable` as false. Asking to spread it raises rather than returning
+A file recording a refusal, an outage or a contract failure, with its
+producer's validation block present, loads fine and reports `usable` as
+false. Asking to spread it raises rather than returning
 nil, because a refusal is not a nil amount, and `refusal_reasons` says why.
 
 `usable` reads four things, not one. The call has to be COMPUTED, the charge

@@ -164,7 +164,9 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
     source = Path(path)
     try:
         record = json.loads(source.read_text(encoding="utf-8"))
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
+        # A file that is not UTF-8 is a file that cannot be read, and this
+        # module's own error is the one a caller catches for that.
         raise DepreciationEvidenceError(f"{source} could not be read: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise DepreciationEvidenceError(f"{source} is not valid JSON: {exc}") from exc
@@ -177,7 +179,14 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
     if not isinstance(calculation, dict):
         raise DepreciationEvidenceError(f"{source}: no calculation block.")
     recorded = record.get("calculation_sha256")
-    actual = hashlib.sha256(_canonical(calculation)).hexdigest()
+    try:
+        actual = hashlib.sha256(_canonical(calculation)).hexdigest()
+    except ValueError as exc:
+        # json.loads accepts NaN and Infinity; the canonical form refuses
+        # them, and that refusal is this module's to report.
+        raise DepreciationEvidenceError(
+            f"{source}: the calculation block cannot be canonicalised: {exc}"
+        ) from exc
     if recorded != actual:
         raise DepreciationEvidenceError(
             f"{source}: calculation_sha256 {recorded} does not match the calculation block "
