@@ -76,3 +76,13 @@ real businesses. The contributions that help most:
 
 Questions or ideas? Open an [Issue](https://github.com/ryanduguid/au-fpa-pack/issues) or a
 Discussion.
+
+## Release checks
+
+The release caller names the component checks that must have succeeded for the
+exact release commit on `main`. It advances the policy SHA, `required-checks`
+and `actions: read` together. Skipped, missing, cancelled or failed checks block
+publication, including component tests skipped by a path filter. An aggregate
+gates job cannot replace those checks. Before tagging, choose a main-branch
+commit with successful component CI; a successful run for an older commit is
+not evidence for the release. Tags and publication still require explicit approval.
