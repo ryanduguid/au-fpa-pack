@@ -26,7 +26,9 @@ REQUIRED = {
 class ReleaseChecksTests(unittest.TestCase):
     def test_every_release_caller_requires_its_component_checks(self) -> None:
         workflows = ROOT / ".github" / "workflows"
-        callers = sorted(path.name for path in workflows.glob("release*.yml"))
+        callers = sorted(
+            {path.name for pattern in ("release*.yml", "release*.yaml") for path in workflows.glob(pattern)}
+        )
         self.assertEqual(callers, sorted(REQUIRED))
         for filename, expected in REQUIRED.items():
             with self.subTest(workflow=filename):
