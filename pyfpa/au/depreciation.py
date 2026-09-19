@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -138,6 +139,22 @@ def _strings(value: object, field: str, source: Path) -> tuple[str, ...]:
     return tuple(value)
 
 
+def _disclaimer(value: object, field: str, source: Path) -> tuple[str, ...]:
+    """The provider's boundary statement, when the advisory carries it as one string.
+
+    The producer contract records that the live div7a route writes its advisory
+    as `disclaimer`, not the `notes` array; reading `notes` alone dropped that
+    sentence from advisory_notes while keeping the figure usable.
+    """
+    if value is None:
+        return ()
+    if not isinstance(value, str):
+        raise DepreciationEvidenceError(
+            f"{source}: {field} is {type(value).__name__}, not a string."
+        )
+    return (value.strip(),) if value.strip() else ()
+
+
 def _money(value: object, field: str) -> Decimal | None:
     if value is None:
         return None
@@ -206,6 +223,9 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
     upstream = _object(calculation.get("upstream"), "calculation.upstream", source)
     advisory = _object(upstream.get("advisory"), "calculation.upstream.advisory", source)
     notes = _strings(advisory.get("notes"), "calculation.upstream.advisory.notes", source)
+    notes += _disclaimer(
+        advisory.get("disclaimer"), "calculation.upstream.advisory.disclaimer", source
+    )
     validation = _object(calculation.get("validation"), "calculation.validation", source)
     accepted = validation.get("accepted")
     if not isinstance(accepted, bool):
@@ -298,6 +318,13 @@ def straight_line_schedule(
         raise DepreciationEvidenceError("no months to spread the charge across")
     assert evidence.charge is not None
     per_month = float(evidence.charge) / len(months)
+    if not math.isfinite(per_month):
+        # A finite Decimal beyond float range became an infinite forecast in
+        # every month. Nothing in a workpaper is that large; refuse it.
+        raise DepreciationEvidenceError(
+            f"{evidence.label}: charge {evidence.charge} is outside the range a forecast "
+            "series can carry."
+        )
     return pd.Series(per_month, index=months, name="depreciation_expense")
 
 
