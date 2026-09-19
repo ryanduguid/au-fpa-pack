@@ -8,6 +8,37 @@ Use a fresh copy of `lumbridge.xlsx`, its source files and this guide.
 Keep the answer key closed until you have recorded your results.
 You do not need a Xero login, client data, macros or an AI agent.
 
+## What you are reviewing
+
+| Item | Value |
+| --- | --- |
+| Artefact | `lumbridge.xlsx`, 23,506 bytes |
+| SHA-256 | `b150de6281fccb6dcb1d221c034b047eb610ad4064972c5d9ac9fca8916b8463` |
+| Source commit | `386c7ff31f7989b86445ef37d83a912fcb02bb47` |
+| Distributed at | <https://duguid.com.au/assets/examples/lumbridge/lumbridge-sample-pack.zip> |
+| Explained at | <https://duguid.com.au/examples/profit-vs-cash-flow/> |
+| Prerequisites | Desktop Excel with automatic calculation. To rebuild instead, Python 3.11 and uv |
+| Data | Fabricated throughout. No client, taxpayer or production data is involved |
+
+Compare the SHA-256 before you start if you received the file by any route other
+than the download above. If you rebuild from source, a fresh export can differ in
+package metadata or cache bytes from the distributed file; the figures should not.
+
+## Which evidence this produces
+
+Keep these three categories apart when reporting or citing a result.
+
+1. **Author-run technical checks.** Formula checks against the Python model, the
+   repository suite and a native Excel run by the maintainer. Already complete and
+   recorded in the sample record. They establish that the workbook calculates what
+   its model says, nothing more.
+2. **Maintainer trial.** The author opening the workbook and exercising it. Recorded
+   as such, and not independent.
+3. **Independent review.** This guide, completed by an accountant with no part in
+   building the case. **None has been completed.** Until a named reviewer returns a
+   result under the consent terms below, the independent-review status stays pending
+   and no page, README or listing may claim otherwise.
+
 ## First run
 
 If you received the workbook, open it in desktop Excel and enable automatic
@@ -62,6 +93,38 @@ The README states the model's limits and source assumptions.
 
 Use the answer key only after completing this table. Record differences
 against the key instead of replacing your original answers.
+
+## Report a deviation or a defect
+
+Anything that did not behave as this guide describes is worth returning, including
+a figure that differs from the key, a step whose wording sent you the wrong way, an
+Excel version that refused the file, and a result you could not reproduce twice.
+
+Record the step number, exactly what you did, what you observed and what you
+expected, plus your Excel version and operating system. Attach a screenshot only if
+it contains no client or personal data. Open an issue at
+<https://github.com/ryanduguid/au-fpa-pack/issues> or return the table by whatever
+channel you agreed.
+
+## Consent and attribution
+
+Nothing you write here is published unless you say so below. Complete this block and
+return it with your findings.
+
+| Item | Reviewer entry |
+| --- | --- |
+| May the findings be published? | Yes / No |
+| If yes, attribute them to | Name and organisation, or Anonymous |
+| May your professional designation be named? | Yes / No |
+| May the completed table be quoted in full? | Yes / Summary only |
+| Any part to be withheld | |
+| Date of consent | |
+| Contact for follow-up | |
+
+Consent may be withdrawn at any time. A published independent review names the
+reviewer or states that they chose to remain anonymous, and it links this guide and
+the exact artefact reviewed. Findings returned without a completed consent block
+stay private and are used only to fix the case.
 
 The trial passes only when the reviewer reproduces the figures, explains
 the profit/cash difference and identifies the liabilities and owner action
