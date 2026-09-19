@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import socket
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 
@@ -283,3 +284,52 @@ def test_a_file_that_is_not_utf8_is_this_modules_error(tmp_path):
     path.write_bytes(b'{"schema": "lodgeit-calculation-evidence/1", "note": "\xff"}')
     with pytest.raises(dep.DepreciationEvidenceError, match="could not be read"):
         dep.load_evidence(path)
+
+
+def test_a_disclaimer_only_advisory_keeps_its_boundary_statement(tmp_path):
+    # The producer contract records the live div7a route writing `disclaimer`
+    # rather than `notes`. Reading notes alone dropped the sentence and kept
+    # the figure.
+    def mutate(record):
+        advisory = record["calculation"]["upstream"]["advisory"]
+        del advisory["notes"]
+        advisory["disclaimer"] = "  Figures are indicative and not a substitute for advice.  "
+
+    evidence = dep.load_evidence(_resealed(tmp_path, "disclaimer.json", mutate))
+    assert evidence.usable is True
+    assert evidence.advisory_notes == (
+        "Figures are indicative and not a substitute for advice.",
+    )
+
+
+def test_notes_and_a_disclaimer_both_travel(tmp_path):
+    def mutate(record):
+        record["calculation"]["upstream"]["advisory"]["disclaimer"] = "Provider boundary."
+
+    evidence = dep.load_evidence(_resealed(tmp_path, "both.json", mutate))
+    original = dep.load_evidence(GOOD).advisory_notes
+    assert evidence.advisory_notes == original + ("Provider boundary.",)
+
+
+def test_a_blank_disclaimer_adds_nothing(tmp_path):
+    def mutate(record):
+        record["calculation"]["upstream"]["advisory"]["disclaimer"] = "   "
+
+    assert dep.load_evidence(_resealed(tmp_path, "blank.json", mutate)).advisory_notes == (
+        dep.load_evidence(GOOD).advisory_notes
+    )
+
+
+def test_a_disclaimer_that_is_not_a_string_is_this_modules_error(tmp_path):
+    def mutate(record):
+        record["calculation"]["upstream"]["advisory"]["disclaimer"] = ["not", "a", "string"]
+
+    with pytest.raises(dep.DepreciationEvidenceError, match="disclaimer is list"):
+        dep.load_evidence(_resealed(tmp_path, "list.json", mutate))
+
+
+def test_a_charge_beyond_float_range_is_refused_not_spread_as_infinity():
+    evidence = replace(dep.load_evidence(GOOD), charge=Decimal("1e1000"))
+    assert evidence.usable is True
+    with pytest.raises(dep.DepreciationEvidenceError, match="outside the range"):
+        dep.straight_line_schedule(evidence, months())
