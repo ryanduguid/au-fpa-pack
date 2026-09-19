@@ -318,9 +318,10 @@ def straight_line_schedule(
         raise DepreciationEvidenceError("no months to spread the charge across")
     assert evidence.charge is not None
     per_month = float(evidence.charge) / len(months)
-    if not math.isfinite(per_month):
+    if not math.isfinite(per_month) or (per_month == 0.0 and evidence.charge != 0):
         # A finite Decimal beyond float range became an infinite forecast in
-        # every month. Nothing in a workpaper is that large; refuse it.
+        # every month. Nothing in a workpaper is that large; refuse it. A
+        # nonzero charge that underflowed to zero is likewise not representable.
         raise DepreciationEvidenceError(
             f"{evidence.label}: charge {evidence.charge} is outside the range a forecast "
             "series can carry."

@@ -333,3 +333,10 @@ def test_a_charge_beyond_float_range_is_refused_not_spread_as_infinity():
     assert evidence.usable is True
     with pytest.raises(dep.DepreciationEvidenceError, match="outside the range"):
         dep.straight_line_schedule(evidence, months())
+
+
+def test_a_charge_below_float_range_is_refused_not_spread_as_zero():
+    evidence = replace(dep.load_evidence(GOOD), charge=Decimal("1e-1000"))
+    assert evidence.usable is True
+    with pytest.raises(dep.DepreciationEvidenceError, match="outside the range"):
+        dep.straight_line_schedule(evidence, months())
