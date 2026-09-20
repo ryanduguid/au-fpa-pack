@@ -73,7 +73,10 @@ clients:
 
    An approval is written under `<library>/approvals/<digest>.yaml`, one per candidate,
    and it is never created for you. Change the candidate and the digest changes, so the
-   old approval no longer covers it.
+   old approval no longer covers it. Pass paths or ids to `contributing_workspaces`:
+   the file stores opaque ids either way, so the approval names no client directory.
+   Validate and promote in the same session, because `validate_prior` stamps its result
+   for this process only.
 5. **Ratify.** With the approval recorded, `pyfpa.promote_prior` / `pyfpa.promote_skill`
    writes `~/.fpa/library/` and `library-log.md`, naming workspaces only by an opaque id.
    `pyfpa.withdraw_prior(library, digest)` removes a prior and returns the client
@@ -86,9 +89,17 @@ clients:
   between your clients: see the boundary above.
 - Default-deny promotion. `promote_prior` refuses unless a recorded approval covers the
   candidate's digest, lists exactly its contributing workspaces, names the same business
-  type and driver, and the validation carries the same digest with at least 2 folds.
-  `promote_skill` refuses any file the approval does not list, so a workpaper left in a
-  client's skill directory cannot ride along.
+  type and driver, and the validation carries the same digest and `validate_prior`'s
+  stamp with at least 2 folds. `validate_prior` refuses a candidate whose driver,
+  business type, support or value are not the ones its folds tested. `promote_skill`
+  refuses any file the approval does not list, writes the bytes it screened rather than
+  re-reading the client's directory, and refuses a link in the tree.
+- Seeding is the same boundary in reverse: `seed_from_library` refuses a library prior
+  whose approval is missing, so a legacy or hand-authored entry cannot seed a client.
+  Withdraw it or record its approval.
+- The gate is a structural barrier, not a security control. It stops mistakes and
+  results carried in from elsewhere; it does not defend against code running in your
+  own session, and it never replaces your reading of the evidence.
 - The confidentiality screen looks for ABN and TFN shaped numbers, email addresses,
   phone numbers, BSB and account patterns, dollar amounts in narrative lines and the
   contributing clients' business names. A finding blocks promotion until your review

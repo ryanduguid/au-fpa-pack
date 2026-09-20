@@ -1,12 +1,15 @@
 """The cross-client promotion gate. Every workspace and name here is fabricated."""
 
 import os
+from pathlib import Path
 
 import pytest
 
+import pyfpa.portfolio.library as library_module
 from pyfpa.backtest.score import score_forecast
 from pyfpa.backtest.snapshot import save_snapshot, snapshot_forecast
 from pyfpa.config.schemas import EntityConfig
+from pyfpa.io.loaders import read_yaml, write_yaml
 from pyfpa.models.cashflow import cashflow_from_config
 from pyfpa.portfolio.approval import (
     APPROVAL_STATEMENT,
@@ -14,12 +17,15 @@ from pyfpa.portfolio.approval import (
     ConfidentialityReview,
     PromotionApproval,
     PromotionDenied,
+    attest_validation,
     business_name,
     candidate_digest,
+    check_promotion_approval,
     load_promotion_approval,
     record_promotion_approval,
     resolved_support,
     screen_candidate,
+    skill_tree,
     workspace_id,
 )
 from pyfpa.portfolio.library import (
@@ -124,6 +130,19 @@ def _validated(clients, candidate):
     return result
 
 
+def _attested(digest, *, mean_delta=-0.01, n_folds=3, validated=True):
+    """A hand-built result carrying this process's attestation for those numbers.
+
+    The attestation stops a result built elsewhere, not a caller inside this
+    process, which is why the tests can build one: see promote_prior's docstring.
+    """
+    return ValidationResult(
+        mean_delta=mean_delta, n_folds=n_folds, validated=validated,
+        candidate_digest=digest,
+        attestation=attest_validation(digest, n_folds, mean_delta),
+    )
+
+
 # --- no approval, no promotion -------------------------------------------------
 
 def test_prior_promotion_without_an_approval_is_denied(tmp_path):
@@ -170,12 +189,8 @@ def test_approval_for_an_earlier_digest_does_not_cover_a_changed_candidate(tmp_p
     library = tmp_path / "library"
     _approval(library, candidate)
     changed = candidate.model_copy(update={"value": 52.0})
-    validation = ValidationResult(
-        mean_delta=-0.01, n_folds=3, validated=True,
-        candidate_digest=candidate_digest(changed),
-    )
     with pytest.raises(PromotionDenied, match="no promotion approval recorded"):
-        promote_prior(library, changed, validation)
+        promote_prior(library, changed, _attested(candidate_digest(changed)))
 
 
 def test_validation_from_another_candidate_is_refused(tmp_path):
@@ -183,20 +198,40 @@ def test_validation_from_another_candidate_is_refused(tmp_path):
     candidate = _prior(clients)
     library = tmp_path / "library"
     _approval(library, candidate)
-    stale = ValidationResult(mean_delta=-0.01, n_folds=3, validated=True)
+    stale = _attested("0" * 64)
     with pytest.raises(PromotionDenied, match="does not carry this candidate's digest"):
         promote_prior(library, candidate, stale)
 
 
-def test_hand_built_validation_still_needs_an_approval(tmp_path):
+def test_a_validation_result_built_by_hand_is_denied(tmp_path):
     clients = _three_clients(tmp_path)
     candidate = _prior(clients)
+    library = tmp_path / "library"
+    _approval(library, candidate)
     forged = ValidationResult(
         mean_delta=-9.0, n_folds=99, validated=True,
         candidate_digest=candidate_digest(candidate),
     )
+    with pytest.raises(PromotionDenied, match="no attestation from validate_prior"):
+        promote_prior(library, candidate, forged)
+
+
+def test_an_attestation_does_not_cover_edited_numbers(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    library = tmp_path / "library"
+    _approval(library, candidate)
+    validation = _validated(clients, candidate)
+    edited = validation.model_copy(update={"mean_delta": -9.0, "n_folds": 99})
+    with pytest.raises(PromotionDenied, match="no attestation from validate_prior"):
+        promote_prior(library, candidate, edited)
+
+
+def test_an_attested_result_still_needs_an_approval(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
     with pytest.raises(PromotionDenied, match="no promotion approval recorded"):
-        promote_prior(tmp_path / "library", candidate, forged)
+        promote_prior(tmp_path / "library", candidate, _validated(clients, candidate))
 
 
 def test_validate_prior_refuses_a_candidate_it_does_not_hold_out(tmp_path):
@@ -256,12 +291,8 @@ def test_duplicated_workspace_leaves_one_contributor(tmp_path):
     )
     library = tmp_path / "library"
     _approval(library, doubled)
-    validation = ValidationResult(
-        mean_delta=0.0, n_folds=3, validated=True,
-        candidate_digest=candidate_digest(doubled),
-    )
     with pytest.raises(PromotionDenied, match="at least two contributing workspaces"):
-        promote_prior(library, doubled, validation)
+        promote_prior(library, doubled, _attested(candidate_digest(doubled)))
 
 
 ALIAS_NOTES = (
@@ -452,6 +483,35 @@ def test_an_unlisted_file_cannot_ride_along(tmp_path):
     assert (reviewed / "skills" / "segment-rollup" / "workpaper.md").exists()
 
 
+def test_the_library_gets_the_bytes_that_were_screened(tmp_path, monkeypatch):
+    candidate = _skill_candidate(tmp_path)
+    screened = dict(skill_tree(candidate))["SKILL.md"]
+    library = tmp_path / "library"
+    _approval(library, candidate)
+    source = Path(candidate.source) / "SKILL.md"
+
+    def rewrite_then_check(*args, **kwargs):
+        # A client edit landing between the screen and the copy.
+        source.write_text("Client stocktake counts.\n", encoding="utf-8")
+        return check_promotion_approval(*args, **kwargs)
+
+    monkeypatch.setattr(library_module, "check_promotion_approval", rewrite_then_check)
+    promote_skill(library, candidate)
+    assert (library / "skills" / "segment-rollup" / "SKILL.md").read_bytes() == screened
+
+
+def test_a_link_in_the_skill_tree_is_refused(tmp_path, directory_link):
+    candidate = _skill_candidate(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "workpaper.md").write_text("Client stocktake counts.\n", encoding="utf-8")
+    directory_link(Path(candidate.source) / "linked", outside)
+    library = tmp_path / "library"
+    with pytest.raises(PromotionDenied, match="link or reparse point"):
+        promote_skill(library, candidate)
+    assert not (library / "skills").exists()
+
+
 # --- what the shared library records -----------------------------------------
 
 def test_promoted_records_carry_ids_not_paths(tmp_path):
@@ -464,13 +524,19 @@ def test_promoted_records_carry_ids_not_paths(tmp_path):
 
     prior_yaml = (library / "priors" / "d2c.yaml").read_text(encoding="utf-8")
     log = (library / "library-log.md").read_text(encoding="utf-8")
+    approval_yaml = (
+        library / "approvals" / f"{approval.candidate_digest}.yaml"
+    ).read_text(encoding="utf-8")
     identifiers = [workspace_id(path) for path in resolved_support(candidate.support)]
     for path in resolved_support(candidate.support):
         assert path not in prior_yaml
         assert path not in log
+        assert path not in approval_yaml           # the approval file names no client path
     for identifier in identifiers:
         assert identifier in prior_yaml
         assert identifier in log
+        assert identifier in approval_yaml
+    assert approval.contributing_workspaces == sorted(identifiers)
     assert candidate_digest(candidate) in log
     index = (library / "provenance" / "workspaces.yaml").read_text(encoding="utf-8")
     assert all(path in index for path in resolved_support(candidate.support))
@@ -521,6 +587,54 @@ def test_withdrawal_names_the_seeded_workspace_and_leaves_it_alone(tmp_path):
     assert workspace_id(receiving) in (library / "library-log.md").read_text(encoding="utf-8")
     assert derived.read_text(encoding="utf-8") == "label: derived\n"
     assert (receiving / ".fpa" / "library-seeds.yaml").exists()
+
+
+def test_an_unapproved_library_entry_cannot_seed(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    library = tmp_path / "library"
+    _approval(library, candidate)
+    promote_prior(library, candidate, _validated(clients, candidate))
+    receiving = tmp_path / "fourth"
+
+    # A hand-authored entry with no digest at all.
+    priors = library / "priors" / "d2c.yaml"
+    doc = read_yaml(priors)
+    doc["priors"].append({"driver": "tax_rate", "value": 0.25})
+    write_yaml(priors, doc)
+    with pytest.raises(PromotionDenied, match="no recorded approval"):
+        seed_from_library(library, "d2c", _cfg(30.0),
+                          company_root=receiving, seeded_at="2026-09-21")
+
+    # A digest whose approval is not in the library.
+    doc["priors"][-1]["candidate_digest"] = "0" * 64
+    write_yaml(priors, doc)
+    with pytest.raises(PromotionDenied, match="0{64}"):
+        seed_from_library(library, "d2c", _cfg(30.0),
+                          company_root=receiving, seeded_at="2026-09-21")
+    assert not (receiving / ".fpa" / "library-seeds.yaml").exists()
+
+    # Withdrawing the unapproved entry restores seeding.
+    withdraw_prior(library, "0" * 64)
+    seeded = seed_from_library(library, "d2c", _cfg(30.0),
+                               company_root=receiving, seeded_at="2026-09-21")
+    assert seeded.working_capital.dio_days == 45.0
+
+
+def test_a_candidate_value_that_was_not_validated_is_refused(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    shifted = candidate.model_copy(update={"value": 52.0})
+    with pytest.raises(ValueError, match="not the validated median"):
+        validate_prior(DRIVER, clients, tolerance=0.01, candidate=shifted)
+
+
+def test_a_candidate_for_another_business_type_is_refused(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    other = candidate.model_copy(update={"business_type": "trucking"})
+    with pytest.raises(ValueError, match="business type"):
+        validate_prior(DRIVER, clients, candidate=other)
 
 
 def test_withdrawing_an_unknown_prior_raises(tmp_path):

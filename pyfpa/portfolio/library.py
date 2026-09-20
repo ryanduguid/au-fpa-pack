@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import Any
 
@@ -12,8 +11,11 @@ from pyfpa.portfolio.approval import (
     PromotionDenied,
     candidate_digest,
     check_promotion_approval,
+    load_promotion_approval,
     record_screen_findings,
     resolved_support,
+    skill_tree,
+    validation_is_attested,
     workspace_id,
 )
 from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
@@ -71,6 +73,14 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     in another client's work. Both the validation and a recorded
     `PromotionApproval` for this exact candidate are required, and the written
     records name workspaces only by opaque id.
+
+    Trust boundary, stated plainly: `ValidationResult` is a public pydantic
+    model, and any caller running in this process can construct one or call
+    `attest_validation` directly. The checks below establish that the result came
+    from `validate_prior` in this process for this candidate, which stops a
+    result built by hand, edited on disk or carried over from another candidate.
+    They do not defend against code running inside the process, and they are not
+    a substitute for the practitioner reading the evidence before approving.
     """
     digest = candidate_digest(candidate)
     if not validation.validated or validation.n_folds < 2:
@@ -79,6 +89,17 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
         raise PromotionDenied(
             "validation does not carry this candidate's digest: re-run "
             "validate_prior with the candidate being promoted"
+        )
+    if not validation_is_attested(
+        validation.candidate_digest,
+        validation.n_folds,
+        validation.mean_delta,
+        validation.attestation,
+    ):
+        raise PromotionDenied(
+            "validation carries no attestation from validate_prior in this "
+            "process: run validate_prior against the candidate and promote from "
+            "its result, not from a result built or stored elsewhere"
         )
     approval, findings = check_promotion_approval(library, candidate)
     library = Path(library)
@@ -106,14 +127,25 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
     A recorded `PromotionApproval` for the tree's digest is required, and it
     must list every file in the tree, so a workpaper left in a client's skill
     directory cannot ride along with the skill.
+
+    The tree is read once. The digest, the allowed-file check, the screen and the
+    files written into the library are all that one set of bytes, so a file that
+    changes in the client's workspace after the screen cannot reach the library,
+    and a link in the tree is refused rather than followed.
     """
-    digest = candidate_digest(candidate)
-    approval, findings = check_promotion_approval(library, candidate)
+    tree = skill_tree(candidate)
+    digest = candidate_digest(candidate, tree=tree)
+    approval, findings = check_promotion_approval(library, candidate, tree=tree)
     library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
     dest = library / "skills" / candidate.name
     dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(candidate.source, dest)
+    # Not copytree: it would re-read the client's directory and follow links.
+    dest.mkdir()
+    for relative, data in tree:
+        target = dest / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
     _log(library, f"- skill `{candidate.name}` for {candidate.business_type} "
                   f"(contributors {', '.join(support_ids)}, approval {digest})")
     record_screen_findings(library, approval, findings)
@@ -133,15 +165,33 @@ def seed_from_library(
     Each seeding is recorded in the receiving workspace's `.fpa/library-seeds.yaml`
     and in the library's `provenance/seeds.yaml`, so a later withdrawal can name
     the workspaces whose artefacts derive from a prior.
+
+    Every prior applied must still have its approval on disk. A legacy or
+    hand-authored entry with no `candidate_digest`, or one whose approval has been
+    removed, is refused rather than seeded: reading the library is the other side
+    of the same boundary as writing it. Withdraw such an entry with
+    `withdraw_prior`, or record the approval it needs.
     """
     library = Path(library)
     data = cfg.model_dump()
     seeds: list[dict[str, Any]] = []
-    for prior in load_library(library)["priors"].get(business_type, []):
+    priors = load_library(library)["priors"].get(business_type, [])
+    unapproved = [
+        f"{prior.get('driver')} (digest {prior.get('candidate_digest') or 'absent'})"
+        for prior in priors
+        if not prior.get("candidate_digest")
+        or load_promotion_approval(library, prior["candidate_digest"]) is None
+    ]
+    if unapproved:
+        raise PromotionDenied(
+            "these library priors have no recorded approval, so they cannot seed a "
+            f"client: {unapproved}"
+        )
+    for prior in priors:
         apply_override(data, prior["driver"], prior["value"])
         seeds.append({
             "library": str(library), "driver": prior["driver"], "value": prior["value"],
-            "candidate_digest": prior.get("candidate_digest", ""), "seeded_at": seeded_at,
+            "candidate_digest": prior["candidate_digest"], "seeded_at": seeded_at,
         })
     if seeds:
         workspace = _write_workspace_seeds(company_root, seeds)

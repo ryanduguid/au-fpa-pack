@@ -15,7 +15,11 @@ from pyfpa.backtest.snapshot import Snapshot
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.memory.paths import apply_override
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.portfolio.approval import candidate_digest, resolved_support
+from pyfpa.portfolio.approval import (
+    attest_validation,
+    candidate_digest,
+    resolved_support,
+)
 from pyfpa.portfolio.manifest import (
     ClientRef,
     canonical_client_path,
@@ -33,6 +37,11 @@ class ValidationResult(BaseModel):
     # digest is not the candidate's, so a result cannot be carried across to a
     # different or later candidate.
     candidate_digest: str = ""
+    # validate_prior's per-process stamp over the three fields above. A result
+    # built by hand, or carried in from another process, carries none and cannot
+    # support a promotion. See pyfpa.portfolio.approval.attest_validation for
+    # what it does and does not establish.
+    attestation: str = ""
 
 
 def validate_prior(
@@ -50,9 +59,11 @@ def validate_prior(
     Repeated workspaces are rejected: a fold whose peers include copies of the
     held-out client is not held out.
 
-    Pass `candidate` to stamp its digest into the result. Without it the digest
-    stays empty and `promote_prior` refuses the result: a fitness check on a
-    driver is not evidence about a particular candidate."""
+    Pass `candidate` to stamp its digest and an attestation into the result.
+    Without it both stay empty and `promote_prior` refuses the result: a fitness
+    check on a driver is not evidence about a particular candidate. A candidate
+    is refused unless its driver, business type, support and value are the ones
+    these folds tested."""
     require_distinct_clients(type_clients)
     digest = _candidate_digest_for(driver, type_clients, candidate)
     usable: list[tuple[float, Snapshot, ScoreResult]] = []
@@ -71,9 +82,9 @@ def validate_prior(
                 usable.append((value, snap, snap.score))
     n = len(usable)
     if n < 2:
-        return ValidationResult(
-            mean_delta=0.0, n_folds=n, validated=False, candidate_digest=digest
-        )
+        return _result(0.0, n, False, digest)
+    if candidate is not None:
+        _require_validated_value(candidate, [value for value, _, _ in usable])
 
     deltas = []
     for i, (_, snap, score) in enumerate(usable):
@@ -92,12 +103,35 @@ def validate_prior(
         deltas.append(new_fitness - score.fitness)
 
     mean_delta = statistics.fmean(deltas)
+    return _result(mean_delta, n, mean_delta <= tolerance, digest)
+
+
+def _result(mean_delta: float, n_folds: int, validated: bool, digest: str) -> ValidationResult:
+    """One validation result, attested when it is about a named candidate."""
     return ValidationResult(
         mean_delta=mean_delta,
-        n_folds=n,
-        validated=mean_delta <= tolerance,
+        n_folds=n_folds,
+        validated=validated,
         candidate_digest=digest,
+        attestation=(
+            attest_validation(digest, n_folds, mean_delta) if digest else ""
+        ),
     )
+
+
+def _require_validated_value(candidate: PriorCandidate, validated_values: list[float]) -> None:
+    """Refuse a candidate whose value is not the one these folds tested.
+
+    Each fold applies the median of its peers, so the value the folds support is
+    the median across the clients that were usable. A candidate carrying any
+    other value was not validated by this run, whatever its dispersion said.
+    """
+    tested = statistics.median(validated_values)
+    if candidate.value != tested:
+        raise ValueError(
+            f"candidate value {candidate.value!r} is not the validated median "
+            f"{tested!r} across the {len(validated_values)} usable clients"
+        )
 
 
 def _candidate_digest_for(
@@ -109,6 +143,12 @@ def _candidate_digest_for(
     if candidate.driver != driver:
         raise ValueError(
             f"candidate drives {candidate.driver!r}, validation is for {driver!r}"
+        )
+    types = {client.type for client in type_clients}
+    if types != {candidate.business_type}:
+        raise ValueError(
+            f"candidate is for business type {candidate.business_type!r}, the "
+            f"validated clients are {sorted(types)}"
         )
     known = {canonical_client_path(client.path) for client in type_clients}
     missing = [path for path in resolved_support(candidate.support) if path not in known]

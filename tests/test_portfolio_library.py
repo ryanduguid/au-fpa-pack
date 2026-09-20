@@ -6,6 +6,7 @@ from pyfpa.portfolio.approval import (
     ConfidentialityReview,
     PromotionApproval,
     PromotionDenied,
+    attest_validation,
     candidate_digest,
     record_promotion_approval,
 )
@@ -72,8 +73,16 @@ def _approve(library, candidate, *, allowed_files=()):
 
 
 def _validation(candidate, *, mean_delta=-0.01, n_folds=3, validated=True):
+    """A validation result standing in for validate_prior over these workspaces.
+
+    The fabricated support directories hold no scored snapshots, so this attests
+    the result the way validate_prior would. tests/test_portfolio_approval.py
+    covers what happens without the attestation.
+    """
+    digest = candidate_digest(candidate)
     return ValidationResult(mean_delta=mean_delta, n_folds=n_folds, validated=validated,
-                            candidate_digest=candidate_digest(candidate))
+                            candidate_digest=digest,
+                            attestation=attest_validation(digest, n_folds, mean_delta))
 
 
 def _prior(tmp_path, driver="working_capital.dio_days", value=45.0):
@@ -158,7 +167,6 @@ def test_invalid_prior_cannot_create_library(tmp_path, folds, validated):
     lib = tmp_path / "library"
     candidate = _prior(tmp_path, driver="tax_rate", value=0.25)
     with pytest.raises(ValueError, match="validation"):
-        promote_prior(lib, candidate, ValidationResult(
-            mean_delta=0, n_folds=folds, validated=validated,
-            candidate_digest=candidate_digest(candidate)))
+        promote_prior(lib, candidate, _validation(
+            candidate, mean_delta=0, n_folds=folds, validated=validated))
     assert not lib.exists()

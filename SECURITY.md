@@ -67,6 +67,21 @@ authentication: the kernel cannot tell who wrote the file. It is not legal proof
 that the client consented, and it does not replace the engagement terms, the
 firm's confidentiality policy or professional obligations.
 
+The gate is a structural barrier inside one process, not a security boundary.
+`ValidationResult` is a public model, so `validate_prior` stamps each result it
+produces and `promote_prior` refuses a result that stamp does not cover: that
+stops a result built by hand, edited on disk or carried over from another
+candidate, and it stops nothing that runs inside the process, which can call the
+same functions. Validate and promote in one session, because the stamp does not
+outlive the process. A promoted skill is written from the bytes the digest and
+the screen covered, not copied from the client's directory a second time, and a
+symlink, junction or other reparse point in the tree is refused rather than
+followed.
+
+Reading the library is the same boundary as writing it, so seeding a client from
+the library refuses any prior whose approval is not on disk, including a legacy
+or hand-authored entry with no candidate digest.
+
 The automated confidentiality screen looks for ABN and TFN shaped numbers,
 email addresses, Australian phone numbers, BSB and account patterns, dollar
 amounts in narrative lines, and the contributing clients' business names. A
@@ -83,8 +98,9 @@ establishes no client at all. Promotion across two workspaces that resolve to
 one business name requires their workspace ids in the approval's
 `aliases_acknowledged`, alongside review notes.
 
-Shared library records name workspaces by an opaque id, with the path-to-id map
-kept in the library's own `provenance/` directory. Seeding a new client records
+Shared library records name workspaces by an opaque id, the approval file
+included, with the path-to-id map kept in the library's own `provenance/`
+directory. Seeding a new client records
 the prior it used, so `withdraw_prior` can report which workspaces hold derived
 artefacts. Withdrawal never deletes anything inside a client workspace; what to
 do with a derived model is a practitioner's decision.

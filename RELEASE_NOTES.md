@@ -25,6 +25,19 @@
   seed in that workspace's `.fpa/library-seeds.yaml` and in the library's seed index,
   and the new `withdraw_prior` removes a prior and reports the workspaces it seeded
   without touching anything inside them.
+- Approval files store contributing workspaces as opaque ids, so nothing in a shared
+  library names a client directory. Building one still accepts paths.
+- `validate_prior` stamps each result it produces, and `promote_prior` refuses a result
+  that stamp does not cover, which rejects a `ValidationResult` built by hand, edited on
+  disk or carried over from another candidate. The stamp is a per-process structural
+  barrier, not a security control, so validate and promote in one session.
+- `validate_prior` also refuses a candidate whose business type or value are not the ones
+  its folds tested.
+- `promote_skill` reads the skill tree once and writes those exact bytes, instead of
+  copying the client's directory again after the screen, and refuses a symlink, junction
+  or other reparse point inside the tree.
+- `seed_from_library` refuses any library prior whose approval is not on disk, including
+  a legacy entry with no candidate digest.
 - Documentation states that "nothing leaves your machine" is about network egress and
   does not by itself permit moving one client's information into another client's work.
 

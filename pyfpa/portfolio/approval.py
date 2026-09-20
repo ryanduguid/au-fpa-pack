@@ -16,7 +16,10 @@ is present.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import re
+import secrets
+import stat
 from datetime import date
 from pathlib import Path
 
@@ -35,7 +38,16 @@ APPROVAL_STATEMENT = (
 
 WORKSPACE_ID_LENGTH = 16
 
+# Per-process key behind the validation attestation. It is a structural barrier,
+# not a security control: it stops a ValidationResult built by hand or carried in
+# from somewhere else, and any caller that can import this module can also call
+# `attest_validation`. See promote_prior for the trust boundary this sits inside.
+_ATTESTATION_KEY = secrets.token_bytes(32)
+
+_FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
+_WORKSPACE_ID = re.compile(r"^[0-9a-f]{%d}$" % WORKSPACE_ID_LENGTH)
 _NON_ALNUM = re.compile(r"[^0-9a-z]+")
 _BRACKETED = re.compile(r"[(\[][^)\]]*[)\]]")
 # Trailing words that describe the legal wrapper rather than the business, so
@@ -164,6 +176,11 @@ class PromotionApproval(BaseModel):
     in scope, every contributing workspace, the authorisation it rests on, and
     the exact candidate digest. A candidate that changes digests, so an
     approval cannot follow the candidate into new content.
+
+    `contributing_workspaces` holds opaque workspace ids, never paths. Pass
+    paths or ids when building one; both are stored as ids, so the approval file
+    in a shared library names no client directory. The id-to-path map lives in
+    the library's own `provenance/workspaces.yaml`.
     """
 
     purpose: str
@@ -196,10 +213,13 @@ class PromotionApproval(BaseModel):
 
     @field_validator("contributing_workspaces")
     @classmethod
-    def _resolved_paths(cls, value: list[str]) -> list[str]:
+    def _workspace_ids(cls, value: list[str]) -> list[str]:
         if not value:
             raise ValueError("promotion approval requires contributing_workspaces")
-        return resolved_support(value)
+        return sorted({
+            entry if _WORKSPACE_ID.match(entry) else workspace_id(entry)
+            for entry in value
+        })
 
     @field_validator("statement")
     @classmethod
@@ -218,23 +238,56 @@ def _require_text(value: str, field: str) -> str:
     return value
 
 
-def skill_tree(candidate: SkillCandidate) -> list[tuple[str, bytes]]:
-    """Every file under the candidate's skill directory, sorted by relative path."""
-    root = Path(candidate.source)
-    files = sorted(
-        (path for path in root.rglob("*") if path.is_file()),
-        key=lambda path: path.relative_to(root).as_posix(),
+def _refuse_link(path: Path) -> None:
+    """Refuse a symlink, junction or other reparse point inside a skill tree.
+
+    A link would let the digest cover one file while the copy reads another, or
+    reach a file outside the client's skill directory entirely.
+    """
+    info = path.lstat()
+    reparse = bool(
+        getattr(info, "st_file_attributes", 0) & _FILE_ATTRIBUTE_REPARSE_POINT
     )
-    return [(path.relative_to(root).as_posix(), path.read_bytes()) for path in files]
+    if stat.S_ISLNK(info.st_mode) or reparse:
+        raise PromotionDenied(
+            f"skill tree must not contain a link or reparse point: {path}"
+        )
 
 
-def candidate_digest(candidate: PriorCandidate | SkillCandidate) -> str:
+def skill_tree(candidate: SkillCandidate) -> list[tuple[str, bytes]]:
+    """Every file under the candidate's skill directory, read once.
+
+    Returns (relative posix path, bytes), sorted by path. These are the exact
+    bytes the digest covers, and `promote_skill` writes these same bytes into
+    the library rather than re-reading the client's directory, so a file that
+    changes after the screen cannot land in the library unscreened. Any link or
+    reparse point in the tree is refused.
+    """
+    root = Path(candidate.source)
+    _refuse_link(root)
+    entries = sorted(root.rglob("*"), key=lambda path: path.relative_to(root).as_posix())
+    tree: list[tuple[str, bytes]] = []
+    for path in entries:
+        _refuse_link(path)
+        if path.is_file():
+            tree.append((path.relative_to(root).as_posix(), path.read_bytes()))
+    return tree
+
+
+def candidate_digest(
+    candidate: PriorCandidate | SkillCandidate,
+    *,
+    tree: list[tuple[str, bytes]] | None = None,
+) -> str:
     """A deterministic sha256 over everything that makes the candidate what it is.
 
     A prior digests its driver, business type, value and sorted support set; a
     skill digests its name, business type and whole tree (relative path and
     bytes of every file). Change any of it and the digest changes, which is
     what stops an approval recorded for one candidate covering another.
+
+    Pass `tree` for a skill to digest bytes already captured by `skill_tree`
+    instead of reading the directory again.
     """
     if isinstance(candidate, PriorCandidate):
         parts = [
@@ -247,10 +300,33 @@ def candidate_digest(candidate: PriorCandidate | SkillCandidate) -> str:
         return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
     digest = hashlib.sha256()
     digest.update(f"skill\n{candidate.business_type}\n{candidate.name}\n".encode())
-    for relative, data in skill_tree(candidate):
+    for relative, data in skill_tree(candidate) if tree is None else tree:
         digest.update(f"{relative}\n{len(data)}\n".encode())
         digest.update(data)
     return digest.hexdigest()
+
+
+def attest_validation(candidate_digest: str, n_folds: int, mean_delta: float) -> str:
+    """Stamp a cross-client validation run so a promotion can recognise it.
+
+    `validate_prior` is the only caller. The stamp is an HMAC over the candidate
+    digest (which already fixes the driver, business type, value and support),
+    the fold count and the mean delta, keyed by a value generated fresh in this
+    process. It makes a hand-built or imported `ValidationResult` fail, and it
+    is not a security control: the key lives in this module's memory, so any
+    code that can import the module can also stamp. It also does not outlive the
+    process, so validate and promote in one session.
+    """
+    payload = f"{candidate_digest}\n{n_folds}\n{mean_delta!r}".encode()
+    return hmac.new(_ATTESTATION_KEY, payload, "sha256").hexdigest()
+
+
+def validation_is_attested(
+    candidate_digest: str, n_folds: int, mean_delta: float, attestation: str
+) -> bool:
+    """Whether `attestation` is this process's stamp for those validation facts."""
+    expected = attest_validation(candidate_digest, n_folds, mean_delta)
+    return hmac.compare_digest(expected, attestation)
 
 
 def _narrative(text: str) -> str:
@@ -285,11 +361,12 @@ def normalised_business_name(name: str) -> str:
 
 def _screened_text(
     candidate: PriorCandidate | SkillCandidate,
+    tree: list[tuple[str, bytes]] | None,
 ) -> list[tuple[str, str]]:
     if isinstance(candidate, SkillCandidate):
         return [
             (relative, data.decode("utf-8", "replace"))
-            for relative, data in skill_tree(candidate)
+            for relative, data in (skill_tree(candidate) if tree is None else tree)
         ]
     return [
         (f"support entry for workspace {workspace_id(path)}", path)
@@ -297,7 +374,11 @@ def _screened_text(
     ]
 
 
-def screen_candidate(candidate: PriorCandidate | SkillCandidate) -> list[str]:
+def screen_candidate(
+    candidate: PriorCandidate | SkillCandidate,
+    *,
+    tree: list[tuple[str, bytes]] | None = None,
+) -> list[str]:
     """Screen a promotion candidate for client information, and report findings.
 
     Scans skill files, or a prior's support metadata, for ABN and TFN shaped
@@ -309,6 +390,9 @@ def screen_candidate(candidate: PriorCandidate | SkillCandidate) -> list[str]:
     This assists a human review and proves nothing. An empty list means the
     patterns found nothing, not that the candidate carries no client
     information.
+
+    Pass `tree` for a skill to screen bytes already captured by `skill_tree`,
+    which is what `promote_skill` screens and copies.
     """
     # The normalised name, so a mention without the entity suffix still hits.
     names = {
@@ -317,7 +401,7 @@ def screen_candidate(candidate: PriorCandidate | SkillCandidate) -> list[str]:
         if (name := business_name(path)) is not None
     }
     findings: set[str] = set()
-    for location, text in _screened_text(candidate):
+    for location, text in _screened_text(candidate, tree):
         for label, pattern in _SENSITIVE_PATTERNS:
             if pattern.search(text):
                 findings.add(f"{label} in {location}")
@@ -397,11 +481,11 @@ def _check_scope(approval: PromotionApproval, candidate: PriorCandidate | SkillC
 
 
 def _check_contributors(approval: PromotionApproval, support: list[str]) -> None:
-    if approval.contributing_workspaces != support:
+    identifiers = sorted({workspace_id(path) for path in support})
+    if approval.contributing_workspaces != identifiers:
         raise PromotionDenied(
             "approval contributing_workspaces do not match the candidate's support: "
-            f"approved {[workspace_id(p) for p in approval.contributing_workspaces]}, "
-            f"candidate {[workspace_id(p) for p in support]}"
+            f"approved {approval.contributing_workspaces}, candidate {identifiers}"
         )
     if len(support) < 2:
         raise PromotionDenied(
@@ -460,11 +544,11 @@ def _check_aliases(approval: PromotionApproval, support: list[str]) -> None:
         )
 
 
-def _check_allowed_files(approval: PromotionApproval, candidate: SkillCandidate) -> None:
+def _check_allowed_files(
+    approval: PromotionApproval, tree: list[tuple[str, bytes]]
+) -> None:
     allowed = set(approval.allowed_files)
-    extra = sorted(
-        relative for relative, _ in skill_tree(candidate) if relative not in allowed
-    )
+    extra = sorted(relative for relative, _ in tree if relative not in allowed)
     if extra:
         raise PromotionDenied(
             f"skill tree holds files the approval does not list in allowed_files: {extra}"
@@ -472,17 +556,23 @@ def _check_allowed_files(approval: PromotionApproval, candidate: SkillCandidate)
 
 
 def check_promotion_approval(
-    library: str | Path, candidate: PriorCandidate | SkillCandidate
+    library: str | Path,
+    candidate: PriorCandidate | SkillCandidate,
+    *,
+    tree: list[tuple[str, bytes]] | None = None,
 ) -> tuple[PromotionApproval, list[str]]:
     """Require a recorded approval for `candidate`, and return it with the screen.
 
     Denies unless an approval exists for this candidate's digest, covers this
-    exact business type and driver or skill, lists exactly the candidate's
-    resolved support set, establishes at least two distinct clients by
+    exact business type and driver or skill, names exactly the candidate's
+    support set by workspace id, establishes at least two distinct clients by
     business-profile heading, lists every file a skill tree would copy, and
     records every confidentiality finding as reviewed.
+
+    Pass `tree` for a skill so the digest, the allowed-file check, the screen and
+    the copy all cover one set of captured bytes.
     """
-    digest = candidate_digest(candidate)
+    digest = candidate_digest(candidate, tree=tree)
     approval = load_promotion_approval(library, digest)
     if approval is None:
         raise PromotionDenied(
@@ -495,8 +585,8 @@ def check_promotion_approval(
     _check_contributors(approval, support)
     _check_aliases(approval, support)
     if isinstance(candidate, SkillCandidate):
-        _check_allowed_files(approval, candidate)
-    findings = screen_candidate(candidate)
+        _check_allowed_files(approval, skill_tree(candidate) if tree is None else tree)
+    findings = screen_candidate(candidate, tree=tree)
     unreviewed = sorted(set(findings) - set(approval.confidentiality_review.automated_checks))
     if unreviewed:
         raise PromotionDenied(
