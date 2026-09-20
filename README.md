@@ -32,6 +32,8 @@ uv run --locked --extra dev python examples/lumbridge-services/models/generated/
 
 **Output:** `briefing.md`, `lumbridge.xlsx`, monthly and cash schedules in `examples/lumbridge-services/output/`.
 
+The briefing, the monthly and cash schedules and the JSON summary from that run are committed under `examples/lumbridge-services/output/`, so the result can be read without installing anything; the workbook is rebuilt locally. A rendered chart of the 13-week cash line with the 45-day delay, exported from the workbook in Excel, is on the site at <https://duguid.com.au/assets/examples/lumbridge/cash-preview.png> with its capture record.
+
 | Forecast measure | Receipt on time | Receipt 45 days late |
 | --- | ---: | ---: |
 | Quarter revenue | $180,000.00 | $180,000.00 |
