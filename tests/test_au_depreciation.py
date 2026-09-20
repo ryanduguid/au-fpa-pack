@@ -143,6 +143,20 @@ def test_the_charge_spreads_evenly_and_sums_back(tmp_path):
     assert schedule.index.equals(months())
 
 
+def test_the_spread_is_whole_cents_that_sum_exactly_to_the_charge():
+    # 6049.32 over three months: two cents cannot split three ways evenly.
+    schedule = dep.straight_line_schedule(dep.load_evidence(GOOD), months())
+    cents = [round(value * 100) for value in schedule]
+    assert cents == [201644, 201644, 201644]
+    assert sum(cents) == int(QUARTER * 100)
+    twelve = pd.period_range("2026-07", periods=12, freq="M")
+    evidence = dep.load_evidence(GOOD)
+    hundred = dep.DepreciationEvidence(**{**evidence.__dict__, "charge": Decimal("100.00")})
+    spread = dep.straight_line_schedule(hundred, twelve)
+    assert [round(value * 100) for value in spread] == [834] * 4 + [833] * 8
+    assert sum(round(value * 100) for value in spread) == 10000
+
+
 def test_expense_and_purchases_stay_apart():
     schedule = dep.straight_line_schedule(dep.load_evidence(GOOD), months())
     purchases = pd.Series([120000.0, 0.0, 0.0], index=months())
