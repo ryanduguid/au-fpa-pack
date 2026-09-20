@@ -117,4 +117,10 @@ def _candidate_digest_for(
             f"candidate support includes {len(missing)} workspace(s) outside the "
             "validated client list, so the folds do not hold them out"
         )
+    if candidate.business_type not in {client.type for client in type_clients}:
+        raise ValueError("candidate business type does not match the validated clients")
+    values = [client_driver_value(client, driver) for client in type_clients]
+    values = [value for value in values if value is not None]
+    if not values or candidate.value != statistics.median(values):
+        raise ValueError("candidate value is not the value represented by the validated clients")
     return candidate_digest(candidate)
