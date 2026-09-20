@@ -14,15 +14,17 @@ You do not need a Xero login, client data, macros or an AI agent.
 | --- | --- |
 | Artefact | `lumbridge.xlsx`, 23,506 bytes |
 | SHA-256 | `b150de6281fccb6dcb1d221c034b047eb610ad4064972c5d9ac9fca8916b8463` |
-| Source commit | `386c7ff31f7989b86445ef37d83a912fcb02bb47` |
+| Source commit | [`386c7ff31f7989b86445ef37d83a912fcb02bb47`](https://github.com/ryanduguid/au-fpa-pack/tree/386c7ff31f7989b86445ef37d83a912fcb02bb47/examples/lumbridge-services) |
 | Distributed at | <https://duguid.com.au/assets/examples/lumbridge/lumbridge-sample-pack.zip> |
 | Explained at | <https://duguid.com.au/examples/profit-vs-cash-flow/> |
 | Prerequisites | Desktop Excel with automatic calculation. To rebuild instead, Python 3.11 and uv |
 | Data | Fabricated throughout. No client, taxpayer or production data is involved |
 
-Compare the SHA-256 before you start if you received the file by any route other
-than the download above. If you rebuild from source, a fresh export can differ in
-package metadata or cache bytes from the distributed file; the figures should not.
+The SHA-256 is for the `lumbridge.xlsx` member of the published ZIP, not for a
+local rebuild. Compare it before you start if you received the file by any route
+other than the download above. If you rebuild from source, a fresh export can
+differ in package metadata or cache bytes from the distributed file; the figures
+should not.
 
 ## Which evidence this produces
 
@@ -102,11 +104,15 @@ Excel version that refused the file, and a result you could not reproduce twice.
 
 Record the step number, exactly what you did, what you observed and what you
 expected, plus your Excel version and operating system. Attach a screenshot only if
-it contains no client or personal data. Open an issue at
-<https://github.com/ryanduguid/au-fpa-pack/issues> or return the table by whatever
-channel you agreed. A suspected security vulnerability is the one exception: report
-it privately through the repository's Security tab as [SECURITY.md](../../SECURITY.md)
-describes, never in a public issue.
+it contains no client or personal data.
+
+The channel you agreed with the maintainer is the default route for every finding.
+Anything that could be a security weakness goes through the private reporting
+process that [SECURITY.md](../../SECURITY.md) describes, and is never filed as a
+public issue. A public issue at <https://github.com/ryanduguid/au-fpa-pack/issues>
+is only for a non-sensitive defect, and only after the consent block below says Yes
+to publication. Never put contact details or a screenshot containing personal data
+in a public issue.
 
 ## Consent and attribution
 
