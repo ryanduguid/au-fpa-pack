@@ -109,14 +109,22 @@ from pyfpa.models.opex import opex_from_config
 from pyfpa.models.revenue import revenue_from_config
 from pyfpa.models.working_capital import working_capital_from_config
 from pyfpa.portfolio import (
+    ApprovalScope,
+    ConfidentialityReview,
     Portfolio,
+    PromotionApproval,
+    PromotionDenied,
+    candidate_digest,
     find_recurring_skills,
     load_portfolio,
     mine_priors,
     promote_prior,
     promote_skill,
+    record_promotion_approval,
+    screen_candidate,
     seed_from_library,
     validate_prior,
+    withdraw_prior,
 )
 from pyfpa.research import (
     EpochEvaluation,
@@ -139,11 +147,13 @@ from pyfpa.research import (
 )
 
 __all__ = [
+    "ApprovalScope",
     "ArchitectureProposal",
     "Carveout",
     "Cash13Config",
     "Channel",
     "CompanyEntrypoint",
+    "ConfidentialityReview",
     "ConnectorAuth",
     "ConnectorManifest",
     "Correction",
@@ -171,6 +181,8 @@ __all__ = [
     "OpexLine",
     "Override",
     "Portfolio",
+    "PromotionApproval",
+    "PromotionDenied",
     "PromotionRecord",
     "ResearchEpoch",
     "ResearchObjective",
@@ -188,6 +200,7 @@ __all__ = [
     "apply_override",
     "build_context_pack",
     "build_memory_index",
+    "candidate_digest",
     "cash13_forecast",
     "cashflow_from_config",
     "cogs_from_config",
@@ -237,6 +250,7 @@ __all__ = [
     "reconcile",
     "reconcile_account_table",
     "record_intake_fact",
+    "record_promotion_approval",
     "register_challenger",
     "register_entrypoint",
     "register_mapping",
@@ -261,6 +275,7 @@ __all__ = [
     "save_source_registry",
     "scaffold_connector_bundle",
     "score_forecast",
+    "screen_candidate",
     "search_memory",
     "seed_from_library",
     "segment_pnl",
@@ -271,6 +286,7 @@ __all__ = [
     "validate_connector_bundle",
     "validate_prior",
     "verify_workbook",
+    "withdraw_prior",
     "working_capital_from_config",
     "write_onboarding_outputs",
 ]

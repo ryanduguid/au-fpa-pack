@@ -23,6 +23,11 @@ def require_distinct_clients(clients: list[ClientRef]) -> list[ClientRef]:
     Repeated entries are the same evidence counted twice: they would inflate
     prior support and fill leave-one-out folds with copies of the held-out
     client. Raising keeps the duplication visible instead of averaging it in.
+
+    This check sees paths only. Two copies of one client under different paths
+    pass it, so the promotion gate counts distinct clients again by normalised
+    business-profile heading, and treats a workspace with no heading as
+    establishing no client (`pyfpa.portfolio.approval.check_promotion_approval`).
     """
     seen: dict[str, str] = {}
     for client in clients:

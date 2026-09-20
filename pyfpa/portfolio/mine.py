@@ -57,7 +57,10 @@ def client_driver_value(client: ClientRef, driver: str) -> float | None:
 def mine_priors(portfolio: Portfolio, business_type: str, *,
                 min_support: int = 3, dispersion_max: float = 0.15) -> list[PriorCandidate]:
     """Drivers that cluster tightly (CoV <= dispersion_max) across >= min_support
-    same-type clients become prior candidates at the median."""
+    same-type clients become prior candidates at the median.
+
+    Discovery only. A candidate is not promotable until a practitioner records a
+    `PromotionApproval` for its digest; see `pyfpa.portfolio.approval`."""
     clients = clients_of_type(portfolio, business_type)
     out: list[PriorCandidate] = []
     for driver in MINEABLE_DRIVERS:
@@ -83,7 +86,11 @@ def find_recurring_skills(portfolio: Portfolio, business_type: str, *,
                           min_support: int = 3) -> list[SkillCandidate]:
     """Generated-skill directory names that recur across >= min_support same-type
     clients. (Structural corrections are an additional human signal the operator
-    weighs in the skill, not a mechanical trigger here.)"""
+    weighs in the skill, not a mechanical trigger here.)
+
+    Discovery only. Recurrence is not permission: `promote_skill` refuses the
+    candidate until a practitioner records a `PromotionApproval` for its digest
+    that lists every file in the tree."""
     clients = clients_of_type(portfolio, business_type)
     by_name: dict[str, list[tuple[str, str]]] = {}
     for c in clients:

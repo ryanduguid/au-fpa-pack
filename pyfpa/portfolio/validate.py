@@ -15,8 +15,13 @@ from pyfpa.backtest.snapshot import Snapshot
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.memory.paths import apply_override
 from pyfpa.models.cashflow import cashflow_from_config
-from pyfpa.portfolio.manifest import ClientRef, require_distinct_clients
-from pyfpa.portfolio.mine import client_driver_value
+from pyfpa.portfolio.approval import candidate_digest, resolved_support
+from pyfpa.portfolio.manifest import (
+    ClientRef,
+    canonical_client_path,
+    require_distinct_clients,
+)
+from pyfpa.portfolio.mine import PriorCandidate, client_driver_value
 from pyfpa.portfolio.recover import best_snapshot, recover_actuals
 
 
@@ -24,17 +29,32 @@ class ValidationResult(BaseModel):
     mean_delta: float
     n_folds: int
     validated: bool
+    # The candidate this result validates. promote_prior refuses a result whose
+    # digest is not the candidate's, so a result cannot be carried across to a
+    # different or later candidate.
+    candidate_digest: str = ""
 
 
-def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: float = 0.0) -> ValidationResult:
+def validate_prior(
+    driver: str,
+    type_clients: list[ClientRef],
+    *,
+    tolerance: float = 0.0,
+    candidate: PriorCandidate | None = None,
+) -> ValidationResult:
     """Leave-one-out cross-client check. For each usable client, derive `driver`'s
     value as the median across the OTHER clients, apply it to the held-out client's
     best-snapshot config, re-forecast, and score against that client's recovered
     actuals. A prior is `validated` if the mean fitness delta (new - original) is
     <= tolerance with >= 2 folds - a peer-derived value does not degrade held-out fit.
     Repeated workspaces are rejected: a fold whose peers include copies of the
-    held-out client is not held out."""
+    held-out client is not held out.
+
+    Pass `candidate` to stamp its digest into the result. Without it the digest
+    stays empty and `promote_prior` refuses the result: a fitness check on a
+    driver is not evidence about a particular candidate."""
     require_distinct_clients(type_clients)
+    digest = _candidate_digest_for(driver, type_clients, candidate)
     usable: list[tuple[float, Snapshot, ScoreResult]] = []
     for c in type_clients:
         snap = best_snapshot(c.path)
@@ -51,7 +71,9 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
                 usable.append((value, snap, snap.score))
     n = len(usable)
     if n < 2:
-        return ValidationResult(mean_delta=0.0, n_folds=n, validated=False)
+        return ValidationResult(
+            mean_delta=0.0, n_folds=n, validated=False, candidate_digest=digest
+        )
 
     deltas = []
     for i, (_, snap, score) in enumerate(usable):
@@ -70,4 +92,29 @@ def validate_prior(driver: str, type_clients: list[ClientRef], *, tolerance: flo
         deltas.append(new_fitness - score.fitness)
 
     mean_delta = statistics.fmean(deltas)
-    return ValidationResult(mean_delta=mean_delta, n_folds=n, validated=mean_delta <= tolerance)
+    return ValidationResult(
+        mean_delta=mean_delta,
+        n_folds=n,
+        validated=mean_delta <= tolerance,
+        candidate_digest=digest,
+    )
+
+
+def _candidate_digest_for(
+    driver: str, type_clients: list[ClientRef], candidate: PriorCandidate | None
+) -> str:
+    """The digest to stamp, refusing a candidate this run does not validate."""
+    if candidate is None:
+        return ""
+    if candidate.driver != driver:
+        raise ValueError(
+            f"candidate drives {candidate.driver!r}, validation is for {driver!r}"
+        )
+    known = {canonical_client_path(client.path) for client in type_clients}
+    missing = [path for path in resolved_support(candidate.support) if path not in known]
+    if missing:
+        raise ValueError(
+            f"candidate support includes {len(missing)} workspace(s) outside the "
+            "validated client list, so the folds do not hold them out"
+        )
+    return candidate_digest(candidate)

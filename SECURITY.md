@@ -47,5 +47,47 @@ machine unless something else moves it. If a cloud AI service is pointed at
 this workspace, that data passes to the service; check the firm's policy and
 confidentiality obligations first, and de-identify by default.
 
+## Cross-client promotion
+
+"Nothing leaves your machine" is a statement about network egress. It says
+nothing about confidentiality between the clients on that machine. Moving one
+client's information into another client's work is a separate decision, and
+`pyfpa/portfolio` treats it as default-deny.
+
+Mining a prior or a recurring skill proposes; it does not authorise. Nothing is
+written to a shared library until a practitioner records a `PromotionApproval`
+bound to that exact candidate by a sha256 digest, listing the purpose, the
+contributing workspaces, the authorisation it rests on, a confidentiality
+review, and, for a skill, every file that may be copied. Change the candidate
+and the digest changes, so an earlier approval stops covering it. Nothing
+creates an approval automatically, and recording one never overwrites another.
+
+The approval is an acknowledgement recorded by the practitioner. It is not
+authentication: the kernel cannot tell who wrote the file. It is not legal proof
+that the client consented, and it does not replace the engagement terms, the
+firm's confidentiality policy or professional obligations.
+
+The automated confidentiality screen looks for ABN and TFN shaped numbers,
+email addresses, Australian phone numbers, BSB and account patterns, dollar
+amounts in narrative lines, and the contributing clients' business names. A
+finding blocks the promotion until the recorded review lists it. The screen
+assists a human review and proves nothing: a clean screen is not a finding that
+no client information is present, and it cannot see information it has no
+pattern for.
+
+Support is counted in distinct clients, not distinct directories. Headings from
+each workspace's business profile are compared with case, punctuation, bracketed
+qualifiers and entity suffixes removed, so a copied workspace cannot become a
+second contributor by relabelling its profile, and a workspace with no heading
+establishes no client at all. Promotion across two workspaces that resolve to
+one business name requires their workspace ids in the approval's
+`aliases_acknowledged`, alongside review notes.
+
+Shared library records name workspaces by an opaque id, with the path-to-id map
+kept in the library's own `provenance/` directory. Seeding a new client records
+the prior it used, so `withdraw_prior` can report which workspaces hold derived
+artefacts. Withdrawal never deletes anything inside a client workspace; what to
+do with a derived model is a practitioner's decision.
+
 Examples and fixtures in this repository are fabricated, except where they are
 drawn from published public-company filings. Never commit real client data.

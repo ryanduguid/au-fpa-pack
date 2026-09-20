@@ -54,8 +54,15 @@ completed without understanding the whole company.
    approves the proposal.
 
 7. **After approval, seed from the portfolio library.** If one exists, start the
-   model from what generalised across same-type clients. Priors are seeds; this
-   client's learning loop refines them.
+   model from what generalised across same-type clients:
+   `pyfpa.seed_from_library(library, business_type, cfg, company_root=<this client>,
+   seeded_at="<ISO timestamp>")`. Priors are seeds; this client's learning loop refines
+   them. The call records each seed in this client's `.fpa/library-seeds.yaml` and in the
+   library's provenance index, so a prior withdrawn later can be traced to the models
+   built on it. A library prior carries another client's information, so only seed from
+   priors that were promoted under a recorded approval (see **fpa-portfolio-learn**);
+   local-only processing is about network egress and does not by itself permit moving one
+   client's information into this engagement.
 
 8. **Identify gaps the standard skills don't cover**, and propose bespoke skills/agents:
    - Product company with SKUs → a `sku-profitability` skill

@@ -93,7 +93,14 @@ Claude Code marketplace entry pointing at this repository installs.
 | --- | --- | --- |
 | `pyfpa/memory` | Company memory on disk: the `.fpa/` workspace, intake, sources, mappings, connectors, corrections, experiments, entrypoints and the retrieval index. | The `openfpa` CLI. Every workspace command in the [CLI reference](docs/cli-reference.md) goes through it. |
 | `pyfpa/research` | The champion and challenger loop: a company objective, scored epochs, and a model registry that only a recorded human approval changes. | `openfpa status` reads the model registry. The loop itself runs from [`skills/fpa-research-loop`](skills/fpa-research-loop/SKILL.md) against the Python API. |
-| `pyfpa/portfolio` | Cross-client learning: a portfolio manifest, priors mined and validated across clients, and recurring generated skills promoted into a shared library. | The Python API only. No CLI command reaches it, and today the one documented route is [`skills/fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md). |
+| `pyfpa/portfolio` | Cross-client learning: a portfolio manifest, priors mined and validated across clients, and recurring generated skills promoted into a shared library. Promotion is default-deny: mining and validation propose, and nothing reaches the library without a `PromotionApproval` the practitioner records for that exact candidate. | The Python API only. No CLI command reaches it, and today the one documented route is [`skills/fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md). |
+
+Promotion is the one place the pack would move one client's information into another
+client's work, so it refuses to until you record the decision. The approval is an
+acknowledgement of a judgement you made, not authentication and not legal proof that the
+client consented. Running locally means nothing goes out over the network; it does not by
+itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
+[`fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md) guardrails first.
 
 ## Reference and contribution
 
