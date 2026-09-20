@@ -317,15 +317,33 @@ def straight_line_schedule(
     if len(months) == 0:
         raise DepreciationEvidenceError("no months to spread the charge across")
     assert evidence.charge is not None
-    per_month = float(evidence.charge) / len(months)
-    if not math.isfinite(per_month):
+    if not math.isfinite(float(evidence.charge)):
         # A finite Decimal beyond float range became an infinite forecast in
         # every month. Nothing in a workpaper is that large; refuse it.
         raise DepreciationEvidenceError(
             f"{evidence.label}: charge {evidence.charge} is outside the range a forecast "
             "series can carry."
         )
-    return pd.Series(per_month, index=months, name="depreciation_expense")
+    # Split in whole cents, the extra cents on the earliest months, so the
+    # months sum back to the evidenced charge: an even float division of
+    # $100.00 over twelve months gave twelve 8.333... figures that summed to
+    # 100.00000000000001, and no month was a figure anyone could post.
+    try:
+        charge = evidence.charge.quantize(Decimal("0.01"))
+    except InvalidOperation as exc:
+        raise DepreciationEvidenceError(
+            f"{evidence.label}: charge {evidence.charge} has too many digits to spread in cents"
+        ) from exc
+    if charge != evidence.charge:
+        raise DepreciationEvidenceError(
+            f"{evidence.label}: charge {evidence.charge} is not a whole-cent amount"
+        )
+    # Split the magnitude, then restore the sign, so a reversal's extra cents
+    # also fall on the earliest months rather than the latest.
+    sign = -1 if charge < 0 else 1
+    cents, extra = divmod(abs(int(charge * 100)), len(months))
+    values = [sign * (cents + (1 if index < extra else 0)) / 100 for index in range(len(months))]
+    return pd.Series(values, index=months, name="depreciation_expense")
 
 
 def cash_and_expense(

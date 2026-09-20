@@ -83,3 +83,20 @@ def test_gst_bas_data_shape():
     assert data["monthly_lodgment_threshold"] == 20000000
     assert set(data["quarterly_due"]) == {"09", "12", "03", "06"}
     assert data["monthly_due_day"] == 21
+
+
+def test_lookups_past_the_verified_horizon_raise():
+    sg = load_super_guarantee_table()
+    payroll = load_payroll_tax_table()
+    assert sg.reviewed_until == date(2027, 6, 30)
+    assert payroll.reviewed_until == date(2027, 6, 30)
+    assert rate_at(sg, date(2027, 6, 30)) == 0.12
+    with pytest.raises(ValueError, match="verified only to 2027-06-30"):
+        rate_at(sg, date(2027, 7, 1))
+    with pytest.raises(ValueError, match="verified only to 2027-06-30"):
+        payroll_tax_at(payroll, "NSW", pd.Period("2031-01", freq="M"))
+
+
+def test_a_plain_list_of_entries_has_no_horizon():
+    entries = list(load_super_guarantee_table())
+    assert rate_at(entries, date(2031, 1, 1)) == 0.12

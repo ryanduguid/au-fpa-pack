@@ -11,9 +11,10 @@ and NT), and a lookup before a table's first entry raises ``ValueError``.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
 from importlib import resources
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import pandas as pd
 import yaml
@@ -52,6 +53,22 @@ class PayrollTaxEntry(BaseModel):
 
 JURISDICTIONS = ("NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT")
 
+_Entry = TypeVar("_Entry", bound=BaseModel)
+
+
+class Schedule(list[_Entry]):
+    """A rate table together with the date its maintainer verified it to.
+
+    The last entry in a table is open-ended, so without a ceiling a lookup
+    for 2031 silently returns whatever was current when the table was last
+    checked. ``reviewed_until`` is that check's horizon; a lookup past it
+    raises until someone re-verifies the sources and moves the date.
+    """
+
+    def __init__(self, entries: Iterable[_Entry], reviewed_until: date | None) -> None:
+        super().__init__(entries)
+        self.reviewed_until = reviewed_until
+
 
 def _load_yaml(name: str) -> dict[str, Any]:
     ref = resources.files("pyfpa.au.data").joinpath(name)
@@ -59,18 +76,41 @@ def _load_yaml(name: str) -> dict[str, Any]:
     return loaded
 
 
-def load_super_guarantee_table() -> list[RateEntry]:
+def _reviewed_until(raw: dict[str, Any], name: str) -> date:
+    value = raw.get("reviewed_until")
+    if not isinstance(value, date):
+        raise ValueError(f"{name} must state reviewed_until as an ISO date")
+    return value
+
+
+def load_super_guarantee_table() -> Schedule[RateEntry]:
     """Super guarantee rate schedule, oldest first."""
     raw = _load_yaml("super_guarantee.yaml")
     entries = [RateEntry.model_validate(item) for item in raw["schedule"]]
-    return sorted(entries, key=lambda e: e.effective_from)
+    return Schedule(
+        sorted(entries, key=lambda e: e.effective_from),
+        _reviewed_until(raw, "super_guarantee.yaml"),
+    )
 
 
-def load_payroll_tax_table() -> list[PayrollTaxEntry]:
+def load_payroll_tax_table() -> Schedule[PayrollTaxEntry]:
     """Payroll tax rate/threshold entries for all jurisdictions, oldest first."""
     raw = _load_yaml("payroll_tax.yaml")
     entries = [PayrollTaxEntry.model_validate(item) for item in raw["jurisdictions"]]
-    return sorted(entries, key=lambda e: (e.jurisdiction, e.effective_from))
+    return Schedule(
+        sorted(entries, key=lambda e: (e.jurisdiction, e.effective_from)),
+        _reviewed_until(raw, "payroll_tax.yaml"),
+    )
+
+
+def _within_review(entries: list[Any], when_date: date) -> None:
+    reviewed_until = getattr(entries, "reviewed_until", None)
+    if reviewed_until is not None and when_date > reviewed_until:
+        raise ValueError(
+            f"the schedule was verified only to {reviewed_until.isoformat()}; re-verify it "
+            f"against its sources and extend reviewed_until before forecasting "
+            f"{when_date.isoformat()}"
+        )
 
 
 def load_gst_bas_data() -> dict[str, Any]:
@@ -82,9 +122,11 @@ def rate_at(entries: list[RateEntry], when: date | str | pd.Period) -> float:
     """Rate applying on `when` from an effective-dated schedule.
 
     Accepts a date, ISO string, or monthly Period (start of month is used).
-    Raises ValueError when `when` predates the whole schedule.
+    Raises ValueError when `when` predates the whole schedule or falls after
+    the date the schedule was verified to.
     """
     when_date = _as_date(when)
+    _within_review(entries, when_date)
     applicable = [e for e in entries if e.effective_from <= when_date]
     if not applicable:
         raise ValueError(f"no rate effective on {when_date.isoformat()}")
@@ -96,6 +138,7 @@ def payroll_tax_at(
 ) -> PayrollTaxEntry:
     """Payroll tax entry for `jurisdiction` applying on `when`."""
     when_date = _as_date(when)
+    _within_review(entries, when_date)
     key = jurisdiction.strip().upper()
     if key not in JURISDICTIONS:
         raise ValueError(f"unknown jurisdiction {jurisdiction!r}; expected one of {JURISDICTIONS}")

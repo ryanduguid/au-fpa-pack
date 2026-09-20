@@ -7,6 +7,9 @@
 # apportionment, QLD deduction taper, WA diminishing threshold, VIC/QLD
 # surcharge tiers and ACT rate tiers are NOT modelled beyond the base
 # rate + threshold; encode entity-specific treatment in a generated skill.
+# The maintainer verified this table to the date below. A lookup after it
+# raises until the sources are re-checked and the date is moved.
+reviewed_until: 2027-06-30
 jurisdictions:
   - jurisdiction: NSW
     from: 2024-07-01
