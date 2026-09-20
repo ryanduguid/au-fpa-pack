@@ -25,7 +25,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
-from pyfpa.io.loaders import read_yaml, write_yaml
+from pyfpa.io.loaders import create_yaml, read_yaml, write_yaml
 from pyfpa.memory.workspace import Workspace
 from pyfpa.portfolio.manifest import canonical_client_path
 from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
@@ -435,14 +435,18 @@ def record_promotion_approval(
     """Write one practitioner-recorded approval and return its path.
 
     This is the only way an approval file comes into being: no mining,
-    validation or promotion step writes one. It refuses to overwrite, so a
-    recorded decision cannot be quietly restated.
+    validation or promotion step writes one. The write is an exclusive create, so
+    a recorded decision cannot be quietly restated, and two writers racing on one
+    digest cannot both believe they recorded it.
     """
     path = approval_path(library, approval.candidate_digest)
-    if path.exists():
-        raise FileExistsError(f"promotion approval already recorded: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
-    write_yaml(path, approval.model_dump())
+    try:
+        create_yaml(path, approval.model_dump())
+    except FileExistsError as error:
+        raise FileExistsError(
+            f"promotion approval already recorded: {path}"
+        ) from error
     return path
 
 

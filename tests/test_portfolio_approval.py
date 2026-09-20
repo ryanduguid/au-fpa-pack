@@ -561,8 +561,12 @@ def test_seeding_records_provenance_in_both_places(tmp_path):
     assert DRIVER in seeds
     assert candidate_digest(candidate) in seeds
     assert "2026-09-20" in seeds
-    assert workspace_id(receiving) in (
-        (library / "provenance" / "seeds.yaml").read_text(encoding="utf-8")
+    index = (library / "provenance" / "seeds.yaml").read_text(encoding="utf-8")
+    assert workspace_id(receiving) in index
+    assert str(receiving.resolve()) not in index      # the index carries ids, not paths
+    assert receiving.name not in index
+    assert str(receiving.resolve()) in (
+        (library / "provenance" / "workspaces.yaml").read_text(encoding="utf-8")
     )
 
 
@@ -653,6 +657,21 @@ def test_recording_an_approval_twice_is_refused(tmp_path):
     _approval(library, candidate)
     with pytest.raises(FileExistsError, match="already recorded"):
         _approval(library, candidate)
+
+
+def test_recording_an_approval_is_an_exclusive_create(tmp_path):
+    # A second writer must lose the race, not overwrite the first decision. The
+    # placeholder is not a valid approval, so a refusal that never reads or
+    # parses it shows the create itself did the checking.
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    library = tmp_path / "library"
+    placeholder = library / "approvals" / f"{candidate_digest(candidate)}.yaml"
+    placeholder.parent.mkdir(parents=True)
+    placeholder.write_text("first writer wins\n", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="already recorded"):
+        _approval(library, candidate)
+    assert placeholder.read_text(encoding="utf-8") == "first writer wins\n"
 
 
 def test_the_statement_is_fixed_text(tmp_path):

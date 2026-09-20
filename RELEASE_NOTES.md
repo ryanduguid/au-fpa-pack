@@ -26,7 +26,12 @@
   and the new `withdraw_prior` removes a prior and reports the workspaces it seeded
   without touching anything inside them.
 - Approval files store contributing workspaces as opaque ids, so nothing in a shared
-  library names a client directory. Building one still accepts paths.
+  library names a client directory. Building one still accepts paths. The library's seed
+  index records the receiving workspace by id too, and `withdraw_prior` resolves ids back
+  to paths through `provenance/workspaces.yaml` when it reports affected workspaces.
+- `record_promotion_approval` writes with an exclusive create through the new
+  `pyfpa.io.loaders.create_yaml`, so a second writer racing on the same digest is
+  refused instead of replacing a recorded decision.
 - `validate_prior` stamps each result it produces, and `promote_prior` refuses a result
   that stamp does not cover, which rejects a `ValidationResult` built by hand, edited on
   disk or carried over from another candidate. The stamp is a per-process structural

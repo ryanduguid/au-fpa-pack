@@ -98,9 +98,10 @@ establishes no client at all. Promotion across two workspaces that resolve to
 one business name requires their workspace ids in the approval's
 `aliases_acknowledged`, alongside review notes.
 
-Shared library records name workspaces by an opaque id, the approval file
-included, with the path-to-id map kept in the library's own `provenance/`
-directory. Seeding a new client records
+Shared library records name workspaces by an opaque id, the approval file and
+the seed index included, with the path-to-id map kept in the library's own
+`provenance/` directory. Recording an approval is an exclusive create, so two
+writers racing on one digest cannot both believe they recorded the decision. Seeding a new client records
 the prior it used, so `withdraw_prior` can report which workspaces hold derived
 artefacts. Withdrawal never deletes anything inside a client workspace; what to
 do with a derived model is a practitioner's decision.

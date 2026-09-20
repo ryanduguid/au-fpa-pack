@@ -24,6 +24,17 @@ def write_yaml(path: str | Path, data: Any) -> None:
     Path(path).write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
 
+def create_yaml(path: str | Path, data: Any) -> None:
+    """Write `data` as UTF-8 YAML only if `path` does not exist yet.
+
+    The exclusive create is the existence check: an `exists()` test followed by a
+    write lets a second writer slip between the two and replace a record the
+    first one just made. Raises `FileExistsError` instead.
+    """
+    with Path(path).open("x", encoding="utf-8", newline="\n") as handle:
+        handle.write(yaml.safe_dump(data, sort_keys=False))
+
+
 def load_cash13_config(path: str | Path) -> Cash13Config:
     """Load and validate a Cash13Config from a YAML file."""
     return Cash13Config.model_validate(read_yaml(path))

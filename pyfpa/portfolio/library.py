@@ -222,8 +222,10 @@ def _write_library_seeds(
         "schema_version": 1,
         "seeds": [],
     }
+    # The receiving workspace goes in by id, like every contributor: the seed
+    # index is a library file, and the path stays in provenance/workspaces.yaml.
     doc["seeds"].extend({
-        "workspace_id": identifier, "workspace": str(workspace.root),
+        "workspace_id": identifier,
         "driver": seed["driver"], "candidate_digest": seed["candidate_digest"],
         "seeded_at": seeded_at,
     } for seed in seeds)
@@ -252,11 +254,24 @@ def withdraw_prior(library: str | Path, candidate_digest: str) -> list[str]:
         raise ValueError(f"no promoted prior with candidate digest {candidate_digest}")
     index = library / "provenance" / "seeds.yaml"
     entries = ((read_yaml(index) if index.exists() else None) or {}).get("seeds", [])
-    seeded: list[str] = []
+    identifiers: list[str] = []
     for entry in entries:
-        if entry.get("candidate_digest") == candidate_digest and entry["workspace"] not in seeded:
-            seeded.append(entry["workspace"])
+        identifier = entry["workspace_id"]
+        if entry.get("candidate_digest") == candidate_digest and identifier not in identifiers:
+            identifiers.append(identifier)
+    known = _workspace_paths(library)
+    seeded = [known[i] for i in identifiers if i in known]
+    unresolved = [i for i in identifiers if i not in known]
     _log(library, f"- withdrawn prior {candidate_digest} "
-                  f"(seeded workspaces {', '.join(workspace_id(p) for p in seeded) or 'none recorded'}; "
+                  f"(seeded workspaces {', '.join(identifiers) or 'none recorded'}"
+                  f"{f', unresolved {unresolved}' if unresolved else ''}; "
                   "derived artefacts in those workspaces are untouched)")
     return seeded
+
+
+def _workspace_paths(library: Path) -> dict[str, str]:
+    """The library's id-to-path map, the one place that holds client paths."""
+    path = library / "provenance" / "workspaces.yaml"
+    doc = (read_yaml(path) if path.exists() else None) or {}
+    workspaces: dict[str, str] = doc.get("workspaces", {})
+    return workspaces
