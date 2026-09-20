@@ -15,6 +15,7 @@ from pyfpa.portfolio.approval import (
     record_screen_findings,
     resolved_support,
     workspace_id,
+    load_promotion_approval,
 )
 from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
 from pyfpa.portfolio.validate import ValidationResult
@@ -138,6 +139,9 @@ def seed_from_library(
     data = cfg.model_dump()
     seeds: list[dict[str, Any]] = []
     for prior in load_library(library)["priors"].get(business_type, []):
+        digest = prior.get("candidate_digest", "")
+        if not isinstance(digest, str) or len(digest) != 64 or load_promotion_approval(library, digest) is None:
+            continue
         apply_override(data, prior["driver"], prior["value"])
         seeds.append({
             "library": str(library), "driver": prior["driver"], "value": prior["value"],
@@ -173,7 +177,7 @@ def _write_library_seeds(
         "seeds": [],
     }
     doc["seeds"].extend({
-        "workspace_id": identifier, "workspace": str(workspace.root),
+        "workspace_id": identifier,
         "driver": seed["driver"], "candidate_digest": seed["candidate_digest"],
         "seeded_at": seeded_at,
     } for seed in seeds)
@@ -203,9 +207,12 @@ def withdraw_prior(library: str | Path, candidate_digest: str) -> list[str]:
     index = library / "provenance" / "seeds.yaml"
     entries = ((read_yaml(index) if index.exists() else None) or {}).get("seeds", [])
     seeded: list[str] = []
+    workspaces = ((read_yaml(library / "provenance" / "workspaces.yaml") or {}).get("workspaces", {}))
     for entry in entries:
-        if entry.get("candidate_digest") == candidate_digest and entry["workspace"] not in seeded:
-            seeded.append(entry["workspace"])
+        identifier = entry.get("workspace_id")
+        path = workspaces.get(identifier)
+        if entry.get("candidate_digest") == candidate_digest and path and path not in seeded:
+            seeded.append(path)
     _log(library, f"- withdrawn prior {candidate_digest} "
                   f"(seeded workspaces {', '.join(workspace_id(p) for p in seeded) or 'none recorded'}; "
                   "derived artefacts in those workspaces are untouched)")
