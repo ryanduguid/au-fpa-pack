@@ -53,7 +53,7 @@ class PayrollTaxEntry(BaseModel):
 
 JURISDICTIONS = ("NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT")
 
-_Entry = TypeVar("_Entry", RateEntry, PayrollTaxEntry)
+_Entry = TypeVar("_Entry", bound=BaseModel)
 
 
 class Schedule(list[_Entry]):
