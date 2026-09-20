@@ -104,7 +104,9 @@ Record the step number, exactly what you did, what you observed and what you
 expected, plus your Excel version and operating system. Attach a screenshot only if
 it contains no client or personal data. Open an issue at
 <https://github.com/ryanduguid/au-fpa-pack/issues> or return the table by whatever
-channel you agreed.
+channel you agreed. A suspected security vulnerability is the one exception: report
+it privately through the repository's Security tab as [SECURITY.md](../../SECURITY.md)
+describes, never in a public issue.
 
 ## Consent and attribution
 
