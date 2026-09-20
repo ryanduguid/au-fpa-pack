@@ -604,16 +604,17 @@ def test_an_unapproved_library_entry_cannot_seed(tmp_path):
     # A hand-authored entry with no digest at all.
     priors = library / "priors" / "d2c.yaml"
     doc = read_yaml(priors)
+    promoted = dict(doc["priors"][0])
     doc["priors"].append({"driver": "tax_rate", "value": 0.25})
     write_yaml(priors, doc)
-    with pytest.raises(PromotionDenied, match="no recorded approval"):
+    with pytest.raises(PromotionDenied, match="no candidate digest"):
         seed_from_library(library, "d2c", _cfg(30.0),
                           company_root=receiving, seeded_at="2026-09-21")
 
-    # A digest whose approval is not in the library.
+    # A digest with no support ids to re-digest from.
     doc["priors"][-1]["candidate_digest"] = "0" * 64
     write_yaml(priors, doc)
-    with pytest.raises(PromotionDenied, match="0{64}"):
+    with pytest.raises(PromotionDenied, match="not in the provenance map"):
         seed_from_library(library, "d2c", _cfg(30.0),
                           company_root=receiving, seeded_at="2026-09-21")
     assert not (receiving / ".fpa" / "library-seeds.yaml").exists()
@@ -623,6 +624,55 @@ def test_an_unapproved_library_entry_cannot_seed(tmp_path):
     seeded = seed_from_library(library, "d2c", _cfg(30.0),
                                company_root=receiving, seeded_at="2026-09-21")
     assert seeded.working_capital.dio_days == 45.0
+
+    # An approval removed from the library stops the entry seeding again.
+    (library / "approvals" / f"{promoted['candidate_digest']}.yaml").unlink()
+    with pytest.raises(PromotionDenied, match="is not in the library"):
+        seed_from_library(library, "d2c", _cfg(30.0),
+                          company_root=receiving, seeded_at="2026-09-21")
+
+
+def test_an_edited_library_prior_cannot_seed(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    library = tmp_path / "library"
+    _approval(library, candidate)
+    promote_prior(library, candidate, _validated(clients, candidate))
+    priors = library / "priors" / "d2c.yaml"
+    doc = read_yaml(priors)
+    recorded = doc["priors"][0]["value"]
+
+    for field, value in (("value", 52.0), ("driver", "working_capital.dso_days")):
+        edited = read_yaml(priors)
+        edited["priors"][0][field] = value
+        write_yaml(priors, edited)
+        with pytest.raises(PromotionDenied, match="edited after promotion"):
+            seed_from_library(library, "d2c", _cfg(30.0),
+                              company_root=tmp_path / "fourth", seeded_at="2026-09-21")
+
+    write_yaml(priors, doc)
+    seeded = seed_from_library(library, "d2c", _cfg(30.0),
+                               company_root=tmp_path / "fourth", seeded_at="2026-09-21")
+    assert seeded.working_capital.dio_days == recorded
+
+
+def test_an_approval_at_another_digests_filename_is_refused(tmp_path):
+    clients = _three_clients(tmp_path)
+    candidate = _prior(clients)
+    library = tmp_path / "library"
+    approval = _approval(library, candidate)
+    other = candidate.model_copy(update={"value": 52.0})
+    other_digest = candidate_digest(other)
+    copied = library / "approvals" / f"{other_digest}.yaml"
+    copied.write_bytes((library / "approvals" / f"{approval.candidate_digest}.yaml").read_bytes())
+
+    with pytest.raises(PromotionDenied, match=f"not the {other_digest}"):
+        promote_prior(library, other, _attested(other_digest))
+    # The record it was copied from keeps its own findings and stays where it is.
+    stored = load_promotion_approval(library, approval.candidate_digest)
+    assert stored is not None
+    assert stored.candidate_digest == approval.candidate_digest
+    assert not (library / "priors").exists()
 
 
 def test_a_candidate_value_that_was_not_validated_is_refused(tmp_path):

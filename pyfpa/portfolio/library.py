@@ -118,7 +118,7 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     _log(library, f"- prior `{candidate.driver}` = {candidate.value} for {candidate.business_type} "
                   f"(contributors {', '.join(support_ids)}, approval {digest}, "
                   f"delta {validation.mean_delta:+.4f})")
-    record_screen_findings(library, approval, findings)
+    record_screen_findings(library, digest, approval, findings)
 
 
 def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
@@ -148,7 +148,7 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
         target.write_bytes(data)
     _log(library, f"- skill `{candidate.name}` for {candidate.business_type} "
                   f"(contributors {', '.join(support_ids)}, approval {digest})")
-    record_screen_findings(library, approval, findings)
+    record_screen_findings(library, digest, approval, findings)
 
 
 def seed_from_library(
@@ -176,16 +176,14 @@ def seed_from_library(
     data = cfg.model_dump()
     seeds: list[dict[str, Any]] = []
     priors = load_library(library)["priors"].get(business_type, [])
-    unapproved = [
-        f"{prior.get('driver')} (digest {prior.get('candidate_digest') or 'absent'})"
+    refused = [
+        f"{prior.get('driver')}: {reason}"
         for prior in priors
-        if not prior.get("candidate_digest")
-        or load_promotion_approval(library, prior["candidate_digest"]) is None
+        if (reason := _seeding_refusal(library, business_type, prior)) is not None
     ]
-    if unapproved:
+    if refused:
         raise PromotionDenied(
-            "these library priors have no recorded approval, so they cannot seed a "
-            f"client: {unapproved}"
+            f"these library priors cannot seed a client: {refused}"
         )
     for prior in priors:
         apply_override(data, prior["driver"], prior["value"])
@@ -197,6 +195,40 @@ def seed_from_library(
         workspace = _write_workspace_seeds(company_root, seeds)
         _write_library_seeds(library, workspace, seeds, seeded_at)
     return EntityConfig.model_validate(data)
+
+
+def _seeding_refusal(
+    library: Path, business_type: str, prior: dict[str, Any]
+) -> str | None:
+    """Why this stored prior cannot seed a client, or None when it can.
+
+    Everything in the entry is editable text on disk, so the approval file
+    existing is not enough: the driver, business type, value and support ids are
+    digested again and must reproduce the digest the promotion recorded.
+    """
+    digest = prior.get("candidate_digest")
+    if not digest:
+        return "no candidate digest, so no approval can cover it"
+    known = _workspace_paths(library)
+    support_ids = prior.get("support_ids") or []
+    missing = [identifier for identifier in support_ids if identifier not in known]
+    if not support_ids or missing:
+        return f"support ids are not in the provenance map: {missing or 'none recorded'}"
+    recomputed = candidate_digest(PriorCandidate(
+        business_type=business_type,
+        driver=prior["driver"],
+        value=prior["value"],
+        support=[known[identifier] for identifier in support_ids],
+        dispersion=0.0,
+    ))
+    if recomputed != digest:
+        return (
+            f"the entry digests to {recomputed}, not the recorded {digest}: it was "
+            "edited after promotion"
+        )
+    if load_promotion_approval(library, digest) is None:
+        return f"approval {digest} is not in the library"
+    return None
 
 
 def _write_workspace_seeds(company_root: str | Path, seeds: list[dict[str, Any]]) -> Workspace:

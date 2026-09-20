@@ -79,8 +79,12 @@ symlink, junction or other reparse point in the tree is refused rather than
 followed.
 
 Reading the library is the same boundary as writing it, so seeding a client from
-the library refuses any prior whose approval is not on disk, including a legacy
-or hand-authored entry with no candidate digest.
+the library digests each stored prior again from its driver, business type, value
+and contributing workspaces, and refuses it unless that reproduces the digest the
+promotion recorded and the approval for that digest is on disk. A legacy or
+hand-authored entry, and an entry edited after promotion, are both refused. An
+approval file is located by digest and must record that same digest, so a record
+copied onto another candidate's filename approves nothing.
 
 The automated confidentiality screen looks for ABN and TFN shaped numbers,
 email addresses, Australian phone numbers, BSB and account patterns, dollar

@@ -41,8 +41,13 @@
 - `promote_skill` reads the skill tree once and writes those exact bytes, instead of
   copying the client's directory again after the screen, and refuses a symlink, junction
   or other reparse point inside the tree.
-- `seed_from_library` refuses any library prior whose approval is not on disk, including
-  a legacy entry with no candidate digest.
+- `seed_from_library` digests each stored prior again from its driver, business type,
+  value and contributing workspace ids, and refuses it unless that reproduces the
+  recorded digest and its approval is on disk. A legacy entry with no digest, and an
+  entry edited after promotion, are both refused.
+- Loading an approval checks that the record's own `candidate_digest` is the one it was
+  looked up by, so a record copied onto another candidate's filename is refused, and the
+  findings stamp writes to the digest the gate verified.
 - Documentation states that "nothing leaves your machine" is about network egress and
   does not by itself permit moving one client's information into another client's work.
 

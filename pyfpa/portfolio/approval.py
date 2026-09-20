@@ -422,11 +422,23 @@ def approval_path(library: str | Path, digest: str) -> Path:
 def load_promotion_approval(
     library: str | Path, candidate_digest: str
 ) -> PromotionApproval | None:
-    """The recorded approval for `candidate_digest`, or None when there is none."""
+    """The recorded approval for `candidate_digest`, or None when there is none.
+
+    The filename is a lookup key, not evidence. An approval whose own
+    `candidate_digest` is not the one asked for is refused, so a record copied or
+    renamed onto another candidate's filename cannot approve that candidate.
+    """
     path = approval_path(library, candidate_digest)
     if not path.is_file():
         return None
-    return PromotionApproval.model_validate(read_yaml(path))
+    approval = PromotionApproval.model_validate(read_yaml(path))
+    if approval.candidate_digest != candidate_digest:
+        raise PromotionDenied(
+            f"approval file {path.name} records candidate digest "
+            f"{approval.candidate_digest}, not the {candidate_digest} it was read "
+            "for: it approves a different candidate"
+        )
+    return approval
 
 
 def record_promotion_approval(
@@ -451,15 +463,19 @@ def record_promotion_approval(
 
 
 def record_screen_findings(
-    library: str | Path, approval: PromotionApproval, findings: list[str]
+    library: str | Path,
+    candidate_digest: str,
+    approval: PromotionApproval,
+    findings: list[str],
 ) -> None:
     """Stamp the screen's findings into a recorded approval after a promotion.
 
     It replaces `confidentiality_review.automated_checks` with what the screen
     actually saw, which the gate has already established the reviewer covered.
-    Nothing else in the approval changes.
+    Nothing else in the approval changes. `candidate_digest` is the digest the
+    gate verified, so the write lands on the file the gate read.
     """
-    path = approval_path(library, approval.candidate_digest)
+    path = approval_path(library, candidate_digest)
     updated = approval.model_copy(deep=True)
     updated.confidentiality_review.automated_checks = list(findings)
     write_yaml(path, updated.model_dump())
