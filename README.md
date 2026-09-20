@@ -5,6 +5,18 @@
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-5C2D91.svg?labelColor=04001F)](LICENSE)
 [![python](https://img.shields.io/badge/python-3.11%2B-5C2D91.svg?labelColor=04001F)](https://www.python.org/)
 
+An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
+Guiderail: 30 June financial years, Xero AU account mapping, GST and BAS cash timing
+and payroll on-costs. It builds monthly, weekly and daily cash forecasts and a
+management briefing from a company's own records, for an accountant or analyst doing
+forecasting and month-end work. Every assumption is declared in a file you can read,
+and the funding decision stays with a person.
+
+**Start here:** [the worked Lumbridge case](examples/lumbridge-services/README.md) ·
+[setup](docs/installation.md) ·
+[Australian scope and source dates](docs/australian-pack.md) ·
+[the case explained on the web](https://duguid.com.au/examples/profit-vs-cash-flow/)
+
 Synthetic example. Forecasting aid, not tax advice; a human approves the assumptions and funding decision.
 
 **Input:** [Lumbridge Services' fabricated records](examples/lumbridge-services/data/), NSW payroll assumptions and dated customer receipts and payments for October to December 2026.
