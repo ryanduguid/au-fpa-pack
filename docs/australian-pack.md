@@ -108,6 +108,29 @@ Worked examples on this fork:
 - [`examples/arb/`](../examples/arb/) - ARB Corporation (ASX: ARB) from the FY2025
   Appendix 4E. Annual public proof, not a GST model.
 
+### Cross-client reuse in an Australian practice
+
+The portfolio loop can carry a prior or a generated skill from one client's
+workspace into another's. That is a confidentiality decision before it is a
+modelling one, so `pyfpa/portfolio` refuses to make it: a promotion needs a
+`PromotionApproval` recorded against the exact candidate, with the purpose, the
+contributing workspaces, the authorisation it rests on and a confidentiality
+review. See [SECURITY.md](../SECURITY.md) for the mechanics and
+[`skills/fpa-portfolio-learn`](../skills/fpa-portfolio-learn/SKILL.md) for the
+workflow.
+
+Two points worth stating plainly for practice use:
+
+- "Nothing leaves your machine" describes network egress. It does not permit
+  moving one client's information into another client's engagement file. Weigh
+  the engagement terms, the confidentiality requirements in the APES 110 Code of
+  Ethics and, for personal information, the Australian Privacy Principles.
+- The recorded approval is an acknowledgement by the practitioner. It is not
+  authentication, it is not legal proof of client consent, and it is not a
+  substitute for advice on your obligations. The automated screen for ABNs,
+  TFNs, contact details, bank details and client names assists that review and
+  proves nothing.
+
 Proposed upstream in
 [JeffBrines/openfpa#14](https://github.com/JeffBrines/openfpa/issues/14).
 This fork is not a claim to be upstream.
