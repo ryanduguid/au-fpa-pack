@@ -16,7 +16,9 @@ is present.
 from __future__ import annotations
 
 import hashlib
+import os
 import re
+import yaml
 from datetime import date
 from pathlib import Path
 
@@ -199,7 +201,9 @@ class PromotionApproval(BaseModel):
     def _resolved_paths(cls, value: list[str]) -> list[str]:
         if not value:
             raise ValueError("promotion approval requires contributing_workspaces")
-        return resolved_support(value)
+        # Approvals are shared records: never persist the source paths. Accept
+        # paths for the practitioner-facing API, but normalise them to ids.
+        return sorted({v if re.fullmatch(r"[0-9a-f]{16}", v) else workspace_id(v) for v in value})
 
     @field_validator("statement")
     @classmethod
@@ -355,10 +359,18 @@ def record_promotion_approval(
     recorded decision cannot be quietly restated.
     """
     path = approval_path(library, approval.candidate_digest)
-    if path.exists():
-        raise FileExistsError(f"promotion approval already recorded: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
-    write_yaml(path, approval.model_dump())
+    try:
+        # Exclusive creation closes the check-then-write race between recorders.
+        with path.open("x", encoding="utf-8") as handle:
+            handle.write(yaml.safe_dump(approval.model_dump(), sort_keys=False))
+            handle.flush()
+            os.fsync(handle.fileno())
+    except FileExistsError:
+        raise FileExistsError(f"promotion approval already recorded: {path}")
+    except Exception:
+        path.unlink(missing_ok=True)
+        raise
     return path
 
 
@@ -397,11 +409,12 @@ def _check_scope(approval: PromotionApproval, candidate: PriorCandidate | SkillC
 
 
 def _check_contributors(approval: PromotionApproval, support: list[str]) -> None:
-    if approval.contributing_workspaces != support:
+    approved = sorted(approval.contributing_workspaces)
+    candidate_ids = sorted(workspace_id(p) for p in support)
+    if approved != candidate_ids:
         raise PromotionDenied(
             "approval contributing_workspaces do not match the candidate's support: "
-            f"approved {[workspace_id(p) for p in approval.contributing_workspaces]}, "
-            f"candidate {[workspace_id(p) for p in support]}"
+            f"approved {approved}, candidate {candidate_ids}"
         )
     if len(support) < 2:
         raise PromotionDenied(
