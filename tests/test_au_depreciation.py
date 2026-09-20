@@ -157,6 +157,21 @@ def test_the_spread_is_whole_cents_that_sum_exactly_to_the_charge():
     assert sum(round(value * 100) for value in spread) == 10000
 
 
+def test_a_reversal_puts_its_extra_cents_on_the_earliest_months_too():
+    twelve = pd.period_range("2026-07", periods=12, freq="M")
+    evidence = dep.load_evidence(GOOD)
+    reversal = dep.DepreciationEvidence(**{**evidence.__dict__, "charge": Decimal("-100.00")})
+    spread = dep.straight_line_schedule(reversal, twelve)
+    assert [round(value * 100) for value in spread] == [-834] * 4 + [-833] * 8
+
+
+def test_a_charge_too_wide_for_cents_is_refused_with_the_reason():
+    evidence = dep.load_evidence(GOOD)
+    huge = dep.DepreciationEvidence(**{**evidence.__dict__, "charge": Decimal("1e100")})
+    with pytest.raises(dep.DepreciationEvidenceError, match="too many digits"):
+        dep.straight_line_schedule(huge, months())
+
+
 def test_expense_and_purchases_stay_apart():
     schedule = dep.straight_line_schedule(dep.load_evidence(GOOD), months())
     purchases = pd.Series([120000.0, 0.0, 0.0], index=months())

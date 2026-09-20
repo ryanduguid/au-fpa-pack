@@ -328,13 +328,21 @@ def straight_line_schedule(
     # months sum back to the evidenced charge: an even float division of
     # $100.00 over twelve months gave twelve 8.333... figures that summed to
     # 100.00000000000001, and no month was a figure anyone could post.
-    charge = evidence.charge.quantize(Decimal("0.01"))
+    try:
+        charge = evidence.charge.quantize(Decimal("0.01"))
+    except InvalidOperation as exc:
+        raise DepreciationEvidenceError(
+            f"{evidence.label}: charge {evidence.charge} has too many digits to spread in cents"
+        ) from exc
     if charge != evidence.charge:
         raise DepreciationEvidenceError(
             f"{evidence.label}: charge {evidence.charge} is not a whole-cent amount"
         )
-    cents, extra = divmod(int(charge * 100), len(months))
-    values = [(cents + (1 if index < extra else 0)) / 100 for index in range(len(months))]
+    # Split the magnitude, then restore the sign, so a reversal's extra cents
+    # also fall on the earliest months rather than the latest.
+    sign = -1 if charge < 0 else 1
+    cents, extra = divmod(abs(int(charge * 100)), len(months))
+    values = [sign * (cents + (1 if index < extra else 0)) / 100 for index in range(len(months))]
     return pd.Series(values, index=months, name="depreciation_expense")
 
 
