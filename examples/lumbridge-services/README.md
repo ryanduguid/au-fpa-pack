@@ -21,7 +21,7 @@ uv run --locked --extra dev python examples/lumbridge-services/models/generated/
 Open `examples/lumbridge-services/output/briefing.md` and `lumbridge.xlsx`.
 The same folder holds monthly, weekly and daily CSVs and a JSON summary.
 The runner verifies all 21 monthly workbook lines against the Python model
-before replacing the workbook. Outputs are rebuildable and ignored by Git.
+before replacing the workbook. The briefing, CSVs and JSON summary are committed so the result can be read without running anything; the workbook is rebuilt locally and ignored by Git.
 
 In Excel, change `Assumptions!B2` from 0 to 45. This moves invoice OPEN-V's
 receipt from 14 October to 28 November. Restore 0 after the trial.
