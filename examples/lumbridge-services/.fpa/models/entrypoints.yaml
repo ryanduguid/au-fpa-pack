@@ -20,6 +20,22 @@ entrypoints:
   outputs:
   - output/lumbridge.xlsx
   - output/briefing.md
+- name: lumbridge-recurring-cash
+  kind: cash
+  description: Reconcile closed-period actuals, score the original forecast and preserve
+    a revised snapshot.
+  command:
+  - python
+  - models/generated/recurring.py
+  - --output
+  - output/recurring-cash
+  working_directory: .
+  inputs:
+  - data/refresh-actuals.csv
+  - data/refresh-controls.json
+  - data/receipt-assumptions.csv
+  outputs:
+  - output/recurring-cash/review.json
 - name: lumbridge-workbook
   kind: report
   description: Generate the same verified workbook and matching reports; only receipt

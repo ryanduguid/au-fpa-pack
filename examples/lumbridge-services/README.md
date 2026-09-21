@@ -4,6 +4,9 @@ Lumbridge Services is a fictional maintenance business in Newcastle, NSW.
 Its Varrock maintenance and Falador repairs service lines are OSRS references.
 All amounts are AUD. The business, customers, invoices and accounts are fabricated.
 
+The [recurring cash example](RECURRING.md) retains the original forecast, reconciles
+October actuals and carries a partly paid invoice into November exactly once.
+
 The owner expects $35,957.55 profit before income tax for October to December
 2026. Delaying one $44,000 receipt by 45 days leaves a $25,160 cash shortfall on
 6 November. Both cases end December with $67,320 because the delayed receipt

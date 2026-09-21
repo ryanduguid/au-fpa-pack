@@ -1,0 +1,55 @@
+{
+  "schema_version": "grant-cash-plan.v1",
+  "entity": "Fabricated Community Association",
+  "currency": "AUD",
+  "start": "2027-07-01",
+  "end": "2027-09-30",
+  "opening_bank": "30000",
+  "general_receipts": "0",
+  "general_spend": "0",
+  "funds": [
+    {
+      "id": "G-A",
+      "opening_restricted": "14220",
+      "expected_receipts": [
+        {
+          "id": "FUT-A",
+          "date": "2027-07-15",
+          "amount": "5000",
+          "evidence": "Fabricated conditional funding assumption; receipt is not assured"
+        }
+      ],
+      "renewal_date": "2027-07-01",
+      "restriction_evidence": "Fabricated reviewed carry-forward restriction A",
+      "allocation_evidence": "Fabricated cash allocation decision A",
+      "reviewed": true
+    },
+    {
+      "id": "G-B",
+      "opening_restricted": "7680",
+      "expected_receipts": [],
+      "renewal_date": "2027-09-30",
+      "restriction_evidence": "Fabricated agreement restriction B",
+      "allocation_evidence": "Fabricated cash allocation decision B",
+      "reviewed": true
+    }
+  ],
+  "commitment_plans": [
+    {
+      "id": "PAY-A1",
+      "allocation_id": "A1",
+      "date": "2027-07-05",
+      "amount": "120",
+      "reviewed": true,
+      "evidence": "Fabricated settlement plan for approved allocation"
+    },
+    {
+      "id": "PAY-A2",
+      "allocation_id": "A2",
+      "date": "2027-07-05",
+      "amount": "80",
+      "reviewed": true,
+      "evidence": "Fabricated settlement plan for approved allocation"
+    }
+  ]
+}

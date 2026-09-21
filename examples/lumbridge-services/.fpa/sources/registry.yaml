@@ -68,6 +68,42 @@ sources:
   refreshed_at: ''
   notes: Synthetic case. No live system or client data. Locations are relative to
     the example.
+- source_id: receipt-assumptions
+  kind: local_file
+  location: data/receipt-assumptions.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  - 2026-11
+  - 2026-12
+  - 2027-01
+  extraction_method: Explicit fabricated due dates, receipt plans, disputed amounts
+    and evidence
+  refreshed_at: ''
+  notes: ''
+- source_id: refresh-actuals
+  kind: local_file
+  location: data/refresh-actuals.csv
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  extraction_method: Fabricated complete bank transaction population with explicit
+    source links
+  refreshed_at: ''
+  notes: ''
+- source_id: refresh-controls
+  kind: local_file
+  location: data/refresh-controls.json
+  entity: Lumbridge Services
+  currency: AUD
+  periods:
+  - 2026-10
+  extraction_method: Independently declared fabricated bank and receivables closing
+    controls
+  refreshed_at: ''
+  notes: ''
 - source_id: super-rates
   kind: local_file
   location: ../../pyfpa/au/data/super_guarantee.yaml

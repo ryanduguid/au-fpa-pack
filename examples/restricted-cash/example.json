@@ -1,0 +1,26 @@
+{
+  "currency": "AUD",
+  "opening_cash": "100000",
+  "general_receipts": "5000",
+  "general_spend": "12000",
+  "funds": [
+    {
+      "id": "Programme A",
+      "opening_restricted": "50000",
+      "receipts": "0",
+      "spend": "7000",
+      "renewal_date": "2027-06-30",
+      "restriction_evidence": "Fabricated agreement A",
+      "allocation_evidence": "Fabricated programme cash allocation A"
+    },
+    {
+      "id": "Programme B",
+      "opening_restricted": "30000",
+      "receipts": "0",
+      "spend": "3000",
+      "renewal_date": "2026-12-31",
+      "restriction_evidence": "Fabricated agreement B",
+      "allocation_evidence": "Fabricated programme cash allocation B"
+    }
+  ]
+}
