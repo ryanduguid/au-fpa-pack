@@ -28,7 +28,11 @@ def project(pack: Path) -> dict:
     for row in rows.itertuples():
         when = date.fromisoformat(row.date)
         dr, cr = float(row.receipt), float(row.payment)
-        if not all(math.isfinite(value) and value >= 0 for value in (dr, cr)) or (dr > 0 and cr > 0) or not row.evidence:
+        # The kernel is float-based; reject decimal text that cannot round-trip.
+        from decimal import Decimal
+        if any(Decimal(text) != Decimal(str(value)) for text, value in ((row.receipt, dr), (row.payment, cr))):
+            raise ValueError("Cash amounts exceed float precision")
+        if not all(math.isfinite(value) and value >= 0 for value in (dr, cr)) or (dr > 0) == (cr > 0) or not row.evidence:
             raise ValueError("Cash assumptions require finite one-sided amounts and evidence")
         week = (when - start).days // 7 + 1
         if week < 1:
