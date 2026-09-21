@@ -52,6 +52,12 @@ def refresh(actuals_path: Path, controls_path: Path, assumptions_path: Path) -> 
     planned = ledger.set_index("id")
     if not set(actuals["source_id"]) <= set(planned.index):
         raise ValueError("Unmapped actual bank source ID")
+    # A receipt can only reconcile an invoice billed by the closed month; later
+    # service-month invoices are advances and must not reduce closed-period AR.
+    future_receipts = actuals["receipts"].astype(float).gt(0) & actuals["source_id"].map(
+        planned["date"].dt.to_period("M") > close.to_period("M"))
+    if future_receipts.any():
+        raise ValueError("Receipts cannot be mapped to invoices after the close")
     for row in actuals.itertuples():
         expected_row = planned.loc[row.source_id]
         if row.category != expected_row["category"] or bool(row.receipts) != bool(expected_row["receipts"]):
@@ -110,7 +116,9 @@ def refresh(actuals_path: Path, controls_path: Path, assumptions_path: Path) -> 
     predicted = {"ending_cash": float(base["monthly"].loc[close.to_period("M"), "Closing cash"]),
                  "receipts": float(base["monthly"].loc[closed_months, "Customer receipts"].sum())}
     observed = {"ending_cash": closing_cash, "receipts": float(actuals["receipts"].sum())}
-    score = score_forecast(predicted, observed, weights={"ending_cash": 0.5, "receipts": 0.5}) if all(observed.values()) else None
+    if any(value == 0 for value in observed.values()):
+        raise ValueError("Zero observed metrics require an explicit scoring treatment")
+    score = score_forecast(predicted, observed, weights={"ending_cash": 0.5, "receipts": 0.5})
     if any(path.read_bytes() != source_bytes[path] for path in base_paths):
         raise ValueError("A base forecast source changed during the refresh")
     return {"base": base, "actuals": actuals, "future_items": future, "future_cash": future_cash,
