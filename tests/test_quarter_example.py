@@ -89,3 +89,11 @@ def test_invalid_period_configuration_fails(change):
             case[key][target] = case[key].pop("2026-10-31")
     with pytest.raises(ValueError):
         MODULE["calculate"](case)
+
+
+@pytest.mark.parametrize("planned", ["20261015", "2026-W42-4"])
+def test_noncanonical_plan_dates_are_refused(planned):
+    case = json.loads((ROOT / "case.json").read_text())
+    case["plans"]["2026-09-30"]["S1"] = planned
+    with pytest.raises(ValueError, match="canonical"):
+        MODULE["calculate"](case)

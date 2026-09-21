@@ -43,6 +43,10 @@ def calculate(document: dict) -> list[dict]:
             raise ValueError("Controls must use canonical month-end dates")
         if index and when.year * 12 + when.month != dates[index - 1].year * 12 + dates[index - 1].month + 1:
             raise ValueError("Quarter month ends must be consecutive")
+    for plan in document["plans"].values():
+        for value in plan.values():
+            if date.fromisoformat(value).isoformat() != value:
+                raise ValueError("Plans must use canonical YYYY-MM-DD dates")
     documents, events = {}, set()
     for row in document["documents"]:
         fields = {"id", "book", "counterparty", "date", "due_date", "amount", "apply_to", "evidence"}

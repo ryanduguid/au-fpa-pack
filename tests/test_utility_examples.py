@@ -191,3 +191,14 @@ def test_nfp_rejects_unsupported_restrictions(mutation):
         case["funds"][0].pop("receipts")
     with pytest.raises(ValueError):
         function(case)
+
+
+def test_advance_receipt_cannot_reduce_closed_receivables(refresh_functions, data):
+    path = data / "refresh-actuals.csv"
+    actuals = pd.read_csv(path)
+    invoices = pd.read_csv(data / "invoices.csv")
+    future = invoices[invoices["service_month"] == "2026-11"].iloc[0]
+    actuals.loc[0, "source_id"] = future["id"]
+    actuals.to_csv(path, index=False)
+    with pytest.raises(ValueError, match="customer-deposit"):
+        invoke(refresh_functions, data)

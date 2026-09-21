@@ -92,6 +92,8 @@ def refresh(actuals_path: Path, controls_path: Path, assumptions_path: Path) -> 
     closing_cash = float(base["bs"]["Business Bank Account"] + actuals["receipts"].sum() - actuals["payments"].sum())
     invoices = pd.read_csv(io.BytesIO(source_bytes[actuals_path.parent / "invoices.csv"]))
     billed = invoices[invoices["service_month"] <= str(close.to_period("M"))]
+    if not set(actuals.loc[actuals["receipts"] > 0, "source_id"]) <= set(billed["id"]):
+        raise ValueError("Advance receipts require a separate customer-deposit schedule")
     closing_ar = float(billed[["net", "gst"]].sum().sum() - actuals["receipts"].sum())
     for name, actual in (("closing_cash", closing_cash), ("closing_receivables", closing_ar)):
         control = float(controls[name])
