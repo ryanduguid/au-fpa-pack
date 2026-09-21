@@ -1,0 +1,201 @@
+{
+  "schema_version": "quarter-case.v1",
+  "entity": "Fabricated Quarter Services",
+  "currency": "AUD",
+  "opening_cash": "20000",
+  "opening_equity": "24000",
+  "documents": [
+    {
+      "id": "S1",
+      "book": "AR",
+      "counterparty": "C1",
+      "date": "2026-09-10",
+      "due_date": "2026-10-15",
+      "amount": "10000",
+      "apply_to": "",
+      "evidence": "Fabricated document S1"
+    },
+    {
+      "id": "P1",
+      "book": "AP",
+      "counterparty": "V1",
+      "date": "2026-09-15",
+      "due_date": "2026-10-15",
+      "amount": "6000",
+      "apply_to": "",
+      "evidence": "Fabricated document P1"
+    },
+    {
+      "id": "S2",
+      "book": "AR",
+      "counterparty": "C2",
+      "date": "2026-10-15",
+      "due_date": "2026-11-20",
+      "amount": "5000",
+      "apply_to": "",
+      "evidence": "Fabricated document S2"
+    },
+    {
+      "id": "P2",
+      "book": "AP",
+      "counterparty": "V2",
+      "date": "2026-10-15",
+      "due_date": "2026-11-20",
+      "amount": "3000",
+      "apply_to": "",
+      "evidence": "Fabricated document P2"
+    },
+    {
+      "id": "CS1",
+      "book": "AR",
+      "counterparty": "C1",
+      "date": "2026-10-20",
+      "due_date": "2026-10-20",
+      "amount": "-1000",
+      "apply_to": "S1",
+      "evidence": "Fabricated document CS1"
+    },
+    {
+      "id": "CP1",
+      "book": "AP",
+      "counterparty": "V1",
+      "date": "2026-10-20",
+      "due_date": "2026-10-20",
+      "amount": "-500",
+      "apply_to": "P1",
+      "evidence": "Fabricated document CP1"
+    },
+    {
+      "id": "S3",
+      "book": "AR",
+      "counterparty": "C1",
+      "date": "2026-11-05",
+      "due_date": "2026-12-15",
+      "amount": "4000",
+      "apply_to": "",
+      "evidence": "Fabricated document S3"
+    },
+    {
+      "id": "P3",
+      "book": "AP",
+      "counterparty": "V3",
+      "date": "2026-11-08",
+      "due_date": "2026-11-30",
+      "amount": "2000",
+      "apply_to": "",
+      "evidence": "Fabricated document P3"
+    }
+  ],
+  "settlements": [
+    {
+      "id": "R1",
+      "document_id": "S1",
+      "date": "2026-10-10",
+      "amount": "4000",
+      "evidence": "Fabricated bank line R1"
+    },
+    {
+      "id": "PAY1",
+      "document_id": "P1",
+      "date": "2026-10-10",
+      "amount": "2000",
+      "evidence": "Fabricated bank line PAY1"
+    },
+    {
+      "id": "R2",
+      "document_id": "S1",
+      "date": "2026-11-15",
+      "amount": "5000",
+      "evidence": "Fabricated bank line R2"
+    },
+    {
+      "id": "R3",
+      "document_id": "S2",
+      "date": "2026-11-20",
+      "amount": "2000",
+      "evidence": "Fabricated bank line R3"
+    },
+    {
+      "id": "PAY2",
+      "document_id": "P1",
+      "date": "2026-11-10",
+      "amount": "3500",
+      "evidence": "Fabricated bank line PAY2"
+    },
+    {
+      "id": "PAY3",
+      "document_id": "P2",
+      "date": "2026-11-20",
+      "amount": "1000",
+      "evidence": "Fabricated bank line PAY3"
+    },
+    {
+      "id": "R4",
+      "document_id": "S2",
+      "date": "2026-12-12",
+      "amount": "3000",
+      "evidence": "Fabricated bank line R4"
+    },
+    {
+      "id": "R5",
+      "document_id": "S3",
+      "date": "2026-12-15",
+      "amount": "4000",
+      "evidence": "Fabricated bank line R5"
+    },
+    {
+      "id": "PAY4",
+      "document_id": "P2",
+      "date": "2026-12-18",
+      "amount": "2000",
+      "evidence": "Fabricated bank line PAY4"
+    }
+  ],
+  "plans": {
+    "2026-09-30": {
+      "S1": "2026-10-15",
+      "P1": "2026-10-15"
+    },
+    "2026-10-31": {
+      "S1": "2026-11-15",
+      "S2": "2026-11-20",
+      "P1": "2026-11-10",
+      "P2": "2026-11-20"
+    },
+    "2026-11-30": {
+      "S2": "2026-12-12",
+      "S3": "2026-12-15",
+      "P2": "2026-12-18",
+      "P3": "2026-12-20"
+    },
+    "2026-12-31": {
+      "P3": "2027-01-15"
+    }
+  },
+  "controls": {
+    "2026-09-30": {
+      "cash": "20000",
+      "AR": "10000",
+      "AP": "6000",
+      "evidence": "Independent fabricated month-end control"
+    },
+    "2026-10-31": {
+      "cash": "22000",
+      "AR": "10000",
+      "AP": "6500",
+      "evidence": "Independent fabricated month-end control"
+    },
+    "2026-11-30": {
+      "cash": "24500",
+      "AR": "7000",
+      "AP": "4000",
+      "evidence": "Independent fabricated month-end control"
+    },
+    "2026-12-31": {
+      "cash": "29500",
+      "AR": "0",
+      "AP": "2000",
+      "evidence": "Independent fabricated month-end control"
+    }
+  }
+}

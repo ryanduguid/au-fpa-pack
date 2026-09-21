@@ -14,4 +14,6 @@
 - `research/`: immutable autonomous research epochs
 
 This example uses local fabricated files and has no connector. No forecast
-has been scored against actual results, and no independent trial is recorded.
+has been scored against actual business results, and no independent trial is recorded.
+`RECURRING.md` adds a fabricated October refresh with separate original, scored and
+revised snapshots. It demonstrates bookkeeping and scoring mechanics only.

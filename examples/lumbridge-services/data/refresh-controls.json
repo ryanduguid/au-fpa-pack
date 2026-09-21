@@ -1,0 +1,10 @@
+{
+  "tenant": "Lumbridge Services",
+  "currency": "AUD",
+  "closed_through": "2026-10-31",
+  "closing_cash": -1960,
+  "closing_receivables": 100000,
+  "complete_bank_population": true,
+  "bank_evidence": "Fabricated October bank closing balance: -1960",
+  "receivables_evidence": "Fabricated October receivables control: 100000"
+}

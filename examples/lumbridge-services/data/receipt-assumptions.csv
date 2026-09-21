@@ -1,0 +1,9 @@
+invoice_id,due_date,expected_date,disputed_amount,reason,evidence
+OPEN-V,2026-10-14,2026-11-28,34000,Review assumed receipt delay after partial payment,Fabricated payment plan
+OPEN-F,2026-10-21,2026-10-21,0,Paid in full,B02
+OCT-V,2026-11-13,2026-11-13,0,Original terms,Fabricated contract
+OCT-F,2026-11-20,2026-11-20,0,Original terms,Fabricated contract
+NOV-V,2026-12-14,2026-12-14,0,Forecast invoice,Fabricated sales plan
+NOV-F,2026-12-21,2026-12-21,0,Forecast invoice,Fabricated sales plan
+DEC-V,2027-01-14,2027-01-14,0,Forecast invoice,Fabricated sales plan
+DEC-F,2027-01-21,2027-01-21,0,Forecast invoice,Fabricated sales plan

@@ -17,6 +17,15 @@ and the funding decision stays with a person.
 [Australian scope and source dates](docs/australian-pack.md) ·
 [the case explained on the web](https://duguid.com.au/examples/profit-vs-cash-flow/)
 
+Source examples also cover [refreshing the cash forecast from actuals](examples/lumbridge-services/RECURRING.md),
+[passing the opening balances to close controls](examples/lumbridge-services/CLOSE-HANDOFF.md),
+[tracing WIP into project cash](examples/job-to-cash/README.md) and
+[separating restricted cash](examples/restricted-cash/README.md).
+
+Continue with the [three-month close simulation](examples/quarter-close/README.md),
+[supplier payment plans](examples/creditor-cash/README.md) and
+[grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
+
 Synthetic example. Forecasting aid, not tax advice; a human approves the assumptions and funding decision.
 
 **Input:** [Lumbridge Services' fabricated records](examples/lumbridge-services/data/), NSW payroll assumptions and dated customer receipts and payments for October to December 2026.

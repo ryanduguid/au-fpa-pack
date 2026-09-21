@@ -1,0 +1,13 @@
+transaction_id,source_id,date,category,receipts,payments
+B01,OPEN-V,2026-10-12,Customer receipt,10000,0
+B02,OPEN-F,2026-10-21,Customer receipt,22000,0
+B03,PAY-01,2026-10-07,Materials,0,13200
+B04,PAY-02,2026-10-15,Loan principal,0,1000
+B05,PAY-03,2026-10-15,Interest,0,200
+B06,PAY-04,2026-10-20,Overhead,0,6600
+B07,PAY-05,2026-10-20,Workers compensation,0,480
+B08,PAY-06,2026-10-21,PAYG withholding,0,5000
+B09,PAY-07,2026-10-28,Net wages,0,19000
+B10,PAY-08,2026-10-28,Super,0,2880
+B11,PAY-25,2026-10-28,GST settlement,0,12600
+B12,PAY-26,2026-10-28,Income tax instalment,0,3000

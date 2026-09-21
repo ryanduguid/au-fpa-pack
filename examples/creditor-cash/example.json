@@ -1,0 +1,51 @@
+{
+  "schema_version": "supplier-cash.v1",
+  "entity": "Fabricated Services",
+  "currency": "AUD",
+  "cutoff": "2026-10-31",
+  "control_balance": "3500",
+  "invoices": [
+    {
+      "id": "P1",
+      "supplier_id": "SUP1",
+      "original": "6000",
+      "settled": "2000",
+      "outstanding": "4000",
+      "due_date": "2026-10-15",
+      "expected_date": "2026-11-20",
+      "disputed": "0",
+      "apply_to": "",
+      "evidence": "Fabricated supplier invoice and partial settlement"
+    },
+    {
+      "id": "C1",
+      "supplier_id": "SUP1",
+      "original": "-500",
+      "settled": "0",
+      "outstanding": "-500",
+      "due_date": "2026-10-20",
+      "expected_date": "2026-11-20",
+      "disputed": "0",
+      "apply_to": "P1",
+      "evidence": "Fabricated credit note allocation"
+    }
+  ],
+  "payment_plan": [
+    {
+      "id": "PAY1",
+      "invoice_id": "P1",
+      "date": "2026-11-10",
+      "amount": "1000",
+      "approved": true,
+      "evidence": "Fabricated reviewed payment plan"
+    },
+    {
+      "id": "PAY2",
+      "invoice_id": "P1",
+      "date": "2026-11-20",
+      "amount": "2500",
+      "approved": true,
+      "evidence": "Fabricated reviewed payment plan"
+    }
+  ]
+}

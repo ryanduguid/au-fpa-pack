@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "entity": "Fabricated Community Association",
+  "currency": "AUD",
+  "ledger_start": "2026-07-01",
+  "ledger_end": "2027-06-30",
+  "amount_basis": "GST-inclusive",
+  "source_sha256": {
+    "agreements.json": "b785c92cfcef199c476b9bf6c1fac826316e92f9b7a0e51643afbe72ad222296",
+    "ledger.csv": "c79b766626dc324c410f5df5d4a776aa8c3fa898620c0a4e1db632d11d1dce39",
+    "allocations.csv": "d7d41ce60531ff60b1f6055b114ec18f32c56dffd550c390f04e4bedac241002",
+    "receipts.csv": "b2297f90be34abda6ac266d7bd24df78ee944677e4d01d256d135a87e6bdfad4"
+  },
+  "status": "REVIEW",
+  "ledger_total": "6500",
+  "allocated_total": "6300",
+  "unallocated_total": "200",
+  "budget_lines": [
+    {
+      "grant_id": "G-A",
+      "budget_line": "Delivery",
+      "budget": "10000",
+      "allocated": "3600",
+      "within_period": "3600",
+      "approved_evidenced_in_period": "600",
+      "cash_allocated": "480"
+    },
+    {
+      "grant_id": "G-A",
+      "budget_line": "Administration",
+      "budget": "2000",
+      "allocated": "300",
+      "within_period": "300",
+      "approved_evidenced_in_period": "300",
+      "cash_allocated": "300"
+    },
+    {
+      "grant_id": "G-B",
+      "budget_line": "Delivery",
+      "budget": "12000",
+      "allocated": "2400",
+      "within_period": "400",
+      "approved_evidenced_in_period": "400",
+      "cash_allocated": "2320"
+    },
+    {
+      "grant_id": "G-B",
+      "budget_line": "Administration",
+      "budget": "2000",
+      "allocated": "0",
+      "within_period": "0",
+      "approved_evidenced_in_period": "0",
+      "cash_allocated": "0"
+    }
+  ],
+  "funding_movements": [
+    {
+      "grant_id": "G-A",
+      "opening_cash": "10000",
+      "opening_unspent_funding": "8000",
+      "funding_received": "5000",
+      "expenditure_allocated": "3900",
+      "cash_paid_allocated": "780",
+      "closing_cash_allocation": "14220",
+      "unspent_funding_workpaper": "9100"
+    },
+    {
+      "grant_id": "G-B",
+      "opening_cash": "0",
+      "opening_unspent_funding": "0",
+      "funding_received": "10000",
+      "expenditure_allocated": "2400",
+      "cash_paid_allocated": "2320",
+      "closing_cash_allocation": "7680",
+      "unspent_funding_workpaper": "7600"
+    }
+  ],
+  "allocation_evidence": [
+    {
+      "allocation_id": "A1",
+      "ledger_id": "L1",
+      "grant_id": "G-A",
+      "budget_line": "Delivery",
+      "amount": "600",
+      "cash_allocated": "480",
+      "approved": "yes",
+      "evidence": "Fabricated reviewed allocation 60 per cent",
+      "ledger_date": "2026-10-15",
+      "source_evidence": "Fabricated invoice L1",
+      "agreement_evidence": "Fabricated reviewed summary A",
+      "within_period": "yes"
+    },
+    {
+      "allocation_id": "A2",
+      "ledger_id": "L1",
+      "grant_id": "G-B",
+      "budget_line": "Delivery",
+      "amount": "400",
+      "cash_allocated": "320",
+      "approved": "yes",
+      "evidence": "Fabricated reviewed allocation 40 per cent",
+      "ledger_date": "2026-10-15",
+      "source_evidence": "Fabricated invoice L1",
+      "agreement_evidence": "Fabricated reviewed summary B",
+      "within_period": "yes"
+    },
+    {
+      "allocation_id": "A3",
+      "ledger_id": "L2",
+      "grant_id": "G-B",
+      "budget_line": "Delivery",
+      "amount": "2000",
+      "cash_allocated": "2000",
+      "approved": "yes",
+      "evidence": "Fabricated allocation pending period review",
+      "ledger_date": "2026-09-15",
+      "source_evidence": "Fabricated invoice L2",
+      "agreement_evidence": "Fabricated reviewed summary B",
+      "within_period": "no"
+    },
+    {
+      "allocation_id": "A4",
+      "ledger_id": "L3",
+      "grant_id": "G-A",
+      "budget_line": "Delivery",
+      "amount": "3000",
+      "cash_allocated": "0",
+      "approved": "no",
+      "evidence": "",
+      "ledger_date": "2026-11-20",
+      "source_evidence": "",
+      "agreement_evidence": "Fabricated reviewed summary A",
+      "within_period": "yes"
+    },
+    {
+      "allocation_id": "A5",
+      "ledger_id": "L4",
+      "grant_id": "G-A",
+      "budget_line": "Administration",
+      "amount": "300",
+      "cash_allocated": "300",
+      "approved": "yes",
+      "evidence": "Fabricated partial allocation",
+      "ledger_date": "2026-12-01",
+      "source_evidence": "Fabricated invoice L4",
+      "agreement_evidence": "Fabricated reviewed summary A",
+      "within_period": "yes"
+    }
+  ],
+  "ledger_tieout": [
+    {
+      "ledger_id": "L1",
+      "source_amount": "1000",
+      "allocated": "1000",
+      "unallocated": "0",
+      "source_cash_paid": "800",
+      "cash_allocated": "800",
+      "cash_unallocated": "0"
+    },
+    {
+      "ledger_id": "L2",
+      "source_amount": "2000",
+      "allocated": "2000",
+      "unallocated": "0",
+      "source_cash_paid": "2000",
+      "cash_allocated": "2000",
+      "cash_unallocated": "0"
+    },
+    {
+      "ledger_id": "L3",
+      "source_amount": "3000",
+      "allocated": "3000",
+      "unallocated": "0",
+      "source_cash_paid": "0",
+      "cash_allocated": "0",
+      "cash_unallocated": "0"
+    },
+    {
+      "ledger_id": "L4",
+      "source_amount": "500",
+      "allocated": "300",
+      "unallocated": "200",
+      "source_cash_paid": "500",
+      "cash_allocated": "300",
+      "cash_unallocated": "200"
+    }
+  ],
+  "findings": [
+    {
+      "code": "MISSING_SOURCE_EVIDENCE",
+      "reference": "L3"
+    },
+    {
+      "code": "OUTSIDE_AGREEMENT_PERIOD",
+      "reference": "A3"
+    },
+    {
+      "code": "MISSING_ALLOCATION_EVIDENCE",
+      "reference": "A4"
+    },
+    {
+      "code": "UNAPPROVED_ALLOCATION",
+      "reference": "A4"
+    },
+    {
+      "code": "UNALLOCATED_SOURCE",
+      "reference": "L4"
+    }
+  ],
+  "scope": "Workpaper arithmetic and supplied review decisions only. No grant eligibility, income recognition, liability, acquittal approval or lodgement decision."
+}
