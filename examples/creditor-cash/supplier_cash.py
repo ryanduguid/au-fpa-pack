@@ -24,8 +24,15 @@ def supplier_cash(document: dict) -> dict:
     if cutoff.isoformat() != document["cutoff"]:
         raise ValueError("Cutoff must use YYYY-MM-DD")
     rows = document["invoices"]
-    if not isinstance(rows, list) or not rows:
-        raise ValueError("A non-empty supplier population is required")
+    if not isinstance(rows, list):
+        raise ValueError("invoices must be a list")
+    if not rows:
+        if Decimal(document["control_balance"]) != 0 or document["payment_plan"]:
+            raise ValueError("Empty supplier population requires zero control and no plan")
+        return {"schema_version": "supplier-cash-result.v1", "entity": document["entity"],
+                "currency": "AUD", "cutoff": document["cutoff"], "control_balance": "0",
+                "ledger_outstanding": "0", "payments": [], "payment_total": "0",
+                "invoice_evidence": [], "scope": "No supplier population."}
     suppliers, invoices = {}, []
     for row in rows:
         if not isinstance(row, dict) or not isinstance(row.get("supplier_id"), str) or not row["supplier_id"].strip():

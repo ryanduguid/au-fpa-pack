@@ -38,6 +38,9 @@ def calculate(document: dict) -> list[dict]:
     if len(cutoffs) != 4 or set(document["plans"]) != set(cutoffs):
         raise ValueError("Opening and three month-end plans and controls are required")
     dates = [date.fromisoformat(value) for value in cutoffs]
+    for plan in document["plans"].values():
+        if not isinstance(plan, dict) or any(date.fromisoformat(value).isoformat() != value for value in plan.values()):
+            raise ValueError("Plans must use canonical dates")
     for index, when in enumerate(dates):
         if when.isoformat() != cutoffs[index] or when.day != calendar.monthrange(when.year, when.month)[1]:
             raise ValueError("Controls must use canonical month-end dates")
@@ -48,9 +51,12 @@ def calculate(document: dict) -> list[dict]:
         fields = {"id", "book", "counterparty", "date", "due_date", "amount", "apply_to", "evidence"}
         if set(row) != fields or not row["id"] or row["id"] in documents or row["book"] not in {"AR", "AP"} or not row["evidence"]:
             raise ValueError("Documents require unique IDs, a book and evidence")
-        for field in ("date", "due_date"):
-            if date.fromisoformat(row[field]).isoformat() != row[field]:
+        parsed_dates = {field: date.fromisoformat(row[field]) for field in ("date", "due_date")}
+        for field, parsed in parsed_dates.items():
+            if parsed.isoformat() != row[field]:
                 raise ValueError("Use canonical dates")
+        if parsed_dates["due_date"] < parsed_dates["date"]:
+            raise ValueError("Due date cannot precede issue date")
         if row["date"] > cutoffs[-1] or amount(row["amount"]) == 0 or not row["counterparty"]:
             raise ValueError("Document is outside the supported quarter")
         documents[row["id"]] = row
