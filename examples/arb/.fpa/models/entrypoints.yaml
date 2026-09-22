@@ -2,7 +2,7 @@ schema_version: 1
 entrypoints:
 - name: arb-pipeline
   kind: forecast
-  description: Run ARB actual-driver reproduction, historical holdout, forward forecast,
+  description: Run ARB actual-driver reproduction, retrospective comparison, forward forecast,
     and THB/tariff sensitivity.
   command:
   - python3

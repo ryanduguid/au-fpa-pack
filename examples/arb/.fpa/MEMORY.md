@@ -7,8 +7,8 @@
 - `corrections/`: none
 - `forecasts/`: none committed
 - `scorecard.md`: unused on a 2-year public proof
-- `learnings.md`: holdout lesson (export growth is not company-wide)
+- `learnings.md`: retrospective lesson (export growth is not company-wide)
 - `experiments/`: none
 - `decisions/`: approved demo architecture
 - `models/`: flat FY2024 champion and unpromoted export-led challenger
-- `research/`: holdout objective and epochs written by run_arb.py
+- `research/`: evaluation objective and epochs written by run_arb.py

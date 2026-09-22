@@ -4,7 +4,7 @@ champion:
   created: '2026-08-20'
   artifact: arb_model.py
   source_epoch: null
-  description: Flat FY2024 operating run rate used as the FY2025 holdout champion.
+  description: Flat FY2024 operating run rate used as the FY2025 retrospective baseline.
 challengers:
 - model_id: arb-export-led-150bps
   created: '2026-08-20'

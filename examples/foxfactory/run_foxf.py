@@ -434,7 +434,7 @@ def phase_d(forecast: pd.DataFrame) -> tuple[str, pd.DataFrame, pd.DataFrame]:
     lines = [
         "# Phase D - Marucci divestiture sensitivity",
         "",
-        "**Most assumption-heavy part of the exercise - a labeled sensitivity.**",
+        "**Most assumption-heavy part of the exercise - a labelled sensitivity.**",
         "Marucci sits inside SSG and is not reported standalone. Estimates are anchored",
         "to the acquisition disclosures: Fox paid **$567.2M** (Nov 2023), incl. $279M of",
         (
@@ -447,6 +447,12 @@ def phase_d(forecast: pd.DataFrame) -> tuple[str, pd.DataFrame, pd.DataFrame]:
         "$567M paid - sports-equipment multiples compressed since 2023). Proceeds pay",
         f"down the term loan at {fm.DEBT_RATE * 100:.0f}%, cutting interest. One-time",
         "proceeds are excluded from FCF; they reduce net debt for the leverage line.",
+        "",
+        "Leverage uses debt less cash at the end of FY2027 divided by modelled",
+        "EBITDA summed over the final 12 forecast months. That EBITDA follows the",
+        "segment Adjusted EBITDA assumptions and the scenario's sale timing.",
+        "A sale during those 12 months blends pre-sale and post-sale EBITDA;",
+        "this is not an annualised post-sale continuing-operations ratio.",
         "",
         "| Scenario | 2-yr Free Cash Flow | Net debt / EBITDA |",
         "|---|--:|--:|",

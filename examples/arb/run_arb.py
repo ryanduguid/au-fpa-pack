@@ -1,7 +1,7 @@
 """ARB Corporation worked example - full pipeline.
 
 Phase A reproduces FY2025 operating mechanics from actual drivers.
-Phase B replays 2 FY2025 champion/challenger holdout epochs.
+Phase B replays 2 FY2025 retrospective champion/challenger comparisons.
 Phase C forecasts FY2026-FY2027 from the August 2025 4E view.
 Phase D labels a Thai Baht / US-tariff COGS sensitivity.
 
@@ -65,9 +65,14 @@ def phase_a() -> str:
 def phase_b() -> str:
     epochs = am.historical_research_epochs()
     lines = [
-        "# Phase B - FY2025 historical holdout research",
+        "# Phase B - FY2025 retrospective scenario comparison",
         "",
-        "The champion is a flat FY2024 run rate. FY2025 is held out.",
+        "The champion is a flat FY2024 run rate, scored against FY2025 actuals.",
+        "The challengers use FY2025 realised export growth, rounded to 16.4%,",
+        "as an input. The figure comes from data/segments.csv and the Appendix 4E",
+        "cited in data/SOURCES.md. FY2025 is therefore not an independent holdout.",
+        "The 0.1% revenue error measures retrospective fit, not forecasting accuracy.",
+        "Validate on a separate period with inputs fixed before that period before promotion.",
         "Working-capital days are not a holdout metric: AR barely moved while",
         "sales grew, and H2 destocking is a management action.",
         "",
@@ -84,12 +89,13 @@ def phase_b() -> str:
         "",
         "## What the loop learned",
         "",
-        "- **Uniform 16.4 percent growth was discarded.** Export growth is not a",
+        "- **Uniform 16.4% growth was discarded.** Export growth is not a",
         "  company-wide rate. Applying it to Australian aftermarket overstates",
         f"  revenue error from {uniform.evaluation.champion_metrics['revenue_error'] * 100:.1f}%",
         f"  to {uniform.evaluation.challenger_metrics['revenue_error'] * 100:.1f}%.",
-        "- **Export-led volume plus 150bps margin compression is proposed.**",
-        "  It stays unpromoted until a human accepts the cost-pressure hypothesis.",
+        "- **Export-led volume plus 150bps margin compression is discarded.**",
+        "  Its better retrospective fit does not pass the holdout-separation check.",
+        "  A separate evaluation period is required before promotion.",
         "",
         "| Metric | Flat FY2024 champion | Export-led challenger |",
         "|---|--:|--:|",

@@ -8,7 +8,7 @@ python3 examples/arb/run_arb.py --output-dir <dir>   # replay into a scratch dir
 python3 examples/arb/run_arb.py --replace-epochs     # regenerate the committed outputs
 ```
 
-`run_arb.py` saves a research epoch per holdout challenger and refuses to
+`run_arb.py` saves a research epoch per retrospective challenger and refuses to
 overwrite one that already exists, which is the guard against losing research
 history. This example ships its two epochs, so replaying over them needs
 `--output-dir` or, to regenerate the committed files, `--replace-epochs`.
@@ -21,9 +21,11 @@ Every figure traces to [`data/SOURCES.md`](data/SOURCES.md).
 mix, materials as COGS, WC days, D&A, PPE capex). Gross profit is constructed.
 This is arithmetic, not a forecast.
 
-**Phase B** holds FY2025 out. A uniform 16.4% growth challenger is
-discarded. An export-led challenger with 150bps margin compression is proposed,
-not promoted.
+**Phase B** compares scenarios against FY2025 retrospectively. Both challengers
+use FY2025 realised export growth of 16.4%, so neither passes the independent
+holdout check. Both are discarded for promotion, including the export-led
+scenario whose revenue fits within 0.1%. A separate period with inputs fixed
+in advance is required to test forecasting accuracy.
 
 **Phase C** forecasts FY2026 to FY2027 from the August 2025 4E view.
 
