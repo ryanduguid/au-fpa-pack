@@ -71,9 +71,11 @@ def test_historical_holdout_rejects_uniform_export_rate():
     assert uniform.status == "discarded"
     assert uniform.evaluation.regression_guard_passed is False
     assert uniform.evaluation.promotion_eligible is False
-    assert export_led.status == "proposed"
+    assert export_led.status == "discarded"
     assert export_led.evaluation.regression_guard_passed is True
-    assert export_led.evaluation.promotion_eligible is True
+    assert export_led.evaluation.promotion_eligible is False
+    for epoch in (uniform, export_led):
+        assert next(check for check in epoch.checks if check.name == "holdout separation").result == "fail"
     assert export_led.evaluation.objective_gain > 0.50
     for metric, champion in export_led.evaluation.champion_metrics.items():
         assert export_led.evaluation.challenger_metrics[metric] < champion
@@ -107,8 +109,7 @@ def test_tariff_thb_sensitivity_is_labeled_and_hurts_ebitda():
 def test_registered_challenger_resolves_to_a_committed_research_epoch():
     """MEMORY.md promises `research/` holds the epochs, and the registry needs them.
 
-    Without the committed epoch the recorded `source_epoch` dangles, so the
-    challenger can never be promoted however the human decides.
+    The recorded source resolves, and its failed holdout check blocks promotion.
     """
     from pyfpa.research import (
         load_epochs,
@@ -130,27 +131,12 @@ def test_registered_challenger_resolves_to_a_committed_research_epoch():
     assert challenger.source_epoch is not None
     objective = load_research_objective(research / "objective.yaml")
     source = epochs[challenger.source_epoch]
-    # F088: the committed epochs predated the complexity fields, so promotion
-    # from them was refused until they were regenerated.
-    stripped = source.model_copy(deep=True)
-    assert stripped.evaluation is not None
-    stripped.evaluation.champion_complexity = None
-    with pytest.raises(ValueError, match="complexity inputs"):
+    # Human approval cannot clear the failed separation check.
+    with pytest.raises(ValueError, match="promotion-eligible"):
         promote_challenger(
-            registry, challenger_id=challenger.model_id, epoch=stripped,
+            registry, challenger_id=challenger.model_id, epoch=source,
             approved_by="reviewer", approved_at="2026-08-21", objective=objective,
         )
-    promoted = promote_challenger(
-        registry,
-        challenger_id=challenger.model_id,
-        epoch=source,
-        approved_by="reviewer",
-        approved_at="2026-08-21",
-        objective=objective,
-    )
-    assert promoted.champion is not None
-    assert promoted.champion.model_id == challenger.model_id
-    # The committed registry stays unpromoted; promotion needs a human.
     assert registry.promotions == []
 
 

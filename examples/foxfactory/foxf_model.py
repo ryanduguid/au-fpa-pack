@@ -593,7 +593,7 @@ def proceeds_from_multiple(multiple: float) -> float:
 
 
 def _run_rate_leverage(frame: pd.DataFrame, debt_balance: float) -> float:
-    """Net debt at the forecast end / run-rate (final 12 months) EBITDA.
+    """Net debt at the forecast end / final 12 forecast months of EBITDA.
 
     ``debt_balance`` is the opening debt (less any sale proceeds already applied);
     the modelled principal repayments and the closing cash balance are taken from
@@ -609,7 +609,7 @@ def divestiture_grid(forecast: pd.DataFrame, debt_balance: float,
     """FCF and leverage impact of selling Marucci at each sale-timing, versus hold.
 
     ``two_yr_fcf`` is cumulative free cash flow over the 24-month forecast.
-    ``net_debt_to_ebitda`` uses run-rate (final-year) EBITDA; selling retires
+    ``net_debt_to_ebitda`` uses final-year modelled EBITDA; selling retires
     ``proceeds`` of debt but also removes Marucci's EBITDA.
     """
     carve = marucci_carveout()

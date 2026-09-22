@@ -322,8 +322,8 @@ def _historical_epoch(
     checks = [
         ExperimentCheck(
             name="holdout separation",
-            result="pass",
-            details="Candidate uses FY2024 only; FY2025 is held out.",
+            result="fail",
+            details="Candidate uses FY2025 realised export growth; FY2025 is not held out.",
         ),
         channel_rollup_check(
             export_growth=export_growth,
@@ -372,7 +372,7 @@ def historical_research_epochs() -> list[ResearchEpoch]:
         epoch_id="arb-fy2025-001-uniform-export-rate",
         challenger_id="arb-uniform-16pct",
         hypothesis=(
-            "Apply the 16.4 percent export growth rate to every sales channel "
+            "Apply FY2025 realised export growth of 16.4% to every sales channel "
             "and hold FY2024 EBITDA margin."
         ),
         export_growth=0.164,
@@ -383,7 +383,7 @@ def historical_research_epochs() -> list[ResearchEpoch]:
         epoch_id="arb-fy2025-002-export-led-margin-pressure",
         challenger_id="arb-export-led-150bps",
         hypothesis=(
-            "Exports grow 16.4 percent, Australian aftermarket and OEM stay "
+            "Use FY2025 realised export growth of 16.4%; Australian aftermarket and OEM stay "
             "flat, and EBITDA margin compresses 150bps on THB and tariff cost "
             "pressure known as a 2025 risk."
         ),

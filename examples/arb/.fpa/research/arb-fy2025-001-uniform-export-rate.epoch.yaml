@@ -2,8 +2,8 @@ schema_version: 1
 epoch_id: arb-fy2025-001-uniform-export-rate
 created: '2026-08-20'
 status: discarded
-hypothesis: Apply the 16.4 percent export growth rate to every sales channel and hold
-  FY2024 EBITDA margin.
+hypothesis: Apply FY2025 realised export growth of 16.4% to every sales channel and
+  hold FY2024 EBITDA margin.
 champion_id: arb-flat-fy2024-run-rate
 challenger_id: arb-uniform-16pct
 memory_sources:
@@ -20,8 +20,8 @@ holdout_periods:
 - FY2025
 checks:
 - name: holdout separation
-  result: pass
-  details: Candidate uses FY2024 only; FY2025 is held out.
+  result: fail
+  details: Candidate uses FY2025 realised export growth; FY2025 is not held out.
 - name: channel rollup
   result: pass
   details: 'Australian Aftermarket, Exports and OEM sales of 806,831,256 against engine
@@ -44,7 +44,7 @@ evaluation:
   champion_complexity: 1.0
   challenger_complexity: 1.1
   objective_gain: -1.001
-  hard_checks_passed: true
+  hard_checks_passed: false
   regression_guard_passed: false
   promotion_eligible: false
 notes: 'Working-capital days are reproduced in Phase A but not used as a holdout metric:

@@ -69,6 +69,6 @@ Xero AU mapping, GST and BAS cash timing, and payroll on-cost assumptions.
 - Five worked examples: Lumbridge Services, Harbour Light and Ridgeline Chair
   Co. from synthetic records, ARB Corporation from its FY2025 Appendix 4E, and
   Fox Factory Holding Corp. from public SEC filings.
-- Source-only. The distribution is `au-fpa-pack` and the import is `pyfpa`; it
-  is not published to PyPI.
+- The distribution is `au-fpa-pack` and the import is `pyfpa`. Version 0.1.1
+  is available on [PyPI](https://pypi.org/project/au-fpa-pack/0.1.1/).
 - Tested on Python 3.11, 3.12 and 3.13.

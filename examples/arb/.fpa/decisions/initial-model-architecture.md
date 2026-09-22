@@ -5,7 +5,7 @@
 ## Objective
 
 Demonstrate a source-traced ASX workflow with separate accounting
-reproduction, historical holdout, forward forecast, and a labelled cost-pressure
+reproduction, retrospective comparison, forward forecast, and a labelled cost-pressure
 sensitivity.
 
 ## Data access
@@ -17,7 +17,7 @@ sensitivity.
 
 - Consolidated kernel for revenue, materials-as-COGS, working capital, cash.
 - Three sales channels. Channel EBITDA allocated from consolidated EBIT + D&A.
-- FY2025 champion/challenger holdout (no WC-days metric).
+- FY2025 retrospective champion/challenger comparison (no WC-days metric).
 - FY2026-FY2027 forecast from the August 2025 view.
 - THB/tariff +150bps COGS sensitivity.
 
