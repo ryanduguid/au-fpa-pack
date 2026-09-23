@@ -42,10 +42,13 @@ def holdout_backtest(
     fit_actuals: dict[str, Mapping[str, float]] = {
         p: dict(actuals_by_period[p]) for p in fit_periods
     }
-    cfg = build_cfg_fn(fit_actuals)
-    predicted = extract_lines(cashflow_from_config(cfg), score_lines)
-    actual = aggregate_periods([dict(actuals_by_period[p]) for p in holdout_periods], score_lines)
     selected_weights = weights if weights is not None else {
         line: DEFAULT_WEIGHTS.get(line, 1.0) for line in score_lines
     }
+    # A zero weight disables a metric, so its line is neither extracted nor
+    # aggregated: evidence missing for a disabled line must not stop the rest.
+    scored = [line for line in score_lines if selected_weights.get(line, 0) > 0]
+    cfg = build_cfg_fn(fit_actuals)
+    predicted = extract_lines(cashflow_from_config(cfg), scored)
+    actual = aggregate_periods([dict(actuals_by_period[p]) for p in holdout_periods], scored)
     return score_forecast(predicted, actual, weights=selected_weights)
