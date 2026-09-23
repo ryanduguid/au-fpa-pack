@@ -38,6 +38,8 @@ jobs:
         with:
           version: "0.12.5"
           enable-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          prune-cache: true
 
       - name: Install locked environment
         run: uv sync --locked --extra dev
@@ -75,6 +77,8 @@ jobs:
         with:
           version: "0.12.5"
           enable-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          prune-cache: true
 
       - name: Install locked environment
         run: uv sync --locked --extra dev
@@ -134,6 +138,8 @@ jobs:
         with:
           version: "0.12.5"
           enable-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          prune-cache: true
 
       - name: Resolve declared minimums
         run: uv sync --upgrade --resolution lowest-direct --extra dev
@@ -166,6 +172,8 @@ jobs:
         with:
           version: "0.12.5"
           enable-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          prune-cache: true
 
       - name: Install locked environment
         run: uv sync --locked --extra dev
