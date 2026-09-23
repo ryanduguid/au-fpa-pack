@@ -43,8 +43,9 @@ CI runs the minimum-dependency suite on both Linux and Windows.
 2. **Add tests for new behaviour.** The project is test-first, and CI runs the suite on
    Python 3.11, 3.12, and 3.13. A green suite is required to merge, as are clean
    `ruff check .` and `mypy` runs.
-3. Open a PR describing what you changed and why. For anything non-trivial, open an Issue
-   first so we can talk through the approach before you build.
+3. Open a PR describing what you changed and why. For anything non-trivial, describe the
+   approach in a draft PR before you build: Issues are switched off in this repository, and
+   changes to the shared openfpa core belong in [openfpa's issues](https://github.com/JeffBrines/openfpa/issues).
 
 ## What's most useful to contribute
 
@@ -74,8 +75,8 @@ real businesses. The contributions that help most:
   the `io/` layer. Match the surrounding style.
 - Open-sourced under MIT. By contributing, you agree your work is offered under the same.
 
-Questions or ideas? Open an [Issue](https://github.com/ryanduguid/au-fpa-pack/issues) or a
-Discussion.
+Questions or ideas about the shared core go to [openfpa's issues](https://github.com/JeffBrines/openfpa/issues);
+for the Australian layer, use the [contact page](https://duguid.com.au/contact/).
 
 ## Release checks
 
