@@ -97,3 +97,16 @@ def test_score_forecast_rejects_non_positive_weights():
             {"revenue": 90.0},
             weights={"revenue": 0.0},
         )
+
+
+def test_a_zero_weight_line_no_longer_blocks_scoring():
+    # A zero weight is how a caller disables a metric. Requiring complete evidence for
+    # it stopped the positive-weight lines being scored at all.
+    result = score_forecast(
+        {"revenue": 100.0},
+        {"revenue": 90.0, "ebitda": 0.0},
+        weights={"revenue": 1.0, "ebitda": 0.0},
+    )
+
+    assert set(result.weights) == {"revenue"}
+    assert "ebitda" not in result.per_line

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 import pandas as pd
@@ -107,6 +108,11 @@ class EntityConfig(_ConfigModel):
     @field_validator("start_month")
     @classmethod
     def _valid_month(cls, v: str) -> str:
+        # The exact format, not whatever pandas will parse. "2026" is a valid Period
+        # and month_index reads it as January 2026, so a malformed value chose a
+        # different start period rather than failing.
+        if not re.fullmatch(r"\d{4}-\d{2}", v):
+            raise ValueError(f"start_month must be YYYY-MM, got {v!r}")
         try:
             pd.Period(v, freq="M")
         except Exception as e:

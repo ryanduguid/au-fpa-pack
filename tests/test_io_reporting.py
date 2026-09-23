@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 import pyfpa
 from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
@@ -65,3 +66,11 @@ def test_briefing_with_real_cash13_runway():
     # real Ridgeline runway: trough -$146,000 at week 7, first negative week 3
     assert "week 7" in md
     assert "-$146,000" in md
+
+
+def test_an_empty_forecast_is_refused_rather_than_crashing():
+    # Ending cash is read with .iloc[-1], which raised IndexError inside the headline
+    # block instead of the ValueError a missing column already gets.
+    empty = pd.DataFrame(columns=["revenue", "ebitda", "net_income", "ending_cash"])
+    with pytest.raises(ValueError, match="no rows"):
+        to_briefing_md(empty)

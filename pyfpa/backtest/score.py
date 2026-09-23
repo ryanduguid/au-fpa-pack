@@ -88,11 +88,16 @@ def score_forecast(
     weights = dict(DEFAULT_WEIGHTS if weights is None else weights)
     if any(not math.isfinite(weight) or weight < 0 for weight in weights.values()):
         raise ValueError("scoring weights must be finite and non-negative")
-    lines = list(weights)
+    # A zero weight is how a caller disables a metric, and the docstring asks for
+    # complete evidence for every *weighted* line. Requiring it for a zero-weight line
+    # stopped otherwise scorable evidence being evaluated at all.
+    lines = [line for line in weights if weights[line] > 0]
+    if not lines:
+        raise ValueError("scoring weights must sum to a positive value")
     unscorable = [line for line in lines if line not in predicted or line not in actual
                   or actual[line] == 0 or not math.isfinite(actual[line])
                   or not math.isfinite(predicted[line])]
-    if unscorable or not lines:
+    if unscorable:
         raise ValueError(f"no scorable lines for requested evidence: {unscorable}")
     rec = reconcile({line: predicted[line] for line in lines},
                     {line: actual[line] for line in lines})

@@ -142,3 +142,15 @@ def test_unknown_top_level_key_is_rejected(tmp_path):
     )
     with pytest.raises(ValidationError, match="tax_ratee"):
         load_config(path)
+
+
+@pytest.mark.parametrize("value", ["2026", "2026-1", "2026-13", "January 2026", "2026-01-15"])
+def test_start_month_requires_the_exact_format(value: str) -> None:
+    # pd.Period parses far more than YYYY-MM, and month_index read "2026" as January
+    # 2026, so a malformed value selected a different start period instead of failing.
+    with pytest.raises(ValidationError):
+        EntityConfig(**{**_minimal_kwargs(), "start_month": value})
+
+
+def test_start_month_still_accepts_the_documented_format() -> None:
+    assert EntityConfig(**{**_minimal_kwargs(), "start_month": "2026-07"}).start_month == "2026-07"

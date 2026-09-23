@@ -22,6 +22,24 @@ from pyfpa.portfolio.mine import PriorCandidate, SkillCandidate
 from pyfpa.portfolio.validate import ValidationResult
 
 
+def _child(directory: Path, name: str) -> Path:
+    """`directory / name` when it stays a direct child, else ValueError.
+
+    A business type and a skill name reach the filesystem from portfolio YAML,
+    which nothing else constrains, so a value such as `../../settings` promoted
+    a file outside the library subtree. Resolving both sides also catches an
+    absolute path and a nested one; `load_library` only ever globs direct
+    children, so a nested write could not be read back either.
+    """
+    directory = directory.resolve()
+    path = (directory / name).resolve()
+    if path.parent != directory:
+        raise ValueError(
+            f"unsafe library name {name!r}: it must name a direct child of {directory.name}/"
+        )
+    return path
+
+
 def _log(library: Path, line: str) -> None:
     library.mkdir(parents=True, exist_ok=True)
     log = library / "library-log.md"
@@ -82,6 +100,9 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     They do not defend against code running inside the process, and they are not
     a substitute for the practitioner reading the evidence before approving.
     """
+    library = Path(library)
+    # Refused before anything else is read or written.
+    path = _child(library / "priors", f"{candidate.business_type}.yaml")
     digest = candidate_digest(candidate)
     if not validation.validated or validation.n_folds < 2:
         raise PromotionDenied("prior requires successful validation across at least two folds")
@@ -102,11 +123,8 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
             "its result, not from a result built or stored elsewhere"
         )
     approval, findings = check_promotion_approval(library, candidate)
-    library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
-    priors_dir = library / "priors"
-    priors_dir.mkdir(parents=True, exist_ok=True)
-    path = priors_dir / f"{candidate.business_type}.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
     doc = read_yaml(path) if path.exists() else None
     doc = doc or {"type": candidate.business_type, "priors": []}
     doc["priors"].append({
@@ -133,12 +151,13 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
     changes in the client's workspace after the screen cannot reach the library,
     and a link in the tree is refused rather than followed.
     """
+    library = Path(library)
+    # Refused before anything else is read or written.
+    dest = _child(library / "skills", candidate.name)
     tree = skill_tree(candidate)
     digest = candidate_digest(candidate, tree=tree)
     approval, findings = check_promotion_approval(library, candidate, tree=tree)
-    library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
-    dest = library / "skills" / candidate.name
     dest.parent.mkdir(parents=True, exist_ok=True)
     # Not copytree: it would re-read the client's directory and follow links.
     dest.mkdir()

@@ -170,3 +170,32 @@ def test_invalid_prior_cannot_create_library(tmp_path, folds, validated):
         promote_prior(lib, candidate, _validation(
             candidate, mean_delta=0, n_folds=folds, validated=validated))
     assert not lib.exists()
+
+
+# "." and ".." are not listed: the ".yaml" suffix makes them "..yaml" and "...yaml",
+# odd but legitimate direct children, so only a separator or an absolute path escapes.
+@pytest.mark.parametrize("business_type", ["../../settings", "nested/type", "/tmp/settings"])
+def test_promote_prior_refuses_a_type_that_escapes_the_priors_directory(tmp_path, business_type):
+    lib = tmp_path / "library"
+    cand = PriorCandidate(business_type=business_type, driver="tax_rate", value=0.25,
+                          support=["a", "b", "c"], dispersion=0.01)
+    val = ValidationResult(mean_delta=0.0, n_folds=3, validated=True)
+
+    with pytest.raises(ValueError, match="unsafe library name"):
+        promote_prior(lib, cand, val)
+    assert not list(tmp_path.glob("*.yaml"))
+    assert not lib.exists()
+
+
+@pytest.mark.parametrize("name", ["../escape", "nested/skill", ".."])
+def test_promote_skill_refuses_a_name_that_escapes_the_skills_directory(tmp_path, name):
+    lib = tmp_path / "library"
+    source = tmp_path / "source"
+    (source / "inner").mkdir(parents=True)
+    (source / "inner" / "SKILL.md").write_text("skill\n", encoding="utf-8")
+    cand = SkillCandidate(name=name, business_type="d2c", source=str(source), support=["a", "b"])
+
+    with pytest.raises(ValueError, match="unsafe library name"):
+        promote_skill(lib, cand)
+    assert not list(tmp_path.glob("escape*"))
+    assert not lib.exists()

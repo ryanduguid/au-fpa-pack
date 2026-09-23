@@ -27,6 +27,11 @@ def to_briefing_md(
     missing = _REQUIRED_COLUMNS - set(forecast_df.columns)
     if missing:
         raise ValueError(f"forecast_df missing required columns: {sorted(missing)}")
+    if forecast_df.empty:
+        # Ending cash is read with .iloc[-1], which raises IndexError on an empty
+        # frame. Refuse it the way a missing column is refused, rather than failing
+        # inside the headline block.
+        raise ValueError("forecast_df has no rows to brief")
     df = forecast_df
     lines = [f"# {title}", "", "## Headline", ""]
     lines += [

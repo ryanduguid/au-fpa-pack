@@ -39,6 +39,15 @@ def test_holdout_backtest_scores_holdout():
     assert res.fitness >= 0.0
 
 
+def test_a_disabled_line_with_no_evidence_does_not_stop_the_backtest():
+    # "headcount" is in neither the actuals nor the forecast. Its zero weight disables
+    # it, so the backtest scores revenue instead of failing to extract headcount.
+    res = holdout_backtest(_actuals(), _build_cfg(0.0), holdout=3,
+                           score_lines=["revenue", "headcount"],
+                           weights={"revenue": 1.0, "headcount": 0.0})
+    assert set(res.per_line) == {"revenue"}
+
+
 def test_holdout_discriminates_better_assumption():
     good = holdout_backtest(_actuals(), _build_cfg(0.0), holdout=3, score_lines=["revenue"])
     bad = holdout_backtest(_actuals(), _build_cfg(0.5), holdout=3, score_lines=["revenue"])
