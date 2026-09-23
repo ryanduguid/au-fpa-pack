@@ -184,7 +184,7 @@ def test_promote_prior_refuses_a_type_that_escapes_the_priors_directory(tmp_path
     with pytest.raises(ValueError, match="unsafe library name"):
         promote_prior(lib, cand, val)
     assert not list(tmp_path.glob("*.yaml"))
-    assert not list((lib / "priors").rglob("*.yaml"))
+    assert not lib.exists()
 
 
 @pytest.mark.parametrize("name", ["../escape", "nested/skill", ".."])
@@ -198,4 +198,4 @@ def test_promote_skill_refuses_a_name_that_escapes_the_skills_directory(tmp_path
     with pytest.raises(ValueError, match="unsafe library name"):
         promote_skill(lib, cand)
     assert not list(tmp_path.glob("escape*"))
-    assert not list((lib / "skills").iterdir())
+    assert not lib.exists()

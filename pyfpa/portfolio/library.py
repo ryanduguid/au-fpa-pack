@@ -100,6 +100,9 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
     They do not defend against code running inside the process, and they are not
     a substitute for the practitioner reading the evidence before approving.
     """
+    library = Path(library)
+    # Refused before anything else is read or written.
+    path = _child(library / "priors", f"{candidate.business_type}.yaml")
     digest = candidate_digest(candidate)
     if not validation.validated or validation.n_folds < 2:
         raise PromotionDenied("prior requires successful validation across at least two folds")
@@ -120,11 +123,8 @@ def promote_prior(library: str | Path, candidate: PriorCandidate, validation: Va
             "its result, not from a result built or stored elsewhere"
         )
     approval, findings = check_promotion_approval(library, candidate)
-    library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
-    priors_dir = library / "priors"
-    priors_dir.mkdir(parents=True, exist_ok=True)
-    path = _child(priors_dir, f"{candidate.business_type}.yaml")
+    path.parent.mkdir(parents=True, exist_ok=True)
     doc = read_yaml(path) if path.exists() else None
     doc = doc or {"type": candidate.business_type, "priors": []}
     doc["priors"].append({
@@ -151,14 +151,14 @@ def promote_skill(library: str | Path, candidate: SkillCandidate) -> None:
     changes in the client's workspace after the screen cannot reach the library,
     and a link in the tree is refused rather than followed.
     """
+    library = Path(library)
+    # Refused before anything else is read or written.
+    dest = _child(library / "skills", candidate.name)
     tree = skill_tree(candidate)
     digest = candidate_digest(candidate, tree=tree)
     approval, findings = check_promotion_approval(library, candidate, tree=tree)
-    library = Path(library)
     support_ids = _record_workspace_ids(library, resolved_support(candidate.support))
-    skills_dir = library / "skills"
-    skills_dir.mkdir(parents=True, exist_ok=True)
-    dest = _child(skills_dir, candidate.name)
+    dest.parent.mkdir(parents=True, exist_ok=True)
     # Not copytree: it would re-read the client's directory and follow links.
     dest.mkdir()
     for relative, data in tree:
