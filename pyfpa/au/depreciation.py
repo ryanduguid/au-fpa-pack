@@ -357,6 +357,16 @@ def cash_and_expense(
     the two has undone the point of the split.
     """
     frame = pd.DataFrame({"depreciation_expense": schedule})
+    if purchases is not None:
+        # Reindexing drops any purchase whose month the schedule does not hold, and
+        # a DatetimeIndex against the schedule's PeriodIndex matches nothing at all,
+        # so every purchase would read as nil cash. Refuse rather than lose them.
+        outside = purchases.index.difference(schedule.index)
+        if len(outside):
+            raise ValueError(
+                f"{len(outside)} asset purchase(s) fall outside the schedule's months, "
+                f"first {outside[0]!r}; pass purchases indexed by the schedule's periods"
+            )
     frame["asset_purchases"] = 0.0 if purchases is None else purchases.reindex(
         schedule.index, fill_value=0.0,
     )

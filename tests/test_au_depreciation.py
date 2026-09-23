@@ -183,6 +183,17 @@ def test_expense_and_purchases_stay_apart():
     assert frame["depreciation_expense"].sum() != frame["asset_purchases"].sum()
 
 
+def test_a_purchase_outside_the_schedule_is_refused_not_dropped():
+    schedule = dep.straight_line_schedule(dep.load_evidence(GOOD), months())
+    later = pd.Series([50000.0], index=pd.PeriodIndex(["2027-01"], freq="M"))
+    with pytest.raises(ValueError, match="1 asset purchase"):
+        dep.cash_and_expense(schedule, later)
+    # Timestamps never match the schedule's periods, so every purchase would vanish.
+    stamped = pd.Series([120000.0, 0.0, 0.0], index=months().to_timestamp())
+    with pytest.raises(ValueError, match="3 asset purchase"):
+        dep.cash_and_expense(schedule, stamped)
+
+
 def test_with_no_purchases_the_cash_effect_is_nil():
     frame = dep.cash_and_expense(dep.straight_line_schedule(dep.load_evidence(GOOD), months()))
     assert frame["cash_effect"].tolist() == [0.0, 0.0, 0.0]
