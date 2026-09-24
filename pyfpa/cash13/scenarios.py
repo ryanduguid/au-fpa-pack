@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,7 +21,7 @@ class FlowChange(BaseModel):
     model_config = _STRICT
 
     name: str
-    amount_factor: float = Field(default=1.0, ge=0)
+    amount_factor: float = Field(default=1.0, ge=0, allow_inf_nan=False)
     delay_weeks: int = Field(default=0, ge=0)
 
 
@@ -49,8 +51,11 @@ def _changed(flows: list[WeeklyFlow], changes: list[FlowChange], side: str) -> l
         if change is None:
             result.append(flow)
             continue
+        amount = flow.amount * change.amount_factor
+        if not math.isfinite(amount):
+            raise ValueError(f"scaling {side} {flow.name!r} by {change.amount_factor} is not a finite amount")
         result.append(flow.model_copy(update={
-            "amount": flow.amount * change.amount_factor,
+            "amount": amount,
             "start_week": flow.start_week + change.delay_weeks,
             "end_week": None if flow.end_week is None else flow.end_week + change.delay_weeks,
         }))

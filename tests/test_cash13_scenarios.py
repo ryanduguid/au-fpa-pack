@@ -88,6 +88,15 @@ def test_negative_changes_and_unknown_keys_fail_validation() -> None:
         FlowChange(name="Sales", amount_factor=-1)
     with pytest.raises(ValidationError):
         FlowChange(name="Sales", delay_weeks=-1)
+    for factor in (float("inf"), float("nan")):
+        with pytest.raises(ValidationError):
+            FlowChange(name="Sales", amount_factor=factor)
+
+
+def test_a_factor_that_overflows_the_amount_is_refused() -> None:
+    base = Cash13Config(opening_cash=0.0, receipts=[WeeklyFlow(name="Big", amount=1e308, start_week=1)])
+    with pytest.raises(ValueError, match="not a finite amount"):
+        pyfpa.apply_scenario(base, Scenario(name="x", receipts=[FlowChange(name="Big", amount_factor=10)]))
     with pytest.raises(ValidationError):
         Scenario.model_validate({"name": "x", "recipts": []})
 
