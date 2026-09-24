@@ -98,6 +98,47 @@ def test_verify_fails_when_a_required_output_is_missing(tmp_path):
     assert any("ending_cash: required output missing" in f for f in report.failures)
 
 
+def test_verify_fails_when_a_check_row_is_non_zero(tmp_path):
+    # a check_ row is the workbook's own tie-out: a non-zero month fails the
+    # verification even when every engine line still matches
+    from openpyxl import load_workbook
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    rows = [
+        r for r in range(2, model.max_row + 1)
+        if isinstance(model.cell(row=r, column=1).value, str)
+        and model.cell(row=r, column=1).value.startswith("check_")
+    ]
+    model.cell(row=rows[0], column=3, value="=123")
+    wb.save(path)
+    report = verify_workbook(path, cashflow_from_config(cfg))
+    assert not report.passed
+    assert any("check" in f and "non-zero" in f for f in report.failures)
+
+
+def test_verify_reports_a_non_numeric_check_result(tmp_path):
+    # a check row that stops returning a number must fail cleanly, never crash
+    from openpyxl import load_workbook
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    rows = [
+        r for r in range(2, model.max_row + 1)
+        if isinstance(model.cell(row=r, column=1).value, str)
+        and model.cell(row=r, column=1).value.startswith("check_")
+    ]
+    model.cell(row=rows[0], column=3, value='="boom"')
+    wb.save(path)
+    report = verify_workbook(path, cashflow_from_config(cfg))
+    assert not report.passed
+    assert any("expected 0" in f for f in report.failures)
+
+
 def test_verify_fails_when_the_expected_periods_do_not_match(tmp_path):
     # F070: months were compared by position, so a request for a different year
     # passed against an unchanged workbook.

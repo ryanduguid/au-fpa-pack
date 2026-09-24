@@ -74,3 +74,35 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
         },
         index=revenue.index,
     )
+
+
+def apply_receipt_delay(
+    forecast: pd.DataFrame, month: str, to_month: str, amount: float
+) -> pd.DataFrame:
+    """Move one named receipt between two months and rebuild the cash rows.
+
+    A receipt that slips is a working-capital timing event: ``wc_cash_impact``
+    falls by ``amount`` in ``month`` and rises by ``amount`` in ``to_month``.
+    The cash rows derived from it are rebuilt with the definitions above, and
+    every P&L line is unchanged.
+    """
+    labels = [str(period) for period in forecast.index]
+    if month not in labels:
+        raise ValueError(f"month {month} is not a forecast period")
+    if to_month not in labels:
+        raise ValueError(f"to_month {to_month} is not a forecast period")
+
+    out = forecast.copy()
+    opening_cash = float(out["ending_cash"].iloc[0] - out["change_in_cash"].iloc[0])
+    wc = [float(value) for value in out["wc_cash_impact"]]
+    for position, label in enumerate(labels):
+        if label == month:
+            wc[position] -= amount
+        elif label == to_month:
+            wc[position] += amount
+    out["wc_cash_impact"] = pd.Series(wc, index=out.index)
+    out["operating_cash_flow"] = out["net_income"] + out["da"] + out["wc_cash_impact"]
+    out["free_cash_flow"] = out["operating_cash_flow"] - out["capex"]
+    out["change_in_cash"] = out["free_cash_flow"] - out["principal"]
+    out["ending_cash"] = out["change_in_cash"].cumsum() + opening_cash
+    return out

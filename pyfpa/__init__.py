@@ -39,6 +39,7 @@ from pyfpa.config.schemas import (
     WorkingCapitalConfig,
 )
 from pyfpa.excel.model_workbook import model_to_excel
+from pyfpa.excel.structure import verify_structure
 from pyfpa.excel.verify import verify_workbook
 from pyfpa.io.loaders import load_cash13_config, load_cash13_scenarios, load_skus
 from pyfpa.io.pl_csv import read_pl_csv
@@ -296,6 +297,7 @@ __all__ = [
     "to_briefing_md",
     "validate_connector_bundle",
     "validate_prior",
+    "verify_structure",
     "verify_workbook",
     "withdraw_prior",
     "working_capital_from_config",

@@ -492,6 +492,24 @@ def _build_model(
     ws.cell(row=end_row, column=1, value="ending_cash")
     alloc.write_cells(end_row, _ending_cash_formulas(n, r_chg, end_row), MONEY_FORMAT)
 
+    # Self-check rows: each evaluates to zero while the model is intact.
+    alloc.emit_fn(
+        "check_cash_roll",
+        lambda m, col: (
+            f"={col}{end_row}-(open_cash+{col}{r_chg})" if m == 1
+            else f"={col}{end_row}-({get_column_letter(_MODEL_START_COL + m - 2)}{end_row}"
+                 f"+{col}{r_chg})"
+        ),
+    )
+    alloc.emit_fn(
+        "check_gross_profit",
+        lambda m, col: f"={col}{r_gp}-({col}{r_rev}-{col}{r_cogs})",
+    )
+    alloc.emit_fn(
+        "check_net_income",
+        lambda m, col: f"={col}{r_ni}-({col}{r_pretax}-{col}{r_tax})",
+    )
+
     ws.freeze_panes = "B2"
 
 
