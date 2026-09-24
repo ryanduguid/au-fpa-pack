@@ -124,8 +124,10 @@ review past hypotheses with `openfpa experiment-list <company-root>`.
 When the user wants Excel output with working formulas, use `openfpa model-export`
 or `pyfpa.model_to_excel` for the standard monthly model. For any other cadence or
 layout, generate a company-specific exporter from `pyfpa.excel.toolkit` in the
-generated namespace and register it as a report entrypoint. Install `formulas` and run
-`verify_workbook` before delivering. No workbook ships unverified.
+generated namespace and register it as a report entrypoint. Run `verify_structure`
+for the layout contract (named blue inputs on Assumptions, formula-only Model
+rows, a `check_*` row), then install `formulas` and run `verify_workbook` before
+delivering. No workbook ships unverified.
 
 ## Kernel guardrails
 

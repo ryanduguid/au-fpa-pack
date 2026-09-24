@@ -63,6 +63,9 @@ def verify_workbook(
 
     NaN or unevaluated cells are failures, never skipped.
 
+    Rows labelled ``check_*`` are the workbook's own ties: every month must
+    evaluate to zero within ``rel_tol``, or the verification fails.
+
     Key format confirmed against formulas 1.3.4:
         ``'[<filename_exact_case>]MODEL'!<COL><ROW>``
     The sheet name is stored as-uppercase in the solution dict.
@@ -126,6 +129,24 @@ def verify_workbook(
                     f"{line} month {m_idx + 1}: workbook {got!r} vs engine {want!r}"
                     f" (rel_dev={dev:.2e})"
                 )
+
+    for label, row in labels.items():
+        if not isinstance(label, str) or not label.startswith("check_"):
+            continue
+        for m_idx in range(len(expected.index)):
+            col_letter = get_column_letter(2 + m_idx)
+            ref = f"'[{path.name}]MODEL'!{col_letter}{row}"
+            if ref not in solution:
+                failures.append(
+                    f"{label} month {m_idx + 1}: cell not evaluated (key {ref!r} missing)"
+                )
+                continue
+            raw = solution[ref].value[0][0]
+            if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+                failures.append(f"{label} month {m_idx + 1}: check returned {raw!s}, expected 0")
+                continue
+            if not abs(float(raw)) <= rel_tol:
+                failures.append(f"{label} month {m_idx + 1}: check is non-zero ({float(raw)})")
 
     return VerifyReport(
         passed=not failures and lines > 0,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 
+from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.workbook.defined_name import DefinedName
@@ -10,7 +11,9 @@ from openpyxl.worksheet.worksheet import Worksheet
 MONEY_FORMAT = "#,##0"
 PERCENT_FORMAT = "0.0%"
 DAYS_FORMAT = "0.0"
-
+# Editable drivers carry the spreadsheet convention for inputs: blue font.
+INPUT_FONT_COLOR = "0000FF"
+INPUT_FONT = Font(color=INPUT_FONT_COLOR)
 
 def add_named_cell(
     wb: Workbook,
@@ -24,11 +27,11 @@ def add_named_cell(
 ) -> None:
     """Write a value and register a workbook-scoped defined name for the cell."""
     cell = ws.cell(row=row, column=col, value=value)
+    cell.font = INPUT_FONT
     if number_format:
         cell.number_format = number_format
     ref = f"'{ws.title}'!${get_column_letter(col)}${row}"
     wb.defined_names[name] = DefinedName(name=name, attr_text=ref)
-
 
 def add_named_row(
     wb: Workbook,
@@ -43,6 +46,7 @@ def add_named_row(
     """Write a horizontal run of values and register a defined name for the range."""
     for offset, value in enumerate(values):
         cell = ws.cell(row=row, column=start_col + offset, value=value)
+        cell.font = INPUT_FONT
         if number_format:
             cell.number_format = number_format
     first = f"${get_column_letter(start_col)}${row}"
@@ -50,7 +54,6 @@ def add_named_row(
     wb.defined_names[name] = DefinedName(
         name=name, attr_text=f"'{ws.title}'!{first}:{last}"
     )
-
 
 def fill_formula_row(
     ws: Worksheet,
