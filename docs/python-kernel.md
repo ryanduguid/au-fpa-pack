@@ -15,10 +15,26 @@ runway = pyfpa.runway_summary(weekly)
 print(pyfpa.to_briefing_md(monthly, title="My Company", runway=runway))
 ```
 
+Named scenarios change the declared 13-week flows instead of editing them. A
+`FlowChange` scales every base flow of one name (`amount_factor`), pushes it
+later (`delay_weeks`), or both; `add_receipts` and `add_disbursements` add new
+flows. A name that matches no base flow is refused, so a misspelling cannot
+leave a scenario identical to the base. A flow pushed past the horizon leaves
+the forecast.
+
+```python
+scenarios = pyfpa.load_cash13_scenarios("examples/ridgeline/scenarios.yaml")
+print(pyfpa.compare_scenarios(cash_config, scenarios))
+```
+
+`compare_scenarios` returns one row per scenario, base first, with the cash
+trough (`min_cash`), its week, the first negative week and closing cash. It
+compares declared assumptions; it does not say which scenario is likely.
+
 The base kernel includes:
 
 - monthly P&L and indirect cash-flow modelling
-- 13-week direct-method cash forecasting
+- 13-week direct-method cash forecasting, with named scenario comparison
 - revenue, COGS, operating-expense, debt, tax, and working-capital primitives
 - reconciliation, segment, SKU, and divestiture analysis helpers
 - CSV ingestion and Markdown or Excel reporting: static value export via

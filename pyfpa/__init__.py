@@ -22,6 +22,12 @@ from pyfpa.backtest import (
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.runway import runway_summary
+from pyfpa.cash13.scenarios import (
+    FlowChange,
+    Scenario,
+    apply_scenario,
+    compare_scenarios,
+)
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.config.loader import load_config
 from pyfpa.config.schemas import (
@@ -34,7 +40,7 @@ from pyfpa.config.schemas import (
 )
 from pyfpa.excel.model_workbook import model_to_excel
 from pyfpa.excel.verify import verify_workbook
-from pyfpa.io.loaders import load_cash13_config, load_skus
+from pyfpa.io.loaders import load_cash13_config, load_cash13_scenarios, load_skus
 from pyfpa.io.pl_csv import read_pl_csv
 from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
 from pyfpa.memory import (
@@ -158,6 +164,7 @@ __all__ = [
     "ConnectorManifest",
     "Correction",
     "DebtInstrument",
+    "FlowChange",
     "EntityConfig",
     "EntrypointKind",
     "EntrypointRegistry",
@@ -186,6 +193,7 @@ __all__ = [
     "PromotionRecord",
     "ResearchEpoch",
     "ResearchObjective",
+    "Scenario",
     "ScoreResult",
     "Segment",
     "Sku",
@@ -198,12 +206,14 @@ __all__ = [
     "Workspace",
     "apply_corrections",
     "apply_override",
+    "apply_scenario",
     "build_context_pack",
     "build_memory_index",
     "candidate_digest",
     "cash13_forecast",
     "cashflow_from_config",
     "cogs_from_config",
+    "compare_scenarios",
     "connector_bundle_path",
     "connector_generated_root",
     "debt_from_config",
@@ -216,6 +226,7 @@ __all__ = [
     "initialize_workspace",
     "intake_ready",
     "load_cash13_config",
+    "load_cash13_scenarios",
     "load_config",
     "load_connector_manifest",
     "load_connector_manifests",

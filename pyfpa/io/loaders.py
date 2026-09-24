@@ -6,6 +6,7 @@ from typing import Any
 import yaml
 
 from pyfpa.analysis.sku import Sku
+from pyfpa.cash13.scenarios import Scenario
 from pyfpa.cash13.schemas import Cash13Config
 
 
@@ -38,6 +39,11 @@ def create_yaml(path: str | Path, data: Any) -> None:
 def load_cash13_config(path: str | Path) -> Cash13Config:
     """Load and validate a Cash13Config from a YAML file."""
     return Cash13Config.model_validate(read_yaml(path))
+
+
+def load_cash13_scenarios(path: str | Path) -> list[Scenario]:
+    """Load and validate a list of Scenario from a YAML file with a top-level `scenarios:` list."""
+    return [Scenario.model_validate(item) for item in read_yaml(path)["scenarios"]]
 
 
 def load_skus(path: str | Path) -> list[Sku]:

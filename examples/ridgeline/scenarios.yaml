@@ -1,0 +1,11 @@
+# Named changes to cash13.yaml. Each change applies to every base flow of that name.
+scenarios:
+  - name: Wholesale pays 5 weeks late
+    receipts:
+      - {name: Wholesale AR collection, delay_weeks: 5}
+  - name: D2C sales 20 per cent down
+    receipts:
+      - {name: D2C daily sales, amount_factor: 0.8}
+  - name: Hire two staff from week 5
+    add_disbursements:
+      - {name: New staff payroll, amount: 9000, start_week: 5, recurrence: biweekly}
