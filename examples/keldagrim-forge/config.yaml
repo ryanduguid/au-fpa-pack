@@ -1,0 +1,34 @@
+name: Keldagrim Forge
+start_month: "2026-07"
+horizon_months: 12
+tax_rate: 0.25
+channels:
+  - name: Anvil line
+    annual_revenue: 2400000
+    growth_rate: 0.06
+    seasonality: [0.9, 0.9, 1.0, 1.0, 1.1, 1.2, 0.8, 0.8, 1.0, 1.1, 1.1, 1.2]
+    cogs_pct: 0.55
+  - name: Blast furnace line
+    annual_revenue: 1200000
+    growth_rate: 0.03
+    seasonality: [1.1, 1.0, 1.0, 0.9, 0.9, 0.8, 0.9, 1.0, 1.1, 1.1, 1.1, 1.0]
+    cogs_pct: 0.62
+opex:
+  - {name: Forge wages, kind: fixed, monthly_amount: 95000}
+  - {name: Guild dues, kind: fixed, monthly_amount: 4500}
+  - {name: Cartage, kind: variable, pct_of_revenue: 0.03}
+debt:
+  - {name: Dwarven Bank term loan, kind: term_loan, opening_balance: 420000, annual_rate: 0.089, monthly_principal: 7000}
+  - {name: Grand Exchange line of credit, kind: loc, opening_balance: 150000, annual_rate: 0.11}
+working_capital:
+  dso_days: 42
+  dpo_days: 35
+  dio_days: 68
+opening_balances:
+  cash: 120000
+  ar: 310000
+  ap: 180000
+  inventory: 260000
+  nol: 0
+da_monthly: 12500
+capex_monthly: 9000
