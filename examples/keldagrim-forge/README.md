@@ -30,18 +30,25 @@ The workbook must reproduce these engine lines for every month: `revenue`,
 `tax`, `net_income`, `wc_cash_impact`, `operating_cash_flow`, `capex`,
 `principal`, `free_cash_flow`, `change_in_cash`, `ending_cash`.
 
+For the stress run, model the Anvil line's largest receipt slipping a month as
+[scenarios.yaml](scenarios.yaml) defines it: the $238,017 receipt moves from
+the December 2026 working-capital cash impact to January 2027, and the cash
+rows that derive from it follow. Score that workbook with
+`--scenario receipt-delay`; the base scenario scores the undelayed build.
+
 ## Score it
 
 From the repository checkout:
 
 ```bash
 uv run --locked --extra dev python examples/keldagrim-forge/drill.py path/to/your.xlsx
+uv run --locked --extra dev python examples/keldagrim-forge/drill.py path/to/your.xlsx --scenario receipt-delay
 ```
 
 The drill runs `verify_structure` and `verify_workbook` against the engine and
-prints a verdict: structure, numbers, and any failure by line and month. It
-reads your workbook and computes locally. Record your own time; the drill
-records nothing.
+prints one JSON document to stdout: structure, numbers, and any failure by line
+and month, with the same scorecard in words on stderr. It reads your workbook
+and computes locally. Record your own time; the drill records nothing.
 
 For calibration, `model_to_excel` builds a passing workbook from the same
 config in one call, and `tests/test_keldagrim_forge.py` shows the failure modes

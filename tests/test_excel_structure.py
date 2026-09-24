@@ -210,3 +210,72 @@ def test_non_numeric_input_cell_fails(tmp_path):
     report = verify_structure(path)
     assert not report.passed
     assert any("is not a number" in f for f in report.failures)
+
+
+def test_lowercase_forbidden_function_fails(tmp_path):
+    from openpyxl import load_workbook
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    labels = {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+    model.cell(row=labels["revenue"], column=3, value="=log10(100)")
+    wb.save(path)
+    report = verify_structure(path)
+    assert not report.passed
+    assert any("log10" in f for f in report.failures)
+
+
+def test_unnamed_numeric_driver_fails(tmp_path):
+    from openpyxl import load_workbook
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    ws = wb["Assumptions"]
+    ws.cell(row=ws.max_row + 1, column=2, value=42.0)
+    wb.save(path)
+    report = verify_structure(path)
+    assert not report.passed
+    assert any("not covered by a named input" in f for f in report.failures)
+
+
+def test_formatting_only_cells_do_not_expand_the_model(tmp_path):
+    from openpyxl import load_workbook
+    from openpyxl.styles import Font
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    far = model.cell(row=model.max_row + 5, column=model.max_column + 3)
+    far.font = Font(color=INPUT_FONT_COLOR)
+    wb.save(path)
+    report = verify_structure(path)
+    assert report.passed, report.failures
+
+
+def test_check_row_of_literal_zeros_fails(tmp_path):
+    from openpyxl import load_workbook
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    labels = {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+    check_row = next(r for label, r in labels.items()
+                     if isinstance(label, str) and label.startswith("check_"))
+    for col in range(2, model.max_column + 1):
+        model.cell(row=check_row, column=col, value="=0")
+    wb.save(path)
+    report = verify_structure(path)
+    assert not report.passed
+    assert any("does not reference the model" in f for f in report.failures)
+
+
+def test_check_row_referencing_only_check_rows_fails(tmp_path):
+    from openpyxl import load_workbook
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    labels = {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+    check_row = next(r for label, r in labels.items()
+                     if isinstance(label, str) and label.startswith("check_"))
+    model.cell(row=check_row, column=3, value=f"=B{check_row}")
+    wb.save(path)
+    report = verify_structure(path)
+    assert not report.passed
+    assert any("does not reference the model" in f for f in report.failures)

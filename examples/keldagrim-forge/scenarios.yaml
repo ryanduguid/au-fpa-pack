@@ -1,0 +1,10 @@
+# Engine scenarios the drill can score. Amounts are AUD and synthetic.
+receipt-delay:
+  description: >
+    The Anvil line's largest monthly receipt, taken as its peak month revenue
+    in the base forecast, slips one month: collected in January 2027 instead
+    of December 2026. Model it in the working-capital cash impact, and the
+    cash rows that derive from it follow.
+  month: "2026-12"
+  to_month: "2027-01"
+  amount: 238017.0
