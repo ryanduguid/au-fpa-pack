@@ -18,6 +18,7 @@ REQUIRED = {
         ".github/workflows/ci.yml: test (3.11)",
         ".github/workflows/ci.yml: test (3.12)",
         ".github/workflows/ci.yml: test (3.13)",
+        ".github/workflows/ci.yml: test (3.14)",
         ".github/workflows/codeql.yml: Analyze (actions)",
         ".github/workflows/codeql.yml: Analyze (python)"
     ]
