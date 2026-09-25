@@ -39,6 +39,21 @@ CI runs the minimum-dependency suite on both Linux and Windows.
 
 ## The workflow
 
+`joined-fixtures.yml` runs the fabricated close-to-forecast, quarter and
+job-to-cash examples on this repository's pull requests, pushes to `main` and manual
+runs. Linux and Windows jobs use the proposed FPA checkout with full commit pins for
+Accounting Review Pipeline and Australian Accounting. Update those pins deliberately
+when adopting compatible changes. Each owner runs in a separate process and fresh
+environment, using its workspace lock where applicable.
+
+The existing [joined example driver](https://github.com/ryanduguid/accounting-review-pipeline/blob/3dcb5304f4c67c01de98b34638999b5f274d1810/packages/monthly-close-control-plane/docs/utility-workflows.md)
+checks cash values and retained REVIEW findings. Separate operating-system artefacts
+retain fabricated results, failure diagnostics, the escaped summary, success manifest
+and replay record for seven days. These public routes require no
+private grant checkout or cross-repository secret. Workflow files do not configure
+branch protection. Linux keeps the `public-fixtures` check name; require the added
+`public-fixtures (Windows)` check separately if it should block merges.
+
 1. Fork, branch, and make your change.
 2. **Add tests for new behaviour.** The project is test-first, and CI runs the suite on
    Python 3.11, 3.12, 3.13, and 3.14. A green suite is required to merge, as are clean
