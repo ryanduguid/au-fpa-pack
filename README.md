@@ -33,7 +33,9 @@ Synthetic example. Forecasting aid, not tax advice; a human approves the assumpt
 
 Lumbridge Services is a fictional Newcastle maintenance business. Its Varrock and Falador service lines are Old School RuneScape references; no game knowledge is needed. All amounts are AUD.
 
-From a clone, use Python 3.11 and the locked development environment:
+**Try it without Python:** [download the Excel workbook](https://duguid.com.au/assets/examples/lumbridge/lumbridge.xlsx), or [get the sample pack with its source files](https://duguid.com.au/assets/examples/lumbridge/lumbridge-sample-pack.zip). Use desktop Excel with automatic calculation. [Read the case and compare both scenarios](https://duguid.com.au/examples/profit-vs-cash-flow/) in your browser before opening the file.
+
+To reproduce it from a clone, use Python 3.11 and the locked development environment:
 
 ```bash
 uv sync --locked --extra dev
