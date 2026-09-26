@@ -205,6 +205,10 @@ def phase_a_actual(fy: str, prior_fy: str) -> dict[str, float]:
 # --------------------------------------------------------------------------- #
 # Phase B - historical holdout research (fit through FY2024, predict FY2025)
 # --------------------------------------------------------------------------- #
+# Unallocated corporate expense from the FY2025 10-K segment reconciliation (R106),
+# the step from segment Adjusted EBITDA to consolidated Adjusted EBITDA.
+CORPORATE_EXPENSE = {"FY2023": 62_661_000.0, "FY2024": 56_362_000.0, "FY2025": 57_338_000.0}
+
 HOLDOUT_OBJECTIVE = ResearchObjective(
     metrics=[
         MetricObjective(name="revenue_error", weight=0.30),
@@ -217,7 +221,7 @@ HOLDOUT_OBJECTIVE = ResearchObjective(
     complexity_penalty=0.01,
     # No single holdout metric may regress more than 50% versus the
     # champion, however good the weighted aggregate looks. A challenger that
-    # multiplies the EBITDA error twentyfold is not a better model.
+    # multiplies the EBITDA error more than thirtyfold is not a better model.
     max_metric_regression=0.50,
 )
 
@@ -337,9 +341,12 @@ def holdout_metrics(
         "gross_profit_error": _abs_variance_pct(
             float(annual["gross_profit"]), float(inc.loc["gross_profit", "FY2025"])
         ),
+        # Consolidated Adjusted EBITDA: the candidate carries FY2024 corporate
+        # expense forward, and the actual deducts FY2025's.
         "adjusted_ebitda_error": _abs_variance_pct(
-            float(roll_up_segments(segments)["adjusted_ebitda"]),
-            float(roll_up_segments(segments_for_year("FY2025"))["adjusted_ebitda"]),
+            float(roll_up_segments(segments)["adjusted_ebitda"]) - CORPORATE_EXPENSE["FY2024"],
+            float(roll_up_segments(segments_for_year("FY2025"))["adjusted_ebitda"])
+            - CORPORATE_EXPENSE["FY2025"],
         ),
         "working_capital_balance_error": sum(balance_errors) / len(balance_errors),
     }

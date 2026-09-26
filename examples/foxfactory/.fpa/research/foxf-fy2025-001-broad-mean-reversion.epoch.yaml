@@ -33,12 +33,12 @@ evaluation:
   champion_metrics:
     revenue_error: 0.05002313740483523
     gross_profit_error: 0.04437931898016257
-    adjusted_ebitda_error: 0.010274974079948958
+    adjusted_ebitda_error: 0.00797714367174321
     working_capital_balance_error: 0.07038772042962037
   challenger_metrics:
     revenue_error: 0.026082568163340182
     gross_profit_error: 0.001598294044893374
-    adjusted_ebitda_error: 0.2039435621042006
+    adjusted_ebitda_error: 0.2791990680792217
     working_capital_balance_error: 0.06349156763815528
   per_metric_improvement:
     revenue_error: 0.4785899182561259

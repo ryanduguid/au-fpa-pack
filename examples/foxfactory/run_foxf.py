@@ -236,7 +236,8 @@ def phase_b() -> str:
         "",
         "The research loop fits only on FY2023-FY2024 and holds FY2025 out.",
         "The champion is a flat FY2024 run rate. Each challenger is scored on",
-        "revenue, gross profit, Adjusted EBITDA, and working-capital balances,",
+        "revenue, gross profit, consolidated Adjusted EBITDA (after unallocated",
+        "corporate expense) and working-capital balances,",
         "with accounting checks required and a complexity penalty applied.",
         "",
         "| Epoch | Hypothesis | Status | Objective gain |",
@@ -271,7 +272,7 @@ def phase_b() -> str:
     labels = {
         "revenue_error": "Revenue error",
         "gross_profit_error": "Gross profit error",
-        "adjusted_ebitda_error": "Adjusted EBITDA error",
+        "adjusted_ebitda_error": "Consolidated Adjusted EBITDA error",
         "working_capital_balance_error": "Working-capital balance error",
     }
     for metric, label in labels.items():
