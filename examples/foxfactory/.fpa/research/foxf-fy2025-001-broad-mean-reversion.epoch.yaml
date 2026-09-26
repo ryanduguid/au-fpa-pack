@@ -54,3 +54,6 @@ evaluation:
   regression_guard_passed: false
   promotion_eligible: false
 notes: A deliberately simple annual holdout, not a claim of production-grade validation.
+  Rescored on 27 September 2026 against consolidated Adjusted EBITDA, after unallocated
+  corporate expense; the earlier record scored segment Adjusted EBITDA and had an
+  objective gain of +5.5%.

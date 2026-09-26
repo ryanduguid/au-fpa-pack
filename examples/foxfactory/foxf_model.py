@@ -359,6 +359,7 @@ def _historical_epoch(
     hypothesis: str,
     revenue_reversion: float,
     margin_reversion: float,
+    previous_objective_gain: float,
 ) -> ResearchEpoch:
     champion = holdout_metrics(revenue_reversion=0.0, margin_reversion=0.0)
     challenger = holdout_metrics(
@@ -420,7 +421,12 @@ def _historical_epoch(
         holdout_periods=holdout_periods,
         checks=checks,
         evaluation=evaluation,
-        notes="A deliberately simple annual holdout, not a claim of production-grade validation.",
+        notes=(
+            "A deliberately simple annual holdout, not a claim of production-grade validation. "
+            "Rescored on 27 September 2026 against consolidated Adjusted EBITDA, after "
+            "unallocated corporate expense; the earlier record scored segment Adjusted EBITDA "
+            f"and had an objective gain of {previous_objective_gain:+.1%}."
+        ),
     )
 
 
@@ -435,6 +441,7 @@ def historical_research_epochs() -> list[ResearchEpoch]:
         ),
         revenue_reversion=0.5,
         margin_reversion=0.5,
+        previous_objective_gain=0.055,
     )
     refined = _historical_epoch(
         epoch_id="foxf-fy2025-002-slow-margin-recovery",
@@ -445,6 +452,7 @@ def historical_research_epochs() -> list[ResearchEpoch]:
         ),
         revenue_reversion=0.5,
         margin_reversion=0.05,
+        previous_objective_gain=0.614,
     )
     return [broad, refined]
 
