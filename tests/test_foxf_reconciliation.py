@@ -42,8 +42,8 @@ def test_phase_a_reproduces_actual_driver_mechanics(fy, prior):
 def test_historical_holdout_rejects_broad_recovery_via_regression_guard():
     """Verify the research loop's verdicts are principled, not numerical artefacts.
 
-    Broad recovery (epoch 001) multiplies the adjusted EBITDA error roughly
-    twentyfold versus the champion. The improvement clamp bounds its SCORE
+    Broad recovery (epoch 001) multiplies the adjusted EBITDA error more than
+    thirtyfold versus the champion. The improvement clamp bounds its SCORE
     contribution at -1.0 (so it no longer swamps the weighted average), but the
     max_metric_regression guard inspects the RAW regression and blocks
     eligibility: a challenger that makes a key metric far worse is not a better
@@ -62,7 +62,12 @@ def test_historical_holdout_rejects_broad_recovery_via_regression_guard():
     assert refined.status == "proposed"
     assert refined.evaluation.regression_guard_passed is True
     assert refined.evaluation.promotion_eligible is True
-    assert refined.evaluation.objective_gain > 0.50
+    assert refined.evaluation.objective_gain > 0.30
+    # Scored on consolidated Adjusted EBITDA, after unallocated corporate expense:
+    # (223.375M - 56.362M) against (225.694M - 57.338M), not the segment totals alone.
+    assert refined.evaluation.champion_metrics["adjusted_ebitda_error"] == pytest.approx(
+        1_343_000 / 168_356_000
+    )
     for metric, champion in refined.evaluation.champion_metrics.items():
         assert refined.evaluation.challenger_metrics[metric] < champion
 

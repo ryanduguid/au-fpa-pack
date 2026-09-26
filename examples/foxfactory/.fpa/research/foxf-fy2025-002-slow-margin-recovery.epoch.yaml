@@ -33,24 +33,27 @@ evaluation:
   champion_metrics:
     revenue_error: 0.05002313740483523
     gross_profit_error: 0.04437931898016257
-    adjusted_ebitda_error: 0.010274974079948958
+    adjusted_ebitda_error: 0.00797714367174321
     working_capital_balance_error: 0.07038772042962037
   challenger_metrics:
     revenue_error: 0.026082568163340182
     gross_profit_error: 0.001598294044893374
-    adjusted_ebitda_error: 0.001396480319165562
+    adjusted_ebitda_error: 0.007669327075683387
     working_capital_balance_error: 0.06349156763815528
   per_metric_improvement:
     revenue_error: 0.4785899182561259
     gross_profit_error: 0.9639856112797087
-    adjusted_ebitda_error: 0.8640891637974332
+    adjusted_ebitda_error: 0.038587320064220165
     working_capital_balance_error: 0.09797380493889486
-  weighted_improvement: 0.6151956078597884
+  weighted_improvement: 0.3675450547398245
   complexity_cost: 0.0010000000000000009
   champion_complexity: 1.0
   challenger_complexity: 1.1
-  objective_gain: 0.6141956078597884
+  objective_gain: 0.3665450547398245
   hard_checks_passed: true
   regression_guard_passed: true
   promotion_eligible: true
 notes: A deliberately simple annual holdout, not a claim of production-grade validation.
+  Rescored on 27 September 2026 against consolidated Adjusted EBITDA, after unallocated
+  corporate expense; the earlier record scored segment Adjusted EBITDA and had an
+  objective gain of +61.4%.
