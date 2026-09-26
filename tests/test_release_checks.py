@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-POLICY = "87767ec809dc7f77bcd45808219adaf67841ae7b"
+POLICY = "cf95dd2362f0fa3d317b331aaf2881dde3d92add"
 # These are component jobs from successful main-branch runs, never skip-tolerant
 # aggregate gates. Review the list when a component's CI contract changes.
 REQUIRED = {
