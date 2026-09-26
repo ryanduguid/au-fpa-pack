@@ -249,9 +249,17 @@ def reconcile_account_table(
             raise ValueError(
                 f"expected columns {account_column!r} and {amount_column!r}, got {fields}"
             )
+        if any(not name.strip() for name in fields):
+            raise ValueError("unnamed source CSV columns")
+        if len(fields) != len(set(fields)):
+            raise ValueError("duplicate source CSV columns")
         for row in reader:
+            if None in row:
+                raise ValueError(f"extra fields in source CSV row {reader.line_num}")
             account = (row.get(account_column) or "").strip()
             if not account:
+                if any((value or "").strip() for value in row.values()):
+                    raise ValueError(f"missing account in source CSV row {reader.line_num}")
                 continue
             rows.append((account, _parse_amount(row.get(amount_column))))
 

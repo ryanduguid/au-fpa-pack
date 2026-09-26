@@ -14,13 +14,13 @@ def test_read_pl_csv_parses_amounts(tmp_path):
         'Revenue,"$6,000,000"\n'
         'COGS,"($2,940,000)"\n'
         "Blank,\n"
-        ",999\n"  # blank account -> skipped
+        ",\n"  # An entirely blank row carries no amount to discard.
     )
     result = read_pl_csv(csv_path)
     assert result["Revenue"] == 6_000_000.0
     assert result["COGS"] == -2_940_000.0
     assert result["Blank"] == 0.0
-    assert "" not in result  # blank-account row skipped
+    assert "" not in result
 
 
 def test_read_pl_csv_missing_file_raises():
