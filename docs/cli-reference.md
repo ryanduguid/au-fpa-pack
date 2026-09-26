@@ -129,8 +129,8 @@ through the closed `account-amount-csv` adapter and reconciles it against those
 totals. It does not import or run bundle code, and it does not contact a live
 system.
 
-The account-and-amount reader also refuses duplicate column headings, extra row
-fields and non-blank rows without an account. The generated connector applies
+The account-and-amount reader also refuses duplicate or unnamed column headings,
+extra row fields and non-blank rows without an account. The generated connector applies
 the same checks. Entirely blank rows and declared metadata columns remain valid;
 amounts containing thousands separators need CSV quotes.
 

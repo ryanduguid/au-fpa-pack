@@ -249,6 +249,8 @@ def reconcile_account_table(
             raise ValueError(
                 f"expected columns {account_column!r} and {amount_column!r}, got {fields}"
             )
+        if any(not name.strip() for name in fields):
+            raise ValueError("unnamed source CSV columns")
         if len(fields) != len(set(fields)):
             raise ValueError("duplicate source CSV columns")
         for row in reader:

@@ -2,8 +2,8 @@
 
 The importable package is `pyfpa`. The distribution name is `au-fpa-pack`.
 
-The account-and-amount CSV readers refuse duplicate column headings, extra row
-fields and non-blank rows without an account. These cases can otherwise discard
+The account-and-amount CSV readers refuse duplicate or unnamed column headings,
+extra row fields and non-blank rows without an account. These cases can otherwise discard
 or misassign amounts. Entirely blank rows and declared metadata columns remain
 supported. Quote amounts that contain thousands separators, such as `"1,234"`.
 

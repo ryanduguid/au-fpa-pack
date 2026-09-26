@@ -259,6 +259,8 @@ def normalize_fixture(path: str | Path) -> dict[str, float]:
             raise ValueError(
                 f"expected columns {{sorted(required)}}, got {{fields}}"
             )
+        if any(not name.strip() for name in fields):
+            raise ValueError("unnamed source CSV columns")
         if len(fields) != len(set(fields)):
             raise ValueError("duplicate source CSV columns")
         for row in reader:

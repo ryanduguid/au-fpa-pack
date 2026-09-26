@@ -36,6 +36,8 @@ def read_values(request, tmp_path):
     ("Account,Amount\nSales,1,\n", "extra fields"),
     ("Account,Amount,Amount\nSales,100,200\n", "duplicate.*columns"),
     ("Account,Account,Amount\nSales,Rent,100\n", "duplicate.*columns"),
+    ("Account,Amount,\nSales,100,Fabricated\n", "unnamed.*columns"),
+    ("Account,Amount, \t\nSales,100,Fabricated\n", "unnamed.*columns"),
 ])
 def test_ambiguous_rows_are_refused_instead_of_losing_values(tmp_path, read_values, body, message):
     path = tmp_path / "ambiguous.csv"

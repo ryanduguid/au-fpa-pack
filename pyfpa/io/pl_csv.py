@@ -34,6 +34,8 @@ def read_pl_csv(path: str | Path) -> dict[str, float]:
             raise ValueError(
                 f"expected columns 'Account' and 'Amount', got {fields}"
             )
+        if any(not name.strip() for name in fields):
+            raise ValueError("unnamed P&L CSV columns")
         if len(fields) != len(set(fields)):
             raise ValueError("duplicate P&L CSV columns")
         for row in reader:
