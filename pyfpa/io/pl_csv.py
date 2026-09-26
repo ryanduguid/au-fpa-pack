@@ -34,9 +34,15 @@ def read_pl_csv(path: str | Path) -> dict[str, float]:
             raise ValueError(
                 f"expected columns 'Account' and 'Amount', got {fields}"
             )
+        if len(fields) != len(set(fields)):
+            raise ValueError("duplicate P&L CSV columns")
         for row in reader:
+            if None in row:
+                raise ValueError(f"extra fields in P&L CSV row {reader.line_num}")
             account = (row["Account"] or "").strip()
             if not account:
+                if any((value or "").strip() for value in row.values()):
+                    raise ValueError(f"missing account in P&L CSV row {reader.line_num}")
                 continue
             if account in result:
                 raise ValueError(f"duplicate account in P&L CSV: {account!r}")

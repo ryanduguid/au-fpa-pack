@@ -259,9 +259,15 @@ def normalize_fixture(path: str | Path) -> dict[str, float]:
             raise ValueError(
                 f"expected columns {{sorted(required)}}, got {{fields}}"
             )
+        if len(fields) != len(set(fields)):
+            raise ValueError("duplicate source CSV columns")
         for row in reader:
+            if None in row:
+                raise ValueError(f"extra fields in source CSV row {{reader.line_num}}")
             account = (row.get(SOURCE_ACCOUNT_COLUMN) or "").strip()
             if not account:
+                if any((value or "").strip() for value in row.values()):
+                    raise ValueError(f"missing account in source CSV row {{reader.line_num}}")
                 continue
             if account in result:
                 raise ValueError(f"duplicate account: {{account}}")

@@ -129,6 +129,11 @@ through the closed `account-amount-csv` adapter and reconciles it against those
 totals. It does not import or run bundle code, and it does not contact a live
 system.
 
+The account-and-amount reader also refuses duplicate column headings, extra row
+fields and non-blank rows without an account. The generated connector applies
+the same checks. Entirely blank rows and declared metadata columns remain valid;
+amounts containing thousands separators need CSV quotes.
+
 The generated `extract_live()` function intentionally fails until the agent
 implements host-authenticated access. After the live path has its own
 fixture-backed tests and safe failure behaviour, register the recurring command
