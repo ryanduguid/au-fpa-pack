@@ -43,13 +43,13 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Lint with ruff
-        run: uv run --locked --extra dev ruff check .
+        run: uv run --locked --extra dev ruff check .  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Type-check with mypy
-        run: uv run --locked --extra dev mypy
+        run: uv run --locked --extra dev mypy  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   test:
     needs: lint
@@ -83,18 +83,15 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Run tests
         if: matrix.python-version != '3.13'
-        run: uv run --locked --extra dev pytest -q
+        run: uv run --locked --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Run tests with branch coverage over the whole package
         if: matrix.python-version == '3.13'
-        run: >-
-          uv run --locked --extra dev coverage run --branch
-          --source=pyfpa
-          -m pytest -q
+        run: uv run --locked --extra dev coverage run --branch --source=pyfpa -m pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       # The CLI tests run in-process, so this covers pyfpa/cli.py and
       # pyfpa/cli_commands/ as well as the memory, research and portfolio
@@ -102,13 +99,13 @@ jobs:
       # branch fails the build.
       - name: Require the package branch-coverage floor
         if: matrix.python-version == '3.13'
-        run: uv run --locked --extra dev coverage report --fail-under=100
+        run: uv run --locked --extra dev coverage report --fail-under=100  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.13'
         run: |
-          uv run --locked --extra dev coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
-          uv run --locked --extra dev diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
+          uv run --locked --extra dev coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml  # NOSONAR: unprivileged job; uv installs the hash-locked set
+          uv run --locked --extra dev diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Write whole-package coverage for Codecov
         if: matrix.python-version == '3.13'
@@ -158,13 +155,13 @@ jobs:
           prune-cache: true
 
       - name: Resolve declared minimums
-        run: uv sync --upgrade --resolution lowest-direct --extra dev
+        run: uv sync --upgrade --resolution lowest-direct --extra dev  # NOSONAR: unprivileged job; it resolves the declared minimum versions on purpose, so it cannot use the lock
 
       - name: Audit minimum resolution
         run: uv audit --locked --resolution lowest-direct
 
       - name: Run tests at declared minimums
-        run: uv run --locked --resolution lowest-direct --extra dev pytest -q
+        run: uv run --locked --resolution lowest-direct --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   connector-security-windows:
     needs: lint

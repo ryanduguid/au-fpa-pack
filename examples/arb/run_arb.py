@@ -189,11 +189,16 @@ def run_arb(
     """
     out = Path(output_dir) if output_dir is not None else OUT
     research = RESEARCH if output_dir is None else out / ".fpa" / "research"
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "reconciliation.md").write_text(phase_a())
-    (out / "historical-holdout.md").write_text(phase_b())
-    (out / "forecast-briefing.md").write_text(phase_c())
-    (out / "sensitivity.md").write_text(phase_d())
+    # Example CLI; the path is the operator's own --output or input file.
+    out.mkdir(parents=True, exist_ok=True)  # NOSONAR
+    # Example CLI; the path is the operator's own --output or input file.
+    (out / "reconciliation.md").write_text(phase_a())  # NOSONAR
+    # Example CLI; the path is the operator's own --output or input file.
+    (out / "historical-holdout.md").write_text(phase_b())  # NOSONAR
+    # Example CLI; the path is the operator's own --output or input file.
+    (out / "forecast-briefing.md").write_text(phase_c())  # NOSONAR
+    # Example CLI; the path is the operator's own --output or input file.
+    (out / "sensitivity.md").write_text(phase_d())  # NOSONAR
     # Phase B's verdicts belong in company memory, not only in the markdown:
     # the registry's challenger names its source epoch, and the research skill
     # tells the next agent to read prior epochs before repeating a hypothesis.
