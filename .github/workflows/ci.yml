@@ -109,7 +109,7 @@ jobs:
 
       - name: Write whole-package coverage for Codecov
         if: matrix.python-version == '3.13'
-        run: uv run --locked --extra dev coverage xml -o coverage-codecov.xml
+        run: uv run --locked --extra dev coverage xml -o coverage-codecov.xml  # NOSONAR: the environment is synced from uv.lock, whose dependencies install from wheels
 
       - name: Keep the coverage report for the Codecov upload
         if: matrix.python-version == '3.13'
