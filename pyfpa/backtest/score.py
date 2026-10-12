@@ -12,23 +12,50 @@ DEFAULT_SCORE_LINES = ["ending_cash", "ebitda", "revenue", "gross_margin"]
 DEFAULT_WEIGHTS = {"ending_cash": 0.4, "ebitda": 0.3, "revenue": 0.2, "gross_margin": 0.1}
 
 
+def _forecast_values(
+    forecast_df: pd.DataFrame, column: str, *, final_only: bool = False
+) -> pd.Series:
+    if column not in forecast_df.columns:
+        raise ValueError(f"forecast is missing {column!r}")
+    values = forecast_df[column]
+    if values.empty:
+        raise ValueError("at least one forecast period is required")
+    if final_only:
+        values = values.iloc[-1:]
+    try:
+        finite = not values.isna().any() and all(math.isfinite(value) for value in values)
+    except (TypeError, ValueError, OverflowError):
+        finite = False
+    if not finite:
+        raise ValueError(f"forecast {column!r} must contain finite numeric values")
+    return values
+
+
 def extract_lines(forecast_df: pd.DataFrame, score_lines: Sequence[str]) -> dict[str, float]:
     """Reduce a monthly forecast to a {line: value} dict for scoring.
 
     `ending_cash` is a stock (take the last month); `gross_margin` is a ratio
-    (Σ gross_profit / Σ revenue); every other line is a flow (sum)."""
+    (Σ gross_profit / Σ revenue); every other line is a flow (sum).
+    Selected evidence and aggregates must be finite. Stocks require only the
+    final period. Fully observed zero revenue retains the zero-margin convention.
+    """
     out: dict[str, float] = {}
     for line in score_lines:
-        if line == "ending_cash":
-            out[line] = float(forecast_df["ending_cash"].iloc[-1])
-        elif line == "gross_margin":
-            # Read revenue here, not before the loop: a score_lines without
-            # gross_margin must not require a revenue column to exist.
-            revenue = float(forecast_df["revenue"].sum())
-            gp = float(forecast_df["gross_profit"].sum())
-            out[line] = (gp / revenue) if revenue else 0.0
-        else:
-            out[line] = float(forecast_df[line].sum())
+        try:
+            if line == "ending_cash":
+                out[line] = float(_forecast_values(forecast_df, line, final_only=True).iloc[-1])
+            elif line == "gross_margin":
+                revenue = float(_forecast_values(forecast_df, "revenue").sum())
+                gp = float(_forecast_values(forecast_df, "gross_profit").sum())
+                if not math.isfinite(revenue) or not math.isfinite(gp):
+                    raise ValueError("forecast gross_margin must have finite totals")
+                out[line] = (gp / revenue) if revenue else 0.0
+            else:
+                out[line] = float(_forecast_values(forecast_df, line).sum())
+        except (TypeError, OverflowError) as error:
+            raise ValueError(f"forecast {line!r} must have a finite aggregate") from error
+        if not math.isfinite(out[line]):
+            raise ValueError(f"forecast {line!r} must have a finite aggregate")
     return out
 
 
@@ -103,6 +130,8 @@ def score_forecast(
                     {line: actual[line] for line in lines})
     per_line = {line: float(rec.loc[line, "variance_pct"]) for line in lines}
     total_w = sum(weights[line] for line in lines)
+    if not math.isfinite(total_w):
+        raise ValueError("scoring weights must sum to a finite number")
     if total_w <= 0:
         raise ValueError("scoring weights must sum to a positive value")
     used = {line: weights[line] / total_w for line in lines}

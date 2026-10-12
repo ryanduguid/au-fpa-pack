@@ -66,6 +66,37 @@ def test_validate_too_few_clients(tmp_path):
     assert res.validated is False
 
 
+def test_unscorable_candidate_forecast_refuses_fold_and_checks_remaining_clients(tmp_path, monkeypatch):
+    import importlib
+    import math
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_client(tmp_path, name, 45) for name in ("a", "b", "c")]
+    config = _base_cfg(45).model_copy(deep=True)
+    config.channels[0].annual_revenue = 1e308
+    config.horizon_months = 24
+    config.working_capital.dso_days = 0
+    config.working_capital.dpo_days = 0
+    config.working_capital.dio_days = 0
+    forecast = cashflow_from_config(config)
+    # Two years contain 2 * 1e308 revenue, beyond float's finite range, while
+    # 50% gross profit leaves 1e308 cash and every monthly value remains finite.
+    assert all(math.isfinite(value) for value in forecast.to_numpy().flat)
+    generate = module.cashflow_from_config
+    calls = []
+
+    def candidate_forecast(candidate_config):
+        calls.append(candidate_config)
+        return forecast if len(calls) == 1 else generate(candidate_config)
+
+    monkeypatch.setattr(module, "cashflow_from_config", candidate_forecast)
+    result = validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
+    assert len(calls) == 3
+    assert result.n_folds == 3
+    assert result.mean_delta == float("inf")
+    assert not result.validated
+
+
 def test_incomplete_recovered_actuals_do_not_count_as_validation(tmp_path, monkeypatch):
     import importlib
 
