@@ -1,3 +1,5 @@
+import pytest
+
 from pyfpa.backtest.score import score_forecast
 from pyfpa.backtest.snapshot import save_snapshot, snapshot_forecast
 from pyfpa.config.schemas import EntityConfig
@@ -64,6 +66,60 @@ def test_validate_too_few_clients(tmp_path):
     res = validate_prior("working_capital.dio_days", clients)
     assert res.n_folds == 1
     assert res.validated is False
+
+
+@pytest.mark.parametrize("named", [False, True])
+def test_unscorable_candidate_forecast_refuses_fold_and_checks_remaining_clients(tmp_path, monkeypatch, named):
+    import importlib
+    import math
+
+    from pyfpa.portfolio.approval import (
+        PromotionDenied,
+        candidate_digest,
+        validation_is_attested,
+    )
+    from pyfpa.portfolio.library import promote_prior
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_client(tmp_path, name, 45) for name in ("a", "b", "c")]
+    config = _base_cfg(45).model_copy(deep=True)
+    config.channels[0].annual_revenue = 1e308
+    config.horizon_months = 24
+    config.working_capital.dso_days = 0
+    config.working_capital.dpo_days = 0
+    config.working_capital.dio_days = 0
+    forecast = cashflow_from_config(config)
+    # Two years contain 2 * 1e308 revenue, beyond float's finite range, while
+    # 50% gross profit leaves 1e308 cash and every monthly value remains finite.
+    assert all(math.isfinite(value) for value in forecast.to_numpy().flat)  # nosec B101: pytest outcome assertion
+    generate = module.cashflow_from_config
+    calls = []
+
+    def candidate_forecast(candidate_config):
+        calls.append(candidate_config)
+        return forecast if len(calls) == 1 else generate(candidate_config)
+
+    monkeypatch.setattr(module, "cashflow_from_config", candidate_forecast)
+    candidate = PriorCandidate(
+        business_type="d2c", driver="working_capital.dio_days", value=45.0,
+        support=[client.path for client in clients], dispersion=0.0,
+    ) if named else None
+    result = validate_prior("working_capital.dio_days", clients, tolerance=float("inf"),
+                            candidate=candidate)
+    assert len(calls) == 3  # nosec B101: pytest outcome assertion
+    assert result.n_folds == 3  # nosec B101: pytest outcome assertion
+    assert result.mean_delta == float("inf")  # nosec B101: pytest outcome assertion
+    assert not result.validated
+    if candidate is not None:
+        assert result.candidate_digest == candidate_digest(candidate)  # nosec B101: pytest outcome assertion
+        assert validation_is_attested(  # nosec B101: pytest outcome assertion
+            result.candidate_digest, result.n_folds, result.mean_delta, result.attestation,
+        )
+        library = tmp_path / "library"
+        with pytest.raises(PromotionDenied, match="successful validation"):
+            promote_prior(library, candidate, result)
+        assert not library.exists()  # nosec B101: pytest outcome assertion
 
 
 def test_incomplete_recovered_actuals_do_not_count_as_validation(tmp_path, monkeypatch):
