@@ -95,11 +95,11 @@ jobs:
 
       # The CLI tests run in-process, so this covers pyfpa/cli.py and
       # pyfpa/cli_commands/ as well as the memory, research and portfolio
-      # packages. The floor is the measured figure rounded down to the nearest
-      # five, not an aspiration.
+      # packages. Every line and branch is covered, so any uncovered line or
+      # branch fails the build.
       - name: Require the package branch-coverage floor
         if: matrix.python-version == '3.13'
-        run: uv run --locked --extra dev coverage report --fail-under=90
+        run: uv run --locked --extra dev coverage report --fail-under=100
 
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.13'

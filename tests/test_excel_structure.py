@@ -279,3 +279,30 @@ def test_check_row_referencing_only_check_rows_fails(tmp_path):
     report = verify_structure(path)
     assert not report.passed
     assert any("does not reference the model" in f for f in report.failures)
+
+
+def test_a_model_sheet_with_no_month_columns_fails(tmp_path):
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    wb.active.title = "Assumptions"
+    model = wb.create_sheet("Model")
+    model.cell(row=2, column=1, value="revenue")
+    path = tmp_path / "bare.xlsx"
+    wb.save(path)
+    report = verify_structure(path)
+    assert not report.passed  # nosec B101: pytest outcome assertion
+    assert "Model sheet has no month columns" in report.failures  # nosec B101: pytest outcome assertion
+
+
+def test_a_calculation_cell_whose_font_has_no_colour_passes(tmp_path):
+    from openpyxl import load_workbook
+    from openpyxl.styles import Font
+
+    path = _build(tmp_path)
+    wb = load_workbook(path)
+    wb["Model"].cell(row=2, column=2).font = Font(bold=True)
+    wb.save(path)
+    assert load_workbook(path)["Model"].cell(row=2, column=2).font.color is None  # nosec B101: pytest outcome assertion
+    report = verify_structure(path)
+    assert report.passed, report.failures  # nosec B101: pytest outcome assertion

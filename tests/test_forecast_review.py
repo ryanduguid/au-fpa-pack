@@ -183,3 +183,13 @@ def test_a_non_finite_closing_cash_leaves_its_month_and_the_next_not_run(sample_
     assert [(status, period) for code, status, period in codes(review) if code == "FR-CASH-ROLLFORWARD"] == [
         (Status.NOT_RUN, "2026-05"), (Status.NOT_RUN, "2026-06"),
     ]
+
+
+def test_integer_arithmetic_beyond_the_float_range_is_not_run(sample_config, forecast):
+    changed = forecast.astype(object)
+    # Each operand is a finite float, but their exact integer result is not.
+    big = int(1e308)
+    changed.loc[changed.index[2], ["ebitda", "da", "interest", "pretax_income"]] = [big, -big, 0, big]
+    review = review_forecast(changed, sample_config)
+    assert ("FR-IDENTITY-PRETAX-INCOME", Status.NOT_RUN, "2026-03") in codes(review)  # nosec B101: pytest outcome assertion
+    assert ("FR-IDENTITY-PRETAX-INCOME", Status.FAIL, "2026-03") not in codes(review)  # nosec B101: pytest outcome assertion

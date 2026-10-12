@@ -68,3 +68,8 @@ def test_fy_summary_rejects_unknown_grouping():
     frame = pd.DataFrame({"x": [1.0] * 12}, index=months)
     with pytest.raises(ValueError, match="by must be"):
         fy_summary(frame, by="week")
+
+
+def test_a_daily_period_is_read_as_its_month():
+    assert fy_label(pd.Period("2026-07-15", freq="D")) == "FY2027"  # nosec B101: pytest outcome assertion
+    assert fy_quarter_label(pd.Period("2026-06-30", freq="D")) == "Q4 FY2026"  # nosec B101: pytest outcome assertion

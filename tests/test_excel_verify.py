@@ -170,3 +170,66 @@ def test_verify_accepts_datetime_month_headers(tmp_path):
         model.cell(row=1, column=2 + m, value=period.start_time.to_pydatetime())
     wb.save(path)
     assert verify_workbook(path, expected).passed
+
+
+def _labelled_rows(model):
+    return {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+
+
+def test_verify_reports_a_blank_header_and_unevaluated_cells(tmp_path):
+    # A blank header, a required line with no cells at all and a blank check
+    # month each fail by name; none is skipped.
+    from openpyxl import load_workbook
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    expected = cashflow_from_config(cfg)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    labels = _labelled_rows(model)
+    model.cell(row=1, column=7).value = None
+    model.cell(row=labels["check_cash_roll"], column=3).value = None
+    model.cell(row=model.max_row + 1, column=1, value="extra_line")
+    wb.save(path)
+    expected["extra_line"] = 0.0
+    report = verify_workbook(path, expected)
+    assert not report.passed  # nosec B101: pytest outcome assertion
+    assert "month 6: workbook header '' vs expected '2026-06'" in report.failures  # nosec B101: pytest outcome assertion
+    assert any(f.startswith("extra_line month 1: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
+    assert any(f.startswith("check_cash_roll month 2: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("raw", [None, float("nan")])
+def test_verify_reports_a_cell_that_evaluates_to_nothing(tmp_path, monkeypatch, raw):
+    # The formulas engine can hand back None or NaN for a cell; that is a
+    # failure, never a silent match.
+    import types
+
+    from openpyxl import load_workbook
+
+    import pyfpa.excel.verify as v
+
+    cfg = _simple_cfg()
+    path = tmp_path / "m.xlsx"
+    model_to_excel(cfg, path)
+    row = _labelled_rows(load_workbook(path)["Model"])["gross_profit"]
+    real = v._load_formulas()
+
+    class Model:
+        def loads(self, name):
+            self.inner = real.ExcelModel().loads(name)
+            return self
+
+        def finish(self):
+            self.inner.finish()
+            return self
+
+        def calculate(self):
+            solution = dict(self.inner.calculate())
+            solution[f"'[m.xlsx]MODEL'!C{row}"] = types.SimpleNamespace(value=[[raw]])
+            return solution
+
+    monkeypatch.setattr(v, "_load_formulas", lambda: types.SimpleNamespace(ExcelModel=Model))
+    report = verify_workbook(path, cashflow_from_config(cfg))
+    assert not report.passed  # nosec B101: pytest outcome assertion
+    assert "gross_profit month 2: workbook returned NaN/None" in report.failures  # nosec B101: pytest outcome assertion
