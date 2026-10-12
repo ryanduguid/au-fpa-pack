@@ -81,7 +81,7 @@ def test_unscorable_candidate_forecast_refuses_fold_and_checks_remaining_clients
     forecast = cashflow_from_config(config)
     # Two years contain 2 * 1e308 revenue, beyond float's finite range, while
     # 50% gross profit leaves 1e308 cash and every monthly value remains finite.
-    assert all(math.isfinite(value) for value in forecast.to_numpy().flat)
+    assert all(math.isfinite(value) for value in forecast.to_numpy().flat)  # nosec B101: pytest outcome assertion
     generate = module.cashflow_from_config
     calls = []
 
@@ -91,9 +91,9 @@ def test_unscorable_candidate_forecast_refuses_fold_and_checks_remaining_clients
 
     monkeypatch.setattr(module, "cashflow_from_config", candidate_forecast)
     result = validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
-    assert len(calls) == 3
-    assert result.n_folds == 3
-    assert result.mean_delta == float("inf")
+    assert len(calls) == 3  # nosec B101: pytest outcome assertion
+    assert result.n_folds == 3  # nosec B101: pytest outcome assertion
+    assert result.mean_delta == float("inf")  # nosec B101: pytest outcome assertion
     assert not result.validated
 
 

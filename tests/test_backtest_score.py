@@ -130,9 +130,9 @@ def test_large_finite_equal_weights_preserve_signed_errors(weight):
     )
     revenue_error = (150.0 - 100.0) / 100.0
     ebitda_error = (50.0 - 100.0) / 100.0
-    assert result.per_line == {"revenue": revenue_error, "ebitda": ebitda_error}
-    assert result.weights == {"revenue": 0.5, "ebitda": 0.5}
-    assert result.fitness == (abs(revenue_error) + abs(ebitda_error)) / 2
+    assert result.per_line == {"revenue": revenue_error, "ebitda": ebitda_error}  # nosec B101: pytest outcome assertion
+    assert result.weights == {"revenue": 0.5, "ebitda": 0.5}  # nosec B101: pytest outcome assertion
+    assert result.fitness == (abs(revenue_error) + abs(ebitda_error)) / 2  # nosec B101: pytest outcome assertion
 
 
 def test_large_finite_weight_does_not_require_disabled_evidence():
@@ -140,8 +140,8 @@ def test_large_finite_weight_does_not_require_disabled_evidence():
         {"revenue": 110.0}, {"revenue": 100.0},
         weights={"revenue": 1e308, "absent": 0.0},
     )
-    assert result.weights == {"revenue": 1.0}
-    assert result.fitness == pytest.approx((110.0 - 100.0) / 100.0)
+    assert result.weights == {"revenue": 1.0}  # nosec B101: pytest outcome assertion
+    assert result.fitness == pytest.approx((110.0 - 100.0) / 100.0)  # nosec B101: pytest outcome assertion
 
 
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf"), pd.NA])
@@ -196,15 +196,15 @@ def test_extract_lines_reports_unsupported_selected_values():
 def test_extract_lines_preserves_explicit_zero_and_final_stock_evidence():
     frame = pd.DataFrame({"revenue": [100.0, 0.0], "ending_cash": [float("nan"), 90.0],
                           "unselected": [pd.NA, pd.NA]})
-    assert extract_lines(frame, ["revenue", "ending_cash"]) == {
+    assert extract_lines(frame, ["revenue", "ending_cash"]) == {  # nosec B101: pytest outcome assertion
         "revenue": 100.0, "ending_cash": 90.0,
     }
 
 
 def test_extract_lines_preserves_zero_revenue_margin_convention():
     frame = pd.DataFrame({"revenue": [0.0], "gross_profit": [0.0]})
-    assert extract_lines(frame, ["gross_margin"]) == {"gross_margin": 0.0}
+    assert extract_lines(frame, ["gross_margin"]) == {"gross_margin": 0.0}  # nosec B101: pytest outcome assertion
 
 
 def test_extract_lines_empty_selection_requires_no_evidence():
-    assert extract_lines(pd.DataFrame(), []) == {}
+    assert extract_lines(pd.DataFrame(), []) == {}  # nosec B101: pytest outcome assertion
