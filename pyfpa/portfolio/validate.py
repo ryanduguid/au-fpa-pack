@@ -59,8 +59,8 @@ def validate_prior(
     <= tolerance with >= 2 folds - a peer-derived value does not degrade held-out fit.
     Repeated workspaces are rejected: a fold whose peers include copies of the
     held-out client is not held out. A fold whose peer-derived value leaves the
-    held-out client with no forecast, because the engine refuses the result (for
-    example impossible working-capital flows), counts as an infinitely worse fit,
+    held-out client with no scorable forecast, because generation or extraction
+    refuses the result, counts as an infinitely worse fit,
     so the prior cannot validate and the other folds still run.
 
     Pass `candidate` to stamp its digest and an attestation into the result.
@@ -97,16 +97,15 @@ def validate_prior(
         prior_value = statistics.median(peer_values)
         data = copy.deepcopy(snap.assumptions)
         apply_override(data, driver, prior_value)
+        # Score the same lines and weights as the stored snapshot.
+        scored_lines = list(score.per_line) or DEFAULT_SCORE_LINES
         try:
             forecast = cashflow_from_config(EntityConfig.model_validate(data))
+            predicted = extract_lines(forecast, scored_lines)
         except ValueError:
             deltas.append(math.inf)
             refused = True
             continue
-        # Score over the SAME lines/weights Loop A used for this snapshot, so the new
-        # fitness and the stored fitness are apples-to-apples (not assumed defaults).
-        scored_lines = list(score.per_line) or DEFAULT_SCORE_LINES
-        predicted = extract_lines(forecast, scored_lines)
         new_fitness = score_forecast(
             predicted, recover_actuals(snap), weights=score.weights or None
         ).fitness
