@@ -1,6 +1,7 @@
 # Australian financial planning and analysis with openfpa
 
 [![tests](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/ryanduguid/au-fpa-pack/graph/badge.svg)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
 [![CodeQL](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml/badge.svg)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
 [![Snyk](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml)
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=5C2D91&labelColor=04001F)](https://pypi.org/project/au-fpa-pack/)
