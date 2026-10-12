@@ -193,6 +193,13 @@ def test_extract_lines_reports_unsupported_selected_values():
         extract_lines(pd.DataFrame({"revenue": ["unsupported"]}), ["revenue"])
 
 
+def test_extract_lines_refuses_an_integer_total_beyond_float_range():
+    # Each integer converts to a finite float, but their exact sum does not.
+    frame = pd.DataFrame({"revenue": pd.Series([10**308, 10**308], dtype=object)})
+    with pytest.raises(ValueError, match="finite aggregate"):
+        extract_lines(frame, ["revenue"])
+
+
 def test_extract_lines_preserves_explicit_zero_and_final_stock_evidence():
     frame = pd.DataFrame({"revenue": [100.0, 0.0], "ending_cash": [float("nan"), 90.0],
                           "unselected": [pd.NA, pd.NA]})
