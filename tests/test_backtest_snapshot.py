@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 import yaml
 
@@ -31,6 +32,13 @@ def test_snapshot_forecast_captures_assumptions_and_predictions():
     assert snap.assumptions["channels"][0]["annual_revenue"] == 1_200_000.0
     assert snap.predicted["revenue"] == pytest.approx(1_200_000.0)
     assert snap.score is None
+
+
+def test_snapshot_forecast_refuses_incomplete_caller_supplied_evidence():
+    frame = pd.DataFrame({"revenue": [100.0, float("nan")]})
+    with pytest.raises(ValueError, match="finite"):
+        snapshot_forecast(_cfg(), frame, label="Synthetic", created="2026-10-12",
+                          score_lines=["revenue"])
 
 
 def test_snapshot_round_trip(tmp_path):
