@@ -31,3 +31,14 @@ def test_render_scorecard_table():
     assert "| 2026-01 |" in md
     assert "| 2026-02 |" in md
     assert "fitness" in md.lower()
+
+
+def test_render_scorecard_skips_unscored_snapshots():
+    snaps = [
+        Snapshot(label="2026-01", created="2026-02-01", assumptions={}, predicted={}),
+        Snapshot(label="2026-02", created="2026-03-01", assumptions={}, predicted={},
+                 score=ScoreResult(fitness=0.03, per_line={"revenue": -0.01}, weights={})),
+    ]
+    md = render_scorecard(snaps)
+    assert "| 2026-01 |" not in md  # nosec B101: pytest outcome assertion
+    assert "| 2026-02 | 0.0300 | revenue -1.0% |" in md  # nosec B101: pytest outcome assertion

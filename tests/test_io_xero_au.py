@@ -405,3 +405,33 @@ def test_subtotals_of_less_headings_and_both_export_layouts_still_read(tmp_path)
     assert read_xero_report(path).by_account() == {"Sales": 10000.0, "Rent": -2000.0}
     for fixture in ("xero_pl_au_export.csv", "xero_bs_au_export.csv", "xero_pl_au.csv", "xero_bs_au.csv"):
         assert read_xero_report(FIXTURE_PL.parent / fixture).rows
+
+
+def test_a_missing_report_is_refused_by_path(tmp_path):
+    with pytest.raises(FileNotFoundError, match="Xero report not found: .*absent.csv"):
+        read_xero_report(tmp_path / "absent.csv")
+
+
+def test_a_report_with_only_blank_lines_is_refused(tmp_path):
+    blank = tmp_path / "blank.csv"
+    blank.write_text("\n , \n", encoding="utf-8")
+    with pytest.raises(ValueError, match="no rows parsed from .*blank.csv"):
+        read_xero_report(blank)
+
+
+def test_report_layout_skips_a_row_with_no_label(tmp_path):
+    p = tmp_path / "pl.csv"
+    p.write_text(
+        "Profit and Loss\nOrg\nFor the month ended 31 August 2026\n\n"
+        "Account,Aug 2026,Aug 2025\n\n"
+        "Trading Income\nSales,100.00,90.00\n,,90.00\nTotal Trading Income,100.00,90.00\n",
+        encoding="utf-8",
+    )
+    rows = read_xero_report(p).rows
+    assert [(r.account, r.amount) for r in rows] == [("Sales", 100.0)]  # nosec B101: pytest outcome assertion
+
+
+def test_gst_detector_is_undetermined_without_income(tmp_path):
+    p = tmp_path / "costs.csv"
+    p.write_text("Code,Account,Amount\n627,Rent,(6500.00)\n", encoding="utf-8")
+    assert detect_gst_inclusive(read_xero_report(p), control_total=1000.0) is None  # nosec B101: pytest outcome assertion

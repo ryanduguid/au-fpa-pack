@@ -46,3 +46,11 @@ def test_fill_formula_row_writes_formula_strings():
     assert ws.cell(row=5, column=1).value == "gross_profit"
     assert ws.cell(row=5, column=2).value == "=B3-B4"
     assert ws.cell(row=5, column=4).value == "=D3-D4"
+
+
+def test_add_named_row_applies_the_number_format():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Assumptions"
+    add_named_row(wb, ws, name="growth", row=2, start_col=2, values=[0.1, 0.2], number_format=PERCENT_FORMAT)
+    assert [ws.cell(row=2, column=c).number_format for c in (2, 3)] == [PERCENT_FORMAT] * 2  # nosec B101: pytest outcome assertion

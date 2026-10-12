@@ -103,7 +103,8 @@ def score_forecast(
                     {line: actual[line] for line in lines})
     per_line = {line: float(rec.loc[line, "variance_pct"]) for line in lines}
     total_w = sum(weights[line] for line in lines)
-    if total_w <= 0:
+    # Unreachable: every weight in lines is positive, so their sum is too.
+    if total_w <= 0:  # pragma: no cover
         raise ValueError("scoring weights must sum to a positive value")
     used = {line: weights[line] / total_w for line in lines}
     fitness = sum(used[line] * abs(per_line[line]) for line in lines)

@@ -235,3 +235,28 @@ def test_finite_opening_balances_keep_their_existing_range(value):
 def test_finite_revenue_has_no_new_ceiling(value):
     channel = Channel(name="Sales", annual_revenue=value, seasonality=[1.0] * 12, cogs_pct=0.5)
     assert channel.annual_revenue == value
+
+
+def test_channel_name_must_not_be_blank():
+    with pytest.raises(ValidationError, match="name must not be empty"):
+        Channel(name="  ", annual_revenue=1200.0, seasonality=[1.0] * 12, cogs_pct=0.5)
+
+
+def test_seasonality_weights_must_be_non_negative():
+    with pytest.raises(ValidationError, match="seasonality weights must be non-negative"):
+        Channel(name="D2C", annual_revenue=1200.0, seasonality=[-1.0] + [1.0] * 11, cogs_pct=0.5)
+
+
+def test_seasonality_weights_must_not_all_be_zero():
+    with pytest.raises(ValidationError, match="seasonality weights must sum to a positive number"):
+        Channel(name="D2C", annual_revenue=1200.0, seasonality=[0.0] * 12, cogs_pct=0.5)
+
+
+def test_debt_name_must_not_be_blank():
+    with pytest.raises(ValidationError, match="name must not be empty"):
+        DebtInstrument(name=" ", kind="term_loan", opening_balance=0.0, annual_rate=0.0)
+
+
+def test_debt_name_is_trimmed():
+    debt = DebtInstrument(name=" Term ", kind="term_loan", opening_balance=0.0, annual_rate=0.0)
+    assert debt.name == "Term"  # nosec B101: pytest outcome assertion
