@@ -43,13 +43,13 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev --no-build
 
       - name: Lint with ruff
-        run: uv run --locked --extra dev ruff check .
+        run: uv run --locked --extra dev --no-build ruff check .
 
       - name: Type-check with mypy
-        run: uv run --locked --extra dev mypy
+        run: uv run --locked --extra dev --no-build mypy
 
   test:
     needs: lint
@@ -83,16 +83,16 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev  # NOSONAR: only the Python 3.15 pre-release leg builds sdists, for locked packages with no 3.15 wheel yet (such as PyYAML and pydantic-core), from hash-pinned uv.lock entries
 
       - name: Run tests
         if: matrix.python-version != '3.13'
-        run: uv run --locked --extra dev pytest -q
+        run: uv run --locked --extra dev pytest -q  # NOSONAR: runs in the environment synced above, which on Python 3.15 includes packages built from hash-pinned sdists
 
       - name: Run tests with branch coverage over the whole package
         if: matrix.python-version == '3.13'
         run: >-
-          uv run --locked --extra dev coverage run --branch
+          uv run --locked --extra dev --no-build coverage run --branch
           --source=pyfpa
           -m pytest -q
 
@@ -102,13 +102,13 @@ jobs:
       # branch fails the build.
       - name: Require the package branch-coverage floor
         if: matrix.python-version == '3.13'
-        run: uv run --locked --extra dev coverage report --fail-under=100
+        run: uv run --locked --extra dev --no-build coverage report --fail-under=100
 
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.13'
         run: |
-          uv run --locked --extra dev coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
-          uv run --locked --extra dev diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
+          uv run --locked --extra dev --no-build coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
+          uv run --locked --extra dev --no-build diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
 
       - name: Write whole-package coverage for Codecov
         if: matrix.python-version == '3.13'
@@ -158,13 +158,13 @@ jobs:
           prune-cache: true
 
       - name: Resolve declared minimums
-        run: uv sync --upgrade --resolution lowest-direct --extra dev
+        run: uv sync --upgrade --resolution lowest-direct --extra dev --no-build  # NOSONAR: this job deliberately re-resolves to the declared minimum versions, so it cannot use uv.lock; --no-build keeps it to wheels
 
       - name: Audit minimum resolution
         run: uv audit --locked --resolution lowest-direct
 
       - name: Run tests at declared minimums
-        run: uv run --locked --resolution lowest-direct --extra dev pytest -q
+        run: uv run --locked --resolution lowest-direct --extra dev --no-build pytest -q
 
   connector-security-windows:
     needs: lint

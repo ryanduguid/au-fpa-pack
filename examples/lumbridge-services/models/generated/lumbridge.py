@@ -322,7 +322,8 @@ def export_workbook(path: Path, result: dict) -> None:
 
 def run(output: Path, delay_days: int = 0) -> dict:
     result = forecast(delay_days=delay_days)
-    output.mkdir(parents=True, exist_ok=True)
+    # S8707: the local caller chooses the destination; no output root is imposed.
+    output.mkdir(parents=True, exist_ok=True)  # NOSONAR
     export_workbook(output / "lumbridge.xlsx", result)
     result["monthly"].to_csv(output / "monthly.csv", float_format="%.2f")
     result["weekly"].to_csv(output / "cash13.csv", float_format="%.2f")

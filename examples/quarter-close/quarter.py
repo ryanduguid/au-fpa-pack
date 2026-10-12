@@ -143,10 +143,11 @@ def calculate(document: dict) -> list[dict]:
 
 
 def run(source: Path, output: Path) -> dict:
-    content = source.read_bytes()
+    # S8707: the local caller chooses the input file and a new destination; no root is imposed.
+    content = source.read_bytes()  # NOSONAR
     document = json.loads(content)
     periods = calculate(document)
-    output.mkdir(parents=True, exist_ok=False)
+    output.mkdir(parents=True, exist_ok=False)  # NOSONAR
     previous, snapshot_hashes = None, {}
     errors = []
     for index, period in enumerate(periods):
