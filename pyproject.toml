@@ -122,7 +122,7 @@ warn_return_any = false
 
 # Third-party packages that ship no type information.
 [[tool.mypy.overrides]]
-module = ["formulas.*", "openpyxl.*", "pandas.*"]
+module = ["atheris", "formulas.*", "openpyxl.*", "pandas.*"]
 ignore_missing_imports = true
 
 # Example and script modules the tests import through sys.path. They sit outside

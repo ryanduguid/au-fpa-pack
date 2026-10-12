@@ -1,0 +1,11 @@
+Code,Account,Amount,Tracking Option
+200,Sales - Varrock maintenance,40000,Varrock
+201,Sales - Falador repairs,20000,Falador
+400,Materials,-12000,
+610,Operating overhead,-6000,
+644,Wages and Salaries,-24000,
+640,Superannuation,-2880,
+646,Workers Compensation,-480,
+650,Leave provision expense,-2254.15,
+660,Depreciation,-200,
+800,Interest expense,-200,
