@@ -17,7 +17,7 @@ SEEDS = sorted((ROOT / "fuzz" / "corpus").iterdir())
 
 
 def test_the_corpus_is_not_empty() -> None:
-    assert SEEDS
+    assert SEEDS  # nosec B101: pytest outcome assertion
 
 
 @pytest.mark.parametrize("seed", SEEDS, ids=lambda seed: seed.name)
