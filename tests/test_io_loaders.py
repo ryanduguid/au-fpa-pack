@@ -110,3 +110,30 @@ def test_entity_sku_and_cash13_loaders_read_utf8_under_a_non_utf8_locale(
     assert load_config(config_path).channels[0].name == "Ngô Café"
     assert load_skus(skus_path)[0].name == "Wingbäck chair"
     assert load_cash13_config(cash13_path).receipts[0].name == "Ngô Café receipt"
+
+
+def test_optional_yaml_is_empty_when_only_the_file_is_missing(tmp_path):
+    from pyfpa.io.loaders import read_optional_yaml
+
+    assert read_optional_yaml(tmp_path / "absent" / "registry.yaml") == {}  # nosec B101: pytest outcome assertion
+
+
+def test_optional_yaml_refuses_a_file_where_a_folder_belongs(tmp_path, monkeypatch):
+    # Windows reports a file in the path as FileNotFoundError, which the parent
+    # walk must not read as absence. POSIX raises NotADirectoryError from the
+    # first lstat, so the Windows report is reproduced here on every platform.
+    from pyfpa.io.loaders import read_optional_yaml
+
+    blocker = tmp_path / "registry"
+    blocker.write_text("not a folder", encoding="utf-8")
+    target = blocker / "registry.yaml"
+    real_lstat = Path.lstat
+
+    def lstat(self):
+        if self == target:
+            raise FileNotFoundError(2, "The system cannot find the path specified", str(self))
+        return real_lstat(self)
+
+    monkeypatch.setattr(Path, "lstat", lstat)
+    with pytest.raises(FileNotFoundError):
+        read_optional_yaml(target)

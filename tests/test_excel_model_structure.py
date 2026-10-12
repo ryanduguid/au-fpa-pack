@@ -68,3 +68,22 @@ def test_formula_vocabulary_is_restricted(tmp_path):
                 # T.INV( and N( all slipped past the guard that exists to block them.
                 for fn in re.findall(r"([A-Z][A-Z0-9.]*)\s*\(", cell.value):
                     assert fn in allowed, f"forbidden function {fn} in {cell.value}"
+
+
+def test_the_assumptions_builder_refuses_a_config_without_dso_days():
+    # model_to_excel refuses a collection profile first; the builder keeps its
+    # own check so it never writes a blank receivables input if called alone.
+    import pytest
+    from openpyxl import Workbook
+
+    from pyfpa.excel import model_workbook
+
+    data = _cfg().model_dump()
+    data["working_capital"] = {"collection_profile": [0.5, 0.5], "opening_ar_collection_profile": [1.0],
+                               "dpo_days": 30.0, "dio_days": 60.0}
+    cfg = EntityConfig.model_validate(data)
+    assert cfg.working_capital.dso_days is None  # nosec B101: pytest outcome assertion
+    wb = Workbook()
+    wb.active.title = "Assumptions"
+    with pytest.raises(ValueError, match="the Excel export needs dso_days"):
+        model_workbook._build_assumptions(wb, cfg)
