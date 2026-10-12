@@ -112,3 +112,14 @@ def test_growth_the_days_model_can_follow_is_unchanged(sample_config):
     df = working_capital_from_config(_config(sample_config, dso=45, ar=150), revenue, cogs)
     assert df["ar"].tolist() == [150.0, 300.0, 225.0, 375.0]
     assert df["wc_cash_impact"].tolist() == [0.0, -150.0, 75.0, -150.0]
+
+
+def test_a_config_copied_past_validation_without_receivables_is_refused(sample_config):
+    rev = revenue_from_config(sample_config)
+    cogs = cogs_from_config(sample_config, rev)
+    # model_copy skips validation, so it can drop dso_days with no profile in its place.
+    unvalidated = sample_config.model_copy(
+        update={"working_capital": sample_config.working_capital.model_copy(update={"dso_days": None})}
+    )
+    with pytest.raises(ValueError, match="working capital needs dso_days or collection_profile"):
+        working_capital_from_config(unvalidated, rev, cogs)

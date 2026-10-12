@@ -26,8 +26,8 @@ def test_changed_line_coverage_is_scoped_and_fail_closed() -> None:
     assert "--compare-branch=origin/main" in workflow
     assert "--branch-coverage" in workflow
     assert "--fail-under=100" in workflow
-    # The whole-package floor sits beside the changed-line gate. It is the
-    # measured figure rounded down, so it must stay a concrete number.
+    # The whole-package floor sits beside the changed-line gate and must stay
+    # a concrete number.
     assert re.search(r"coverage report --fail-under=\d+", workflow)
 
 

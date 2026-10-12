@@ -176,3 +176,18 @@ def test_sg_rate_change_at_fy_boundary():
     july = frame.loc[pd.Period("2025-07", freq="M"), "super_guarantee"]
     assert june == pytest.approx(10000 * 0.115)
     assert july == pytest.approx(10000 * 0.12)
+
+
+def test_role_name_must_not_be_blank():
+    with pytest.raises(ValueError, match="name must not be empty"):
+        Role(name="   ", annual_salary=120000, jurisdiction="NSW")
+
+
+def test_role_months_may_be_stated_as_none():
+    role = Role(name="Engineer", annual_salary=120000, jurisdiction="NSW", start_month=None, end_month=None)
+    assert (role.start_month, role.end_month) == (None, None)  # nosec B101: pytest outcome assertion
+
+
+def test_role_month_that_is_not_a_calendar_month_is_refused():
+    with pytest.raises(ValueError, match="month must be YYYY-MM, got '2026-13'"):
+        Role(name="Engineer", annual_salary=120000, jurisdiction="NSW", start_month="2026-13")

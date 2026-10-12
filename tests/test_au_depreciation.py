@@ -406,3 +406,47 @@ def test_a_charge_beyond_float_range_is_refused_not_spread_as_infinity():
     assert evidence.usable is True
     with pytest.raises(dep.DepreciationEvidenceError, match="outside the range"):
         dep.straight_line_schedule(evidence, months())
+
+
+def test_usable_evidence_has_no_refusal_reasons():
+    assert dep.load_evidence(GOOD).refusal_reasons == ()  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("value,expected", [
+    ("six thousand", "is not a decimal: 'six thousand'"),
+    ("NaN", "is not finite"),
+    ("Infinity", "is not finite"),
+])
+def test_a_money_string_that_is_not_a_finite_decimal_is_refused(tmp_path, value, expected):
+    path = _resealed(
+        tmp_path, "badmoney.json",
+        lambda record: record["calculation"]["normalised"]["values"].__setitem__("range_dep", value),
+    )
+    with pytest.raises(dep.DepreciationEvidenceError, match=expected):
+        dep.load_evidence(path)
+
+
+def test_a_file_that_is_not_json_is_this_modules_error(tmp_path):
+    path = tmp_path / "broken.json"
+    path.write_text("{not json", encoding="utf-8")
+    with pytest.raises(dep.DepreciationEvidenceError, match="is not valid JSON"):
+        dep.load_evidence(path)
+
+
+def test_a_record_without_a_calculation_block_is_refused(tmp_path):
+    path = tmp_path / "nocalc.json"
+    path.write_text(json.dumps({"schema": "lodgeit-calculation-evidence/1"}), encoding="utf-8")
+    with pytest.raises(dep.DepreciationEvidenceError, match="no calculation block"):
+        dep.load_evidence(path)
+
+
+def test_a_charge_cannot_be_spread_across_no_months():
+    empty = pd.period_range("2026-10", periods=0, freq="M")
+    with pytest.raises(dep.DepreciationEvidenceError, match="no months to spread"):
+        dep.straight_line_schedule(dep.load_evidence(GOOD), empty)
+
+
+def test_a_charge_in_fractions_of_a_cent_is_refused():
+    evidence = replace(dep.load_evidence(GOOD), charge=Decimal("100.005"))
+    with pytest.raises(dep.DepreciationEvidenceError, match="not a whole-cent amount"):
+        dep.straight_line_schedule(evidence, months())
