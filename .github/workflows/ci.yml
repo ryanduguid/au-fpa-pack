@@ -104,8 +104,8 @@ jobs:
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.13'
         run: |
-          uv run --locked --no-build --extra dev coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
-          uv run --locked --no-build --extra dev diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
+          uv run --no-sync --no-build coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
+          uv run --no-sync --no-build diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
 
       - name: Write whole-package coverage for Codecov
         if: matrix.python-version == '3.13'
