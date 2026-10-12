@@ -4,13 +4,14 @@
 [![Codecov](https://codecov.io/gh/ryanduguid/au-fpa-pack/graph/badge.svg)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
 [![CodeQL](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml/badge.svg)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
 [![Snyk](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml)
-[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=5C2D91&labelColor=04001F)](https://pypi.org/project/au-fpa-pack/)
-[![licence: MIT](https://img.shields.io/badge/licence-MIT-5C2D91.svg?labelColor=04001F)](LICENSE)
-[![python](https://img.shields.io/badge/python-3.12%2B-5C2D91.svg?labelColor=04001F)](https://www.python.org/)
+[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-66023C.svg?labelColor=000000)](LICENSE)
+[![python](https://img.shields.io/badge/python-3.12%2B-66023C.svg?labelColor=000000)](https://www.python.org/)
 [![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7?branch=main)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)
 [![SonarCloud](https://img.shields.io/sonar/quality_gate/ryanduguid_au-fpa-pack?server=https%3A%2F%2Fsonarcloud.io&label=SonarCloud&labelColor=000000)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-release%20files%20scanned-66023C?labelColor=000000&logo=virustotal&logoColor=FFFFF0)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/ryanduguid/au-fpa-pack/badge)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 
 An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
 Guiderail: 30 June financial years, Xero AU account mapping, GST and BAS cash timing
