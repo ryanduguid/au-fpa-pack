@@ -7,6 +7,7 @@
 [![SonarCloud](https://img.shields.io/sonar/quality_gate/ryanduguid_au-fpa-pack?server=https%3A%2F%2Fsonarcloud.io&label=SonarCloud&labelColor=000000&style=flat-square)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
 [![Codacy code quality](https://img.shields.io/codacy/grade/04c98b58f66e4339b598720a05aa6bc7?label=Codacy&labelColor=000000&style=flat-square)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/ryanduguid/au-fpa-pack?label=Scorecard&labelColor=000000&style=flat-square)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
+[![OpenSSF Best Practices](https://img.shields.io/cii/level/15426?label=Best%20Practices&labelColor=000000&style=flat-square)](https://www.bestpractices.dev/projects/15426)
 [![SLSA 3](https://img.shields.io/badge/SLSA-level%203-990024?labelColor=000000&style=flat-square)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat-square&logo=virustotal&logoColor=FFFFF0)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=66023C&labelColor=000000&style=flat-square)](https://pypi.org/project/au-fpa-pack/)
