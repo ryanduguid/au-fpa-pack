@@ -1,3 +1,20 @@
+# v0.3.0
+
+Breaking for code and configurations written against 0.2.0:
+
+- Requires Python 3.14 or later (#172). 0.2.0 remains the last release for Python 3.12 and 3.13.
+- `fetch_rba_series` picks each month's value by observation date instead of file order, keeping the latest date in the month, and raises `ValueError` when one date carries two different values (#175). Identical duplicate dates are still accepted.
+- Forecast evidence extraction refuses incomplete selected evidence and non-finite totals, and `score_forecast` requires a finite, positive weight total (#182). Missing values used to disappear during reduction, and two weights of 1e308 could erase nonzero errors. A refused portfolio candidate now fails its fold while the other folds continue.
+
+Added:
+
+- `XeroReport.account_identities()` and `pyfpa.memory.reimport.compare_reimport()` compare account identities, mappings and source metadata across Xero re-imports (#179). Account codes keep leading zeros, and the comparison reports additions, removals, renames, tracking changes, mapping changes and coverage gaps without changing amounts or company memory.
+
+Fixed:
+
+- `write_onboarding_outputs` refuses a linked `decisions` folder that leads out of the workspace, and replaces files through a sibling temporary file, so a failed overwrite no longer truncates an existing business profile (#173).
+- A forecast snapshot whose assumptions cannot be written no longer creates an empty file or erases an existing snapshot during an explicit overwrite (#177).
+
 # v0.2.0
 
 Breaking for code and configurations written against 0.1.2:
