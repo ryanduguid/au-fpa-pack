@@ -688,11 +688,11 @@ wheels = [
 
 [[package]]
 name = "payday-super-checker"
-version = "0.1.8"
+version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/89/a1/1055bb10d314a77b886ac77247606835d9cb7cfb4def4e5dc0b2392d0ac1/payday_super_checker-0.1.8.tar.gz", hash = "sha256:6169f002593d4e8226f2ad3a584a3061694afe0444183ea2e8cd1c665dd8fb99", size = 371710, upload-time = "2026-09-27T04:39:27.099Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/68/a76b9a3fdc310082ab5d0ae5121516c45a75ce3e4ca732dd528f7a92ac12/payday_super_checker-0.1.9.tar.gz", hash = "sha256:ed147432478d0e0ebca804df24f95707fc5ae022c0aeb4e8244b41148f86ae51", size = 375083, upload-time = "2026-09-30T11:11:57.278Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/b7/7e34c5b8daaf7916cc6d00a812cce3ba969d66a8b00060ed2e8b4519292f/payday_super_checker-0.1.8-py3-none-any.whl", hash = "sha256:dbe864b6b4c3ea31f1290d6220d82cf76299a4b74b33da188a2e8c46ca027bc5", size = 119850, upload-time = "2026-09-27T04:39:25.727Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/05/b5597c1b0b64753424feb947bb49374c278fe420473482da7d9ff963cc44/payday_super_checker-0.1.9-py3-none-any.whl", hash = "sha256:c94a3572e1f7bf76a6060bf081cf0d376bca4c3fa15f07b16a118151409f7b0a", size = 120378, upload-time = "2026-09-30T11:11:55.935Z" },
 ]
 
 [[package]]
