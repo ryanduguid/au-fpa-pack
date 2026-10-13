@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "51 5 * * 2"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -44,16 +47,18 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Lint with ruff
-        run: uv run --locked --extra dev ruff check .
+        run: uv run --locked --extra dev ruff check .  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Type-check with mypy
-        run: uv run --locked --extra dev mypy
+        run: uv run --locked --extra dev mypy  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   test:
     needs: lint
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     timeout-minutes: 15
     permissions:
       contents: read
@@ -61,7 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.14"]
+        python-version: ["3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,6 +78,7 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -83,32 +89,41 @@ jobs:
           prune-cache: true
 
       - name: Install locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Run tests
         if: matrix.python-version != '3.14'
-        run: uv run --locked --extra dev pytest -q
+        run: uv run --locked --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Run tests with branch coverage over the whole package
         if: matrix.python-version == '3.14'
-        run: >-
-          uv run --locked --extra dev coverage run --branch
-          --source=pyfpa
-          -m pytest -q
+        run: uv run --locked --extra dev coverage run --branch --source=pyfpa -m pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       # The CLI tests run in-process, so this covers pyfpa/cli.py and
       # pyfpa/cli_commands/ as well as the memory, research and portfolio
-      # packages. The floor is the measured figure rounded down to the nearest
-      # five, not an aspiration.
+      # packages. Every line and branch is covered, so any uncovered line or
+      # branch fails the build.
       - name: Require the package branch-coverage floor
         if: matrix.python-version == '3.14'
-        run: uv run --locked --extra dev coverage report --fail-under=90
+        run: uv run --locked --extra dev coverage report --fail-under=100  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Require complete changed-line coverage in connector and workspace logic
         if: matrix.python-version == '3.14'
         run: |
-          uv run --locked --extra dev coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
-          uv run --locked --extra dev diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
+          uv run --no-sync --no-build coverage xml --include="pyfpa/memory/connectors.py,pyfpa/memory/workspace.py" -o coverage.xml
+          uv run --no-sync --no-build diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100
+
+      - name: Write whole-package coverage for Codecov
+        if: matrix.python-version == '3.14'
+        run: uv run --locked --extra dev coverage xml -o coverage-codecov.xml  # NOSONAR: the environment is synced from uv.lock, whose dependencies install from wheels
+
+      - name: Keep the coverage report for the Codecov upload
+        if: matrix.python-version == '3.14'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-codecov
+          path: coverage-codecov.xml
+          retention-days: 1
 
       - name: Audit locked dependencies
         if: matrix.python-version == '3.14'
@@ -146,16 +161,18 @@ jobs:
           prune-cache: true
 
       - name: Resolve declared minimums
-        run: uv sync --upgrade --resolution lowest-direct --extra dev
+        run: uv sync --upgrade --resolution lowest-direct --extra dev  # NOSONAR: unprivileged job; it resolves the declared minimum versions on purpose, so it cannot use the lock
 
       - name: Audit minimum resolution
         run: uv audit --locked --no-config --python-version 3.14 --resolution lowest-direct
 
       - name: Run tests at declared minimums
-        run: uv run --locked --resolution lowest-direct --extra dev pytest -q
+        run: uv run --locked --resolution lowest-direct --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   connector-security-windows:
     needs: lint
+    env:
+      UV_PYTHON: "3.15"
     timeout-minutes: 10
     permissions:
       contents: read
@@ -169,7 +186,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14"
+          python-version: "3.15"
+          allow-prereleases: true
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -184,6 +202,59 @@ jobs:
 
       - name: Verify connector trust boundaries
         run: uv run --locked --extra dev pytest -q tests/test_memory_connectors.py
+
+  # The upload runs apart from the tests so the OIDC token is never available
+  # while test code runs. It is exempt from ci-gates: a Codecov outage must
+  # not block merges.
+  codecov:
+    name: upload coverage to Codecov
+    needs: test
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # Authenticate the Codecov upload with OIDC; no stored token.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-codecov
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: coverage-codecov.xml
+          disable_search: true
+          fail_ci_if_error: true
+
+  fuzzing:
+    name: fuzz the Xero CSV importers
+    # A 60-second random exploration is not a repeatable merge gate, so it
+    # runs after merge, weekly and on demand rather than on pull requests.
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install the pinned fuzzer
+        run: >-
+          python -m pip install --require-hashes --only-binary :all:
+          --requirement requirements-fuzz.txt
+      - name: Fuzz the importers
+        run: >-
+          python -m fuzz.xero_import fuzz/corpus
+          -max_total_time=60 -max_len=4096 -timeout=2 -rss_limit_mb=1024
 
   ci-gates:
     # The one context branch protection requires from this workflow. It fails
@@ -209,4 +280,4 @@ jobs:
       - name: Require every job to be listed, kept and successful
         env:
           RESULTS: ${{ toJSON(needs) }}
-        run: python3 .github/ci/check_gates.py .github/workflows/ci.yml ci-gates
+        run: python3 .github/ci/check_gates.py .github/workflows/ci.yml ci-gates --exempt codecov --exempt fuzzing

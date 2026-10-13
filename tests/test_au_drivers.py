@@ -343,3 +343,86 @@ def test_abs_dataflow_id_reaches_the_request_url(monkeypatch):
     series = fetch_abs_series("wpi")
     assert seen["url"].endswith("/data/WPI_H/csv")
     assert series.series_id == "WPI_H"
+
+
+def test_fetch_sends_the_user_agent_and_extra_headers(monkeypatch):
+    import urllib.request
+
+    seen = {}
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b"payload"
+
+    def urlopen(request, timeout):
+        seen["url"] = request.full_url
+        seen["headers"] = dict(request.header_items())
+        seen["timeout"] = timeout
+        return Response()
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert drivers._fetch("https://example.invalid/x.csv", headers={"x-api-key": "k"}, timeout=5) == b"payload"  # nosec B101: pytest outcome assertion
+    assert seen["url"] == "https://example.invalid/x.csv"  # nosec B101: pytest outcome assertion
+    assert seen["headers"]["User-agent"] == drivers._UA  # nosec B101: pytest outcome assertion
+    assert seen["headers"]["X-api-key"] == "k"  # nosec B101: pytest outcome assertion
+    assert seen["timeout"] == 5  # nosec B101: pytest outcome assertion
+
+
+def _rba_table(*rows: str) -> bytes:
+    return "\n".join(["F1 INTEREST RATES", "Title,Cash Rate Target", *rows]).encode()
+
+
+def test_rba_table_without_a_series_id_row_is_refused(monkeypatch):
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: _rba_table("Units,Per cent", "01-Jan-2026,3.60"))
+    with pytest.raises(ValueError, match="no 'Series ID' metadata row in f1-data.csv"):
+        fetch_rba_series("cash_rate_target")
+
+
+def test_rba_table_without_the_named_series_is_refused(monkeypatch):
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: _rba_table("Series ID,OTHER", "01-Jan-2026,3.60"))
+    with pytest.raises(ValueError, match="series id FIRMMCRTD not present in f1-data.csv"):
+        fetch_rba_series("cash_rate_target")
+
+
+def test_rba_table_without_units_and_with_unreadable_rows(monkeypatch):
+    raw = _rba_table("Series ID,FIRMMCRTD", "not a date,3.70", "02-Feb-2026,n/a", "27-Feb-2026,3.85")
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = fetch_rba_series("cash_rate_target")
+    assert series.units == ""  # nosec B101: pytest outcome assertion
+    assert series.data == {"2026-02": 3.85}  # nosec B101: pytest outcome assertion
+
+
+def test_abs_response_without_time_or_observation_columns_is_refused(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: b"PERIOD,VALUE\n2026-Q1,4.0\n")
+    with pytest.raises(ValueError, match=r"unexpected SDMX-CSV shape .*\['PERIOD', 'VALUE'\]"):
+        fetch_abs_series("wpi")
+
+
+def test_abs_response_with_mixed_units_is_refused(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE,UNIT_MEASURE\n2026-Q1,4.0,Percent\n2026-Q2,110.0,Index\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="ambiguous ABS units"):
+        fetch_abs_series("wpi")
+
+
+def test_abs_skips_blank_and_unreadable_observations(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE\n2026-Q1,\n2026-Q2,not a number\n2026-Q3,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    assert fetch_abs_series("wpi").data == {"2026Q3": 4.2}  # nosec B101: pytest outcome assertion
+
+
+def test_abs_refuses_a_repeated_period_in_one_series(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE\n2026-Q1,4.0\n2026-Q1,4.1\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="duplicate ABS period 2026Q1"):
+        fetch_abs_series("wpi")

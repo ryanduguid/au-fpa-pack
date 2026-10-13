@@ -262,7 +262,8 @@ def export_workbook(path: Path, result: dict) -> None:
     chart.x_axis.tickLblPos, chart.y_axis.tickLblPos = "low", "nextTo"
     chart.x_axis.numFmt, chart.y_axis.numFmt = "dd-mmm", '#,##0;(#,##0)'
     chart.legend.position, chart.legend.overlay = "r", False
-    for series in chart.series:
+    # openpyxl's LineChart.series is a list; the scanner's type information is wrong.
+    for series in chart.series:  # NOSONAR
         series.smooth = False
     chart.width, chart.height = 23, 9
     weekly.add_chart(chart, "A22")
@@ -322,7 +323,8 @@ def export_workbook(path: Path, result: dict) -> None:
 
 def run(output: Path, delay_days: int = 0) -> dict:
     result = forecast(delay_days=delay_days)
-    output.mkdir(parents=True, exist_ok=True)
+    # Example CLI; the path is the operator's own --output or input file.
+    output.mkdir(parents=True, exist_ok=True)  # NOSONAR
     export_workbook(output / "lumbridge.xlsx", result)
     result["monthly"].to_csv(output / "monthly.csv", float_format="%.2f")
     result["weekly"].to_csv(output / "cash13.csv", float_format="%.2f")

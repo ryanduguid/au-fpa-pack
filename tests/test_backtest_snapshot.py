@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 import yaml
 
@@ -31,6 +32,13 @@ def test_snapshot_forecast_captures_assumptions_and_predictions():
     assert snap.assumptions["channels"][0]["annual_revenue"] == 1_200_000.0
     assert snap.predicted["revenue"] == pytest.approx(1_200_000.0)
     assert snap.score is None
+
+
+def test_snapshot_forecast_refuses_incomplete_caller_supplied_evidence():
+    frame = pd.DataFrame({"revenue": [100.0, float("nan")]})
+    with pytest.raises(ValueError, match="finite"):
+        snapshot_forecast(_cfg(), frame, label="Synthetic", created="2026-10-12",
+                          score_lines=["revenue"])
 
 
 def test_snapshot_round_trip(tmp_path):
@@ -67,3 +75,26 @@ def test_snapshot_serialisation_failure_preserves_destination(tmp_path, overwrit
         assert load_snapshot(path) == original  # nosec B101
     else:
         assert not path.exists()  # nosec B101: pytest outcome assertion
+
+
+def test_a_missing_snapshot_is_reported_by_path(tmp_path):
+    with pytest.raises(FileNotFoundError, match="snapshot not found: .*absent.yaml"):
+        load_snapshot(tmp_path / "absent.yaml")
+
+
+def test_forecast_snapshots_are_empty_without_a_forecasts_folder(tmp_path):
+    from pyfpa.backtest.snapshot import load_forecast_snapshots
+
+    assert load_forecast_snapshots(tmp_path) == ([], [])  # nosec B101: pytest outcome assertion
+
+
+def test_forecast_snapshots_list_the_files_that_failed_to_parse(tmp_path):
+    from pyfpa.backtest.snapshot import load_forecast_snapshots
+
+    forecasts = tmp_path / "forecasts"
+    forecasts.mkdir()
+    save_snapshot(Snapshot(label="Good", created="2026-10-09", assumptions={}, predicted={}), forecasts / "a.yaml")
+    (forecasts / "b.yaml").write_text("label: [unclosed\n", encoding="utf-8")
+    snapshots, errors = load_forecast_snapshots(tmp_path)
+    assert [snapshot.label for snapshot in snapshots] == ["Good"]  # nosec B101: pytest outcome assertion
+    assert len(errors) == 1 and errors[0].startswith("b.yaml: ")  # nosec B101: pytest outcome assertion

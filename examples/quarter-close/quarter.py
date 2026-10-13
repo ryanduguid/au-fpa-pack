@@ -143,10 +143,12 @@ def calculate(document: dict) -> list[dict]:
 
 
 def run(source: Path, output: Path) -> dict:
-    content = source.read_bytes()
+    # Example CLI; the path is the operator's own --output or input file.
+    content = source.read_bytes()  # NOSONAR
     document = json.loads(content)
     periods = calculate(document)
-    output.mkdir(parents=True, exist_ok=False)
+    # Example CLI; the path is the operator's own --output or input file.
+    output.mkdir(parents=True, exist_ok=False)  # NOSONAR
     previous, snapshot_hashes = None, {}
     errors = []
     for index, period in enumerate(periods):

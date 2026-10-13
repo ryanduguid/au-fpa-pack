@@ -267,7 +267,8 @@ def save_snapshot(series: DriverSeries, directory: str | Path) -> Path:
     existing snapshot; the same day re-fetch appends a counter.
     """
     directory = Path(directory)
-    directory.mkdir(parents=True, exist_ok=True)
+    # Library API; the caller chooses its own snapshot directory.
+    directory.mkdir(parents=True, exist_ok=True)  # NOSONAR
     base = f"{series.source}_{series.name}_{series.retrieved.isoformat()}"
     path = directory / f"{base}.json"
     counter = 1

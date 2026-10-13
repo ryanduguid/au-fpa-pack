@@ -100,3 +100,18 @@ def test_lookups_past_the_verified_horizon_raise():
 def test_a_plain_list_of_entries_has_no_horizon():
     entries = list(load_super_guarantee_table())
     assert rate_at(entries, date(2031, 1, 1)) == 0.12
+
+
+def test_payroll_tax_before_a_jurisdictions_first_entry_raises():
+    table = load_payroll_tax_table()
+    with pytest.raises(ValueError, match="no NSW payroll tax entry effective on 2000-01-01"):
+        payroll_tax_at(table, "nsw", date(2000, 1, 1))
+
+
+def test_a_reviewed_until_that_is_not_a_date_is_refused(monkeypatch):
+    from pyfpa.au import rates
+
+    # A quoted value loads as a string, which says nothing about the review date.
+    monkeypatch.setattr(rates, "load_gst_bas_data", lambda: {"reviewed_until": "2027-06-30"})
+    with pytest.raises(ValueError, match="gst_bas.yaml must state reviewed_until as an ISO date"):
+        rates.require_bas_dates_reviewed(date(2026, 9, 30))

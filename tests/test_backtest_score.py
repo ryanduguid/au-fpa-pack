@@ -110,3 +110,108 @@ def test_a_zero_weight_line_no_longer_blocks_scoring():
 
     assert set(result.weights) == {"revenue"}
     assert "ebitda" not in result.per_line
+
+
+def test_score_forecast_refuses_overflowed_positive_weight_total():
+    with pytest.raises(ValueError, match="weights must sum to a finite number"):
+        score_forecast(
+            {"revenue": 150.0, "ebitda": 50.0},
+            {"revenue": 100.0, "ebitda": 100.0},
+            weights={"revenue": 1e308, "ebitda": 1e308},
+        )
+
+
+@pytest.mark.parametrize("weight", [1.0, 1e307])
+def test_large_finite_equal_weights_preserve_signed_errors(weight):
+    result = score_forecast(
+        {"revenue": 150.0, "ebitda": 50.0},
+        {"revenue": 100.0, "ebitda": 100.0},
+        weights={"revenue": weight, "ebitda": weight},
+    )
+    revenue_error = (150.0 - 100.0) / 100.0
+    ebitda_error = (50.0 - 100.0) / 100.0
+    assert result.per_line == {"revenue": revenue_error, "ebitda": ebitda_error}  # nosec B101: pytest outcome assertion
+    assert result.weights == {"revenue": 0.5, "ebitda": 0.5}  # nosec B101: pytest outcome assertion
+    assert result.fitness == (abs(revenue_error) + abs(ebitda_error)) / 2  # nosec B101: pytest outcome assertion
+
+
+def test_large_finite_weight_does_not_require_disabled_evidence():
+    result = score_forecast(
+        {"revenue": 110.0}, {"revenue": 100.0},
+        weights={"revenue": 1e308, "absent": 0.0},
+    )
+    assert result.weights == {"revenue": 1.0}  # nosec B101: pytest outcome assertion
+    assert result.fitness == pytest.approx((110.0 - 100.0) / 100.0)  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf"), pd.NA])
+@pytest.mark.parametrize("line,column", [
+    ("revenue", "revenue"),
+    ("gross_margin", "revenue"),
+    ("gross_margin", "gross_profit"),
+    ("ending_cash", "ending_cash"),
+])
+def test_extract_lines_refuses_non_finite_selected_values(value, line, column):
+    frame = pd.DataFrame({"revenue": [100.0, 100.0], "gross_profit": [40.0, 40.0],
+                          "ending_cash": [80.0, 90.0]})
+    frame[column] = pd.Series([frame[column].iloc[0], value], dtype=object)
+    with pytest.raises(ValueError, match="finite"):
+        extract_lines(frame, [line])
+
+
+@pytest.mark.parametrize("line,column", [
+    ("revenue", "revenue"),
+    ("gross_margin", "revenue"),
+    ("gross_margin", "gross_profit"),
+    ("ending_cash", "ending_cash"),
+])
+def test_extract_lines_reports_missing_selected_columns(line, column):
+    frame = _forecast().drop(columns=[column])
+    with pytest.raises(ValueError, match="missing"):
+        extract_lines(frame, [line])
+
+
+@pytest.mark.parametrize("line", ["revenue", "gross_margin", "ending_cash"])
+def test_extract_lines_refuses_zero_periods(line):
+    with pytest.raises(ValueError, match="period"):
+        extract_lines(_forecast().iloc[:0], [line])
+
+
+@pytest.mark.parametrize("columns,line", [
+    ({"revenue": [1e308, 1e308]}, "revenue"),
+    ({"revenue": [1e308, 1e308], "gross_profit": [1.0, 1.0]}, "gross_margin"),
+    ({"revenue": [1.0, 1.0], "gross_profit": [1e308, 1e308]}, "gross_margin"),
+    ({"revenue": [1e-308], "gross_profit": [1e308]}, "gross_margin"),
+])
+def test_extract_lines_refuses_non_finite_aggregates(columns, line):
+    with pytest.raises(ValueError, match="finite"):
+        extract_lines(pd.DataFrame(columns), [line])
+
+
+def test_extract_lines_reports_unsupported_selected_values():
+    with pytest.raises(ValueError, match="finite"):
+        extract_lines(pd.DataFrame({"revenue": ["unsupported"]}), ["revenue"])
+
+
+def test_extract_lines_refuses_an_integer_total_beyond_float_range():
+    # Each integer converts to a finite float, but their exact sum does not.
+    frame = pd.DataFrame({"revenue": pd.Series([10**308, 10**308], dtype=object)})
+    with pytest.raises(ValueError, match="finite aggregate"):
+        extract_lines(frame, ["revenue"])
+
+
+def test_extract_lines_preserves_explicit_zero_and_final_stock_evidence():
+    frame = pd.DataFrame({"revenue": [100.0, 0.0], "ending_cash": [float("nan"), 90.0],
+                          "unselected": [pd.NA, pd.NA]})
+    assert extract_lines(frame, ["revenue", "ending_cash"]) == {  # nosec B101: pytest outcome assertion
+        "revenue": 100.0, "ending_cash": 90.0,
+    }
+
+
+def test_extract_lines_preserves_zero_revenue_margin_convention():
+    frame = pd.DataFrame({"revenue": [0.0], "gross_profit": [0.0]})
+    assert extract_lines(frame, ["gross_margin"]) == {"gross_margin": 0.0}  # nosec B101: pytest outcome assertion
+
+
+def test_extract_lines_empty_selection_requires_no_evidence():
+    assert extract_lines(pd.DataFrame(), []) == {}  # nosec B101: pytest outcome assertion

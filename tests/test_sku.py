@@ -58,3 +58,8 @@ def test_revenue_pareto_does_not_follow_profit_ranking():
     ])
     assert frame.index[0] == "High revenue"
     assert pareto_breakpoint(frame, threshold=0.8) == 1
+
+
+def test_pareto_breakpoint_counts_every_sku_when_the_threshold_is_never_reached():
+    df = sku_profitability(_skus())
+    assert pareto_breakpoint(df, threshold=1.5) == len(df)  # nosec B101: pytest outcome assertion

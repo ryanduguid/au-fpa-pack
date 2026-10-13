@@ -64,6 +64,10 @@ include = ["pyfpa*"]
 "pyfpa.io" = ["fixtures/*.csv"]
 "pyfpa.au" = ["data/*.yaml", "fixtures/*.json"]
 
+[tool.coverage.report]
+# The module entry guard only hands over to main(), which the CLI tests call.
+exclude_also = ['if __name__ == "__main__":']
+
 [tool.ruff]
 target-version = "py314"
 
@@ -116,7 +120,7 @@ warn_return_any = false
 
 # Third-party packages that ship no type information.
 [[tool.mypy.overrides]]
-module = ["formulas.*", "openpyxl.*", "pandas.*"]
+module = ["atheris", "formulas.*", "openpyxl.*", "pandas.*"]
 ignore_missing_imports = true
 
 # Example and script modules the tests import through sys.path. They sit outside
