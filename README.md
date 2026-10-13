@@ -11,7 +11,7 @@
 [![SLSA 3](https://img.shields.io/badge/SLSA-level%203-990024?labelColor=000000&style=flat-square)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat-square&logo=virustotal&logoColor=FFFFF0)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=66023C&labelColor=000000&style=flat-square)](https://pypi.org/project/au-fpa-pack/)
-[![python](https://img.shields.io/badge/python-3.12%2B-66023C?labelColor=000000&style=flat-square)](https://www.python.org/)
+[![python](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat-square)](https://www.python.org/)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-66023C?labelColor=000000&style=flat-square)](LICENSE)
 
 An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
@@ -43,7 +43,7 @@ Lumbridge Services is a fictional Newcastle maintenance business. Its Varrock an
 
 **Try it without Python:** [download the Excel workbook](https://duguid.com.au/assets/examples/lumbridge/lumbridge.xlsx), or [get the sample pack with its source files](https://duguid.com.au/assets/examples/lumbridge/lumbridge-sample-pack.zip). Use desktop Excel with automatic calculation. [Read the case and compare both scenarios](https://duguid.com.au/examples/profit-vs-cash-flow/) in your browser before opening the file.
 
-To reproduce it from a clone, use Python 3.12 and the locked development environment:
+To reproduce it from a clone, use Python 3.14 and the locked development environment:
 
 ```bash
 uv sync --locked --extra dev
