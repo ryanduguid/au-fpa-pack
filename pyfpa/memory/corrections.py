@@ -44,7 +44,8 @@ def save_correction(correction: Correction, directory: str | Path, *, overwrite:
     controls the directory and its links; explicit overwrite follows file links.
     """
     slug = correction.slug
-    if not slug or any(char in slug for char in ("/", "\\", ":", "\0")):
+    # Dot-only slugs are path syntax and would load back under another stem.
+    if not slug.strip(".") or any(char in slug for char in ("/", "\\", ":", "\0")):
         raise ValueError("correction slug must be a non-empty filename stem")
     if slug.partition(".")[0].rstrip(" ").upper() in _WINDOWS_DEVICE_NAMES:
         raise ValueError("correction slug uses a reserved Windows device name")

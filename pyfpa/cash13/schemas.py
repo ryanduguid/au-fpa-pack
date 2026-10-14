@@ -5,9 +5,10 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # The weekly cash contract follows the entity config: an unrecognised key is a
-# mistake. Accepting extras let a misspelt field fall back to its default with
-# no word to the person who wrote it.
-_STRICT = ConfigDict(extra="forbid")
+# mistake, and every number must be finite. Accepting extras let a misspelt
+# field fall back to its default with no word to the person who wrote it, and a
+# NaN opening balance turned every ending_cash row into NaN.
+_STRICT = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
 class WeeklyFlow(BaseModel):
