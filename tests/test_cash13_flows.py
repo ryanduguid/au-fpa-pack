@@ -43,3 +43,18 @@ def test_misspelt_weekly_field_is_rejected():
 def test_misspelt_weekly_config_field_is_rejected():
     with pytest.raises(ValidationError):
         Cash13Config.model_validate({"opening_cash": 100.0, "weeks": 13, "reciepts": []})
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_non_finite_opening_cash_is_rejected(value):
+    # A NaN opening balance made every ending_cash row NaN without an error.
+    with pytest.raises(ValidationError, match="finite"):
+        Cash13Config.model_validate({"opening_cash": value})
+
+
+@pytest.mark.parametrize("side", ["receipts", "disbursements"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+def test_non_finite_weekly_amount_is_rejected(side, value):
+    flow = {"name": "x", "amount": value, "start_week": 1}
+    with pytest.raises(ValidationError, match="finite"):
+        Cash13Config.model_validate({"opening_cash": 100.0, side: [flow]})
