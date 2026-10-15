@@ -10,7 +10,7 @@ parents (fetch-depth: 2). It fails when:
   applies its own result rules);
 - a job in WORKFLOW other than GATE and the exempt jobs is missing from needs;
 - on a pull request, a job on the base branch's copy of WORKFLOW (or, for a new
-  or renamed file, of the one base workflow holding GATE) is gone, and WORKFLOW
+  or renamed file, of the one base workflow holding GATE or its reported name) is gone, and WORKFLOW
   has no comment "# removed-jobs: JOB" naming it (the declaration lives in the
   file, so it cannot change without a new commit and a new run);
 - a line at job-key indentation in the jobs block is not a job key it can read.
@@ -18,6 +18,7 @@ parents (fetch-depth: 2). It fails when:
 
 import json
 import os
+import re
 import string
 import subprocess
 import sys
@@ -42,23 +43,73 @@ def job_key(text: str) -> str | None:
     return name
 
 
-def parse_jobs(text: str) -> tuple[set[str], list[str]] | None:
-    """Return a workflow's job ids and unreadable job-level lines, or None without a jobs block."""
+def literal_name(text: str) -> str | None:
+    """Read a single-line literal name; unsupported YAML stays unknown."""
+    text = text.strip()
+    if text.startswith('"'):
+        try:
+            value, end = json.JSONDecoder().raw_decode(text)
+        except ValueError:
+            return None
+        if isinstance(value, str) and value and not re.search(r"[\r\n]", value):
+            tail = text[end:].strip()
+            return value if not tail or tail.startswith("#") else None
+        return None
+    if text.startswith("'"):
+        match = re.fullmatch(r"'((?:[^']|'')*)'\s*(?:#.*)?", text)
+        return match[1].replace("''", "'") if match and match[1] else None
+    text = re.split(r"\s+#", text, maxsplit=1)[0].strip()
+    if (not text or text[0] in "!&*[]{}>|%@`#" or re.search(r":\s|[\r\n]", text)
+            or text.lower() in {"null", "true", "false", "~"}
+            or re.fullmatch(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", text)):
+        return None
+    return text
+
+
+def parse_jobs(text: str) -> tuple[dict[str, str | None], list[str]] | None:
+    """Return job ids mapped to possible reported names, plus unreadable job-level lines."""
     parts = text.split("\njobs:\n", 1)
     if len(parts) != 2:
         return None
-    ids: set[str] = set()
+    names: dict[str, str | None] = {}
     unreadable: list[str] = []
+    job = None
+    named = False
+    unknown = False
+    in_name = False
+    has_property = False
     for line in parts[1].splitlines():
+        if not line.strip() or line.lstrip(" \t").startswith("#"):
+            continue
         if line[:1] not in ("", " ", "#"):
             break  # the next top-level key ends the jobs block
         if line.startswith("  ") and line[2:3] not in ("", " ", "#"):
-            name = job_key(line[2:])
-            if name is None:
+            job = job_key(line[2:])
+            named = in_name = has_property = False
+            if job is None:
                 unreadable.append(line)
             else:
-                ids.add(name)
-    return ids, unreadable
+                tail = line.split(":", 1)[1].strip()
+                unknown = job in names or bool(tail and not tail.startswith("#"))
+                names[job] = None if unknown else job
+        elif job is not None and line.strip() and not line.lstrip().startswith("#"):
+            indent = len(line) - len(line.lstrip(" "))
+            if indent < 4 or (not has_property and indent != 4):
+                unknown = True
+            if line.startswith("    ") and line[4:5] not in ("", " "):
+                has_property = True
+                key = job_key(line[4:])
+                in_name = key == "name"
+                if key is None or (in_name and named):
+                    unknown = True
+                elif in_name:
+                    names[job] = literal_name(line.split(":", 1)[1])
+                    named = True
+            elif in_name:
+                unknown = True  # a continued name is outside the single-line reader
+            if unknown:
+                names[job] = None
+    return names, unreadable
 
 
 def job_ids(text: str) -> set[str]:
@@ -69,29 +120,57 @@ def job_ids(text: str) -> set[str]:
     ids, unreadable = parsed
     if unreadable:
         sys.exit(f"Cannot read the job key {unreadable[0]!r}; the gate check needs updating")
-    return ids
+    return set(ids)
 
 
-def base_copy(workflow: str, gate: str) -> str | None:
+def possible_context(name: str | None, context: str) -> bool:
+    """Keep possible names using literal branches or the expression's literal ends."""
+    if name is None:
+        return True
+    if "${{" not in name:
+        return name == context
+    prefix, expression = name.split("${{", 1)
+    if "}}" not in expression:
+        return True
+    expression, suffix = expression.rsplit("}}", 1)
+    alternatives = re.fullmatch(
+        r"\s*[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*"
+        r"\s*(?:==|!=)\s*'(?:[^']|'')*'\s*"
+        r"&&\s*'((?:[^']|'')*)'\s*\|\|\s*'((?:[^']|'')*)'\s*", expression,
+    )
+    if alternatives:
+        return any(context == prefix + branch.replace("''", "'") + suffix
+                   for branch in alternatives.groups())
+    return (len(context) >= len(prefix) + len(suffix)
+            and context.startswith(prefix) and context.endswith(suffix))
+
+
+def base_copy(workflow: str, gate: str, head: str) -> str | None:
     """Return the base branch's copy of WORKFLOW, or of its predecessor, or None if it is new."""
+    candidates = {}
     if git("ls-tree", "--name-only", "HEAD^1", "--", workflow).strip():
-        return git("show", f"HEAD^1:{workflow}")
-    # Protection requires the gate by name, whatever file reports it, so a renamed
-    # or replacement workflow is compared with the one base workflow holding GATE.
-    candidates = []
-    listing = git("ls-tree", "-r", "--name-only", "HEAD^1", "--", ".github/workflows/")
-    for path in listing.splitlines():
+        candidates[workflow] = git("show", f"HEAD^1:{workflow}")
+    context = parse_jobs(head)[0][gate]
+    if context is None or "${{" in context:
+        sys.exit("Cannot determine the gate context; use a single-line literal name")
+    # shortcut: this narrow YAML reader cannot resolve aliases or evaluate expressions.
+    # Keep possible matches and reject ambiguity; use a full parser if broader syntax is needed.
+    # Match ID and reported context together: preferring an ID collision could select
+    # an unrelated workflow and silently lose the protected context's predecessor.
+    for path in base_workflow_paths():
         # GitHub reads workflows only from the top level of .github/workflows.
         if path.count("/") == 2 and path.endswith((".yml", ".yaml")):
             text = git("show", f"HEAD^1:{path}")
             parsed = parse_jobs(text)
-            if parsed is not None and gate in parsed[0]:
-                candidates.append(text)
+            if parsed is None or not parsed[0] or parsed[1]:
+                sys.exit(f"Cannot read base workflow {path}; the gate check needs updating")
+            if gate in parsed[0] or any(possible_context(name, context) for name in parsed[0].values()):
+                candidates[path] = text
     if len(candidates) > 1:
         sys.exit(
-            f"More than one base workflow has a job named {gate}; the gate check needs updating"
+            f"More than one base workflow can precede {gate}; the gate check needs updating"
         )
-    return candidates[0] if candidates else None
+    return next(iter(candidates.values()), None)
 
 
 def workflow_file(argument: str) -> str:
@@ -105,8 +184,17 @@ def workflow_file(argument: str) -> str:
     return listing[name]
 
 
+def base_workflow_paths() -> list[str]:
+    """Preserve pathname bytes, including CR and LF, before strict UTF-8 decoding."""
+    listing = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", "-z", "HEAD^1", "--", ".github/workflows/"],
+        capture_output=True, check=True,
+    ).stdout
+    return listing.decode("utf-8").split("\0")
+
+
 def git(*args: str) -> str:
-    return subprocess.run(["git", *args], capture_output=True, text=True, check=True).stdout
+    return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8", check=True).stdout
 
 
 def main(argv: list[str]) -> None:
@@ -146,7 +234,7 @@ def main(argv: list[str]) -> None:
     # the merge was made against. A missing parent fails the check rather than
     # skipping it; a workflow and gate both new in this pull request have no base.
     base = (
-        base_copy(workflow, gate) if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" else None
+        base_copy(workflow, gate, text) if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" else None
     )
     if base is not None:
         removed = job_ids(base) - jobs
