@@ -113,10 +113,9 @@ def working_capital_from_config(
     if wc.collection_profile is not None:
         receivables = _profile_receivables(wc, revenue_df["total"], opening.ar)
         ar = receivables["ar"]
-    elif wc.dso_days is not None:
+    else:
+        assert wc.dso_days is not None  # The validated snapshot requires one receivables model.
         ar = revenue_df["total"] * (wc.dso_days / _DAYS_PER_MONTH)
-    else:  # a config built without validation, e.g. model_copy
-        raise ValueError("working capital needs dso_days or collection_profile")
     ap = cogs_df["total"] * (wc.dpo_days / _DAYS_PER_MONTH)
     inventory = cogs_df["total"] * (wc.dio_days / _DAYS_PER_MONTH)
     purchases = None

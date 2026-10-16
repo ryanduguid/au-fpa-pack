@@ -75,10 +75,6 @@ def _require_finite_columns(frame: pd.DataFrame, columns: Iterable[str]) -> None
 def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Compose the monthly forecast, raising ValueError for non-finite results."""
     cfg = _validated_snapshot(cfg)
-    # Configs and their weight lists can change after schema validation.
-    for channel in cfg.channels:
-        if not math.isfinite(sum(channel.seasonality)):
-            raise ValueError("seasonality weights must sum to a finite number")
     try:
         revenue = revenue_from_config(cfg)
     except OverflowError as exc:

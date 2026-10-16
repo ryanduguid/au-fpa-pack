@@ -127,6 +127,18 @@ BUILDERS: list[Callable[..., pd.DataFrame]] = [
 
 
 @pytest.mark.parametrize("builder", BUILDERS, ids=lambda builder: builder.__name__)
+@pytest.mark.parametrize("invalid", [None, {}, object()])
+def test_public_builders_refuse_non_configuration_inputs(cfg, builder, invalid):
+    revenue = revenue_from_config(cfg)
+    cogs = cogs_from_config(cfg, revenue)
+    args = (invalid, revenue, cogs) if builder is working_capital_from_config else (
+        (invalid, revenue) if builder in (cogs_from_config, opex_from_config) else (invalid,)
+    )
+    with pytest.raises(ValueError, match="configuration must be an EntityConfig"):
+        builder(*args)
+
+
+@pytest.mark.parametrize("builder", BUILDERS, ids=lambda builder: builder.__name__)
 def test_every_public_builder_checks_fields_outside_its_calculation(cfg, builder):
     revenue = revenue_from_config(cfg)
     cogs = cogs_from_config(cfg, revenue)
