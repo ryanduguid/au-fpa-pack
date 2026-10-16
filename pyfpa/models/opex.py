@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import pandas as pd
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig
 
 
 def opex_from_config(cfg: EntityConfig, revenue_df: pd.DataFrame) -> pd.DataFrame:
     """Monthly opex per line + total. Fixed lines are constant; variable lines
     scale with total revenue."""
+    cfg = _validated_snapshot(cfg)
     idx = revenue_df.index
     cols: dict[str, pd.Series] = {}
     for line in cfg.opex:
