@@ -10,7 +10,7 @@ from pyfpa.config.schemas import EntityConfig
 
 def _current_state(value: object, ancestors: set[int]) -> object:
     """Copy current model storage without dropping unchecked fields or defaults."""
-    if isinstance(value, (BaseModel, dict, list, tuple, range, set, frozenset)):
+    if isinstance(value, (BaseModel, dict, list, tuple, range)):
         identity = id(value)
         if identity in ancestors:
             raise ValueError("configuration contains a cycle")

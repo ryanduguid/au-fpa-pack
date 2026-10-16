@@ -67,6 +67,10 @@ def mutate(cfg, case):
         cfg.channels[0].seasonality[0] = -1
     elif case == "weights_nan":
         cfg.channels[0].seasonality[0] = float("nan")
+    elif case == "weights_set":
+        cfg.channels[0].seasonality = {str(weight) for weight in range(1, 13)}
+    elif case == "weights_frozenset":
+        cfg.channels[0].seasonality = frozenset(str(weight) for weight in range(1, 13))
     elif case == "cogs_pct":
         cfg.channels[0].cogs_pct = 1.1
     elif case == "tax_rate":
@@ -95,6 +99,7 @@ INVALID = [
     "channel_duplicate", "opex_duplicate", "append_duplicate", "root_copy",
     "nested_copy", "root_extra", "nested_extra", "missing_default", "missing_nested",
     "empty_channels", "weights_length", "weights_zero", "weights_negative", "weights_nan",
+    "weights_set", "weights_frozenset",
     "cogs_pct", "tax_rate", "working_capital", "receivables_conflict", "payment_nan",
     "payment_month", "debt_duplicate", "nested_none",
 ]
@@ -157,6 +162,27 @@ def test_valid_numeric_edit_preserves_all_workbook_lines(cfg, tmp_path):
     assert forecast["cogs"].iloc[0] == 50
     assert forecast["opex"].iloc[0] == 30
     path = tmp_path / "valid.xlsx"
+    model_to_excel(cfg, path)
+    report = verify_workbook(path, forecast)
+    assert report.passed, report.failures
+    assert report.lines_checked == 17
+
+
+@pytest.mark.parametrize("days,opening", [
+    ("dso_days", "ar"), ("dpo_days", "ap"), ("dio_days", "inventory"),
+])
+def test_large_finite_working_capital_keeps_workbook_in_step_with_engine(cfg, tmp_path, days, opening):
+    cfg.channels = [cfg.channels[0]]
+    cfg.channels[0].annual_revenue = 6e307
+    cfg.channels[0].cogs_pct = 0 if days == "dso_days" else 1
+    cfg.opex = []
+    cfg.debt = []
+    cfg.tax_rate = 0
+    cfg.working_capital.dso_days = 0
+    setattr(cfg.working_capital, days, 100)
+    setattr(cfg.opening_balances, opening, 2e307)
+    forecast = cashflow_from_config(cfg)
+    path = tmp_path / "large-finite.xlsx"
     model_to_excel(cfg, path)
     report = verify_workbook(path, forecast)
     assert report.passed, report.failures

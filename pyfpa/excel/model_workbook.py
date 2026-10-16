@@ -478,11 +478,11 @@ def _build_model(
 
     # -- Working capital balances and cash impact --
     r_ar = alloc.emit_fn("ar_balance",
-                         lambda m, col: f"={col}{r_rev}*dso_days/30")
+                         lambda m, col: f"={col}{r_rev}*(dso_days/30)")
     r_ap = alloc.emit_fn("ap_balance",
-                         lambda m, col: f"={col}{r_cogs}*dpo_days/30")
+                         lambda m, col: f"={col}{r_cogs}*(dpo_days/30)")
     r_inv = alloc.emit_fn("inv_balance",
-                          lambda m, col: f"={col}{r_cogs}*dio_days/30")
+                          lambda m, col: f"={col}{r_cogs}*(dio_days/30)")
     r_wc = alloc.emit_cells(
         "wc_cash_impact",
         _wc_cash_impact_formulas(n, r_ar, r_ap, r_inv))
