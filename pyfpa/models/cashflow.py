@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 import pandas as pd
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.cogs import cogs_from_config
 from pyfpa.models.debt import debt_from_config
@@ -73,6 +74,7 @@ def _require_finite_columns(frame: pd.DataFrame, columns: Iterable[str]) -> None
 
 def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Compose the monthly forecast, raising ValueError for non-finite results."""
+    cfg = _validated_snapshot(cfg)
     # Configs and their weight lists can change after schema validation.
     for channel in cfg.channels:
         if not math.isfinite(sum(channel.seasonality)):

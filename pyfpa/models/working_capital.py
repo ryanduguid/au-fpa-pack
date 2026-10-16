@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig, WorkingCapitalConfig
 
 _DAYS_PER_MONTH = 30.0
@@ -103,6 +104,7 @@ def working_capital_from_config(
     purchases or supplier payments in any month, naming the first such month
     and flow.
     """
+    cfg = _validated_snapshot(cfg)
     idx = revenue_df.index
     wc = cfg.working_capital
     opening = cfg.opening_balances

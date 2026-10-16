@@ -15,6 +15,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import DebtInstrument, EntityConfig
 from pyfpa.excel.toolkit import (
     DAYS_FORMAT,
@@ -528,6 +529,7 @@ def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
     written, so the workbook never shows a forecast the engine refuses, such as
     one whose balances imply negative receipts.
     """
+    cfg = _validated_snapshot(cfg)
     if cfg.working_capital.collection_profile is not None:
         # Refuse before creating anything: the workbook's receivables formulas are
         # days-based and would not reproduce the engine's profile receipts.
