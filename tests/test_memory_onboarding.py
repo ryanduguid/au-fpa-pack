@@ -393,9 +393,10 @@ def test_directory_profile_is_rejected_as_non_regular(tmp_path, overwrite):
     assert not (tmp_path / "decisions" / "initial-model-architecture.md").exists()
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX FIFO and permission bits")
 @pytest.mark.parametrize("overwrite", [False, True])
 def test_fifo_profile_is_rejected_without_blocking(tmp_path, overwrite):
+    if sys.platform == "win32":
+        pytest.skip("POSIX FIFO and permission bits")
     fifo = tmp_path / "business-profile.md"
     os.mkfifo(fifo)
     code = (

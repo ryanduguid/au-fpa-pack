@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig, WorkingCapitalConfig
 
 _DAYS_PER_MONTH = 30.0
@@ -103,6 +104,7 @@ def working_capital_from_config(
     purchases or supplier payments in any month, naming the first such month
     and flow.
     """
+    cfg = _validated_snapshot(cfg)
     idx = revenue_df.index
     wc = cfg.working_capital
     opening = cfg.opening_balances
@@ -111,10 +113,9 @@ def working_capital_from_config(
     if wc.collection_profile is not None:
         receivables = _profile_receivables(wc, revenue_df["total"], opening.ar)
         ar = receivables["ar"]
-    elif wc.dso_days is not None:
+    else:
+        assert wc.dso_days is not None  # The validated snapshot requires one receivables model.
         ar = revenue_df["total"] * (wc.dso_days / _DAYS_PER_MONTH)
-    else:  # a config built without validation, e.g. model_copy
-        raise ValueError("working capital needs dso_days or collection_profile")
     ap = cogs_df["total"] * (wc.dpo_days / _DAYS_PER_MONTH)
     inventory = cogs_df["total"] * (wc.dio_days / _DAYS_PER_MONTH)
     purchases = None
