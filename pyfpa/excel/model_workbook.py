@@ -15,6 +15,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import DebtInstrument, EntityConfig
 from pyfpa.excel.toolkit import (
     DAYS_FORMAT,
@@ -477,11 +478,11 @@ def _build_model(
 
     # -- Working capital balances and cash impact --
     r_ar = alloc.emit_fn("ar_balance",
-                         lambda m, col: f"={col}{r_rev}*dso_days/30")
+                         lambda m, col: f"={col}{r_rev}*(dso_days/30)")
     r_ap = alloc.emit_fn("ap_balance",
-                         lambda m, col: f"={col}{r_cogs}*dpo_days/30")
+                         lambda m, col: f"={col}{r_cogs}*(dpo_days/30)")
     r_inv = alloc.emit_fn("inv_balance",
-                          lambda m, col: f"={col}{r_cogs}*dio_days/30")
+                          lambda m, col: f"={col}{r_cogs}*(dio_days/30)")
     r_wc = alloc.emit_cells(
         "wc_cash_impact",
         _wc_cash_impact_formulas(n, r_ar, r_ap, r_inv))
@@ -528,6 +529,7 @@ def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
     written, so the workbook never shows a forecast the engine refuses, such as
     one whose balances imply negative receipts.
     """
+    cfg = _validated_snapshot(cfg)
     if cfg.working_capital.collection_profile is not None:
         # Refuse before creating anything: the workbook's receivables formulas are
         # days-based and would not reproduce the engine's profile receipts.
