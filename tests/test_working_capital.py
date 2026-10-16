@@ -121,5 +121,5 @@ def test_a_config_copied_past_validation_without_receivables_is_refused(sample_c
     unvalidated = sample_config.model_copy(
         update={"working_capital": sample_config.working_capital.model_copy(update={"dso_days": None})}
     )
-    with pytest.raises(ValueError, match="working capital needs dso_days or collection_profile"):
+    with pytest.raises(ValueError, match="give dso_days or collection_profile"):
         working_capital_from_config(unvalidated, rev, cogs)

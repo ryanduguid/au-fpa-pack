@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.periods import month_index
 
@@ -9,6 +10,7 @@ from pyfpa.models.periods import month_index
 def revenue_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Monthly revenue per channel + total. Seasonality is by calendar month;
     growth compounds per forecast year (every 12 months from start)."""
+    cfg = _validated_snapshot(cfg)
     idx = month_index(cfg.start_month, cfg.horizon_months)
     data: dict[str, list[float]] = {}
     for ch in cfg.channels:
