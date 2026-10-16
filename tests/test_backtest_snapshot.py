@@ -1,7 +1,14 @@
+import pandas as pd
 import pytest
+import yaml
 
 from pyfpa.backtest.score import score_forecast
-from pyfpa.backtest.snapshot import load_snapshot, save_snapshot, snapshot_forecast
+from pyfpa.backtest.snapshot import (
+    Snapshot,
+    load_snapshot,
+    save_snapshot,
+    snapshot_forecast,
+)
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.models.cashflow import cashflow_from_config
 
@@ -27,6 +34,13 @@ def test_snapshot_forecast_captures_assumptions_and_predictions():
     assert snap.score is None
 
 
+def test_snapshot_forecast_refuses_incomplete_caller_supplied_evidence():
+    frame = pd.DataFrame({"revenue": [100.0, float("nan")]})
+    with pytest.raises(ValueError, match="finite"):
+        snapshot_forecast(_cfg(), frame, label="Synthetic", created="2026-10-12",
+                          score_lines=["revenue"])
+
+
 def test_snapshot_round_trip(tmp_path):
     cfg = _cfg()
     snap = snapshot_forecast(cfg, cashflow_from_config(cfg),
@@ -40,3 +54,47 @@ def test_snapshot_round_trip(tmp_path):
     assert back.score is not None
     assert back.score.fitness == pytest.approx(0.0)
     assert back.assumptions == snap.assumptions
+
+
+@pytest.mark.parametrize("overwrite,destination_exists", [(False, False), (True, False), (True, True)])
+def test_snapshot_serialisation_failure_preserves_destination(tmp_path, overwrite, destination_exists):
+    path = tmp_path / "forecast.yaml"
+    original = Snapshot(label="Original", created="2026-10-09", assumptions={}, predicted={})
+    if destination_exists:
+        save_snapshot(original, path)
+        original_bytes = path.read_bytes()
+    invalid = Snapshot(label="Invalid", created="2026-10-09",
+                       assumptions={"unsupported": object()}, predicted={})
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        save_snapshot(invalid, path, overwrite=overwrite)
+
+    if destination_exists:
+        # These pytest outcome assertions are not production input validation.
+        assert path.read_bytes() == original_bytes  # nosec B101
+        assert load_snapshot(path) == original  # nosec B101
+    else:
+        assert not path.exists()  # nosec B101: pytest outcome assertion
+
+
+def test_a_missing_snapshot_is_reported_by_path(tmp_path):
+    with pytest.raises(FileNotFoundError, match="snapshot not found: .*absent.yaml"):
+        load_snapshot(tmp_path / "absent.yaml")
+
+
+def test_forecast_snapshots_are_empty_without_a_forecasts_folder(tmp_path):
+    from pyfpa.backtest.snapshot import load_forecast_snapshots
+
+    assert load_forecast_snapshots(tmp_path) == ([], [])  # nosec B101: pytest outcome assertion
+
+
+def test_forecast_snapshots_list_the_files_that_failed_to_parse(tmp_path):
+    from pyfpa.backtest.snapshot import load_forecast_snapshots
+
+    forecasts = tmp_path / "forecasts"
+    forecasts.mkdir()
+    save_snapshot(Snapshot(label="Good", created="2026-10-09", assumptions={}, predicted={}), forecasts / "a.yaml")
+    (forecasts / "b.yaml").write_text("label: [unclosed\n", encoding="utf-8")
+    snapshots, errors = load_forecast_snapshots(tmp_path)
+    assert [snapshot.label for snapshot in snapshots] == ["Good"]  # nosec B101: pytest outcome assertion
+    assert len(errors) == 1 and errors[0].startswith("b.yaml: ")  # nosec B101: pytest outcome assertion

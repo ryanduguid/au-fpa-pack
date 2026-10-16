@@ -40,13 +40,15 @@ def test_correction_keeps_existing_filename_spelling(tmp_path, slug):
     assert [record.slug for record in load_corrections(tmp_path)] == [slug]
 
 
-@pytest.mark.parametrize("style", ["parent", "windows_parent", "absolute"])
+@pytest.mark.parametrize("style", ["parent", "windows_parent", "absolute", "parent_only"])
 def test_correction_record_reports_path_errors_without_writing(tmp_path, run_cli, style):
     assert run_cli("init", str(tmp_path)).returncode == 0
     slugs = {
         "parent": "../../outside",
         "windows_parent": "..\\..\\outside",
         "absolute": str(tmp_path / "outside"),
+        # Saved as "...md", which loads back under a different slug.
+        "parent_only": "..",
     }
     result = run_cli("correction-record", str(tmp_path), "--slug", slugs[style],
                      "--type", "context", "--target", "demo", "--date", "2026-09-29")
@@ -58,7 +60,7 @@ def test_correction_record_reports_path_errors_without_writing(tmp_path, run_cli
 
 
 @pytest.mark.parametrize("slug", [
-    "", "record:stream", "C:outside", "C:\\outside", "\\\\server\\share\\outside", "bad\0name",
+    "", ".", "..", "...", "record:stream", "C:outside", "C:\\outside", "\\\\server\\share\\outside", "bad\0name",
     "NUL", "con.old", "Con .old", "COM1", "LPT9", "com²", "lpt³", "CONIN$", "CONOUT$",
 ])
 def test_correction_rejects_special_paths_before_io(tmp_path, monkeypatch, slug):

@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-POLICY = "ec6b0ee76446f11aefb7fa0c203f2e01b4c9a711"
+POLICY = "a601f1d8b143f92b0517f709216993660d21f480"
 # These are component jobs from successful main-branch runs, plus aggregates that
 # require every job in their workflow to succeed; never a skip-tolerant aggregate
 # gate. Review the list when a component's CI contract changes.
@@ -17,15 +17,10 @@ REQUIRED = {
         ".github/workflows/no-ai-attribution.yml: Attribution policy / Attribution policy runner",
         ".github/workflows/ci.yml: connector-security-windows",
         ".github/workflows/ci.yml: lint",
-        ".github/workflows/ci.yml: minimum-resolution (ubuntu-latest, 3.12)",
-        ".github/workflows/ci.yml: minimum-resolution (ubuntu-latest, 3.13)",
         ".github/workflows/ci.yml: minimum-resolution (ubuntu-latest, 3.14)",
-        ".github/workflows/ci.yml: minimum-resolution (windows-latest, 3.12)",
-        ".github/workflows/ci.yml: minimum-resolution (windows-latest, 3.13)",
         ".github/workflows/ci.yml: minimum-resolution (windows-latest, 3.14)",
-        ".github/workflows/ci.yml: test (3.12)",
-        ".github/workflows/ci.yml: test (3.13)",
         ".github/workflows/ci.yml: test (3.14)",
+        ".github/workflows/ci.yml: test (3.15)",
         ".github/workflows/ci.yml: ci-gates",
         ".github/workflows/codeql.yml: Analyze (actions)",
         ".github/workflows/codeql.yml: Analyze (python)",
@@ -35,6 +30,23 @@ REQUIRED = {
 
 
 class ReleaseChecksTests(unittest.TestCase):
+    def test_test_matrix_keeps_coverage_and_audit_on_the_release_interpreter(self) -> None:
+        workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"))
+        job = workflow["jobs"]["test"]
+        versions = job["strategy"]["matrix"]["python-version"]
+        self.assertEqual(versions, ["3.14", "3.15"])
+        self.assertEqual(job["env"]["UV_PYTHON"], "${{ matrix.python-version }}")
+        windows = workflow["jobs"]["connector-security-windows"]
+        self.assertEqual(windows["env"]["UV_PYTHON"], "3.15")
+        self.assertEqual(
+            {f".github/workflows/ci.yml: test ({version})" for version in versions},
+            {selector for selector in REQUIRED["release.yml"] if ": test (" in selector},
+        )
+        for step in job["steps"]:
+            if ("coverage" in step.get("run", "") or "uv audit" in step.get("run", "")
+                    or step.get("with", {}).get("name") == "coverage-codecov"):
+                self.assertEqual(step["if"], "matrix.python-version == '3.14'")
+
     def test_minimum_dependency_jobs_match_release_selectors(self) -> None:
         workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"))
         job = workflow["jobs"]["minimum-resolution"]
@@ -44,7 +56,7 @@ class ReleaseChecksTests(unittest.TestCase):
         matrix = job["strategy"]["matrix"]
         self.assertEqual(matrix, {
             "os": ["ubuntu-latest", "windows-latest"],
-            "python-version": ["3.12", "3.13", "3.14"],
+            "python-version": ["3.14"],
         })
         setup = next(step for step in job["steps"]
                      if step.get("uses", "").startswith("actions/setup-python@"))

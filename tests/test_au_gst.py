@@ -172,3 +172,9 @@ def test_explicit_zero_rate_remains_a_valid_scenario():
         GstAssumptions(gst_rate=0.0),
     )
     assert frame.iloc[0].tolist() == [0.0, 0.0, 0.0]
+
+
+def test_bas_rejects_amounts_that_are_not_numbers():
+    series = pd.Series([6000.0, "6000", 6000.0], index=pd.period_range("2026-07", periods=3, freq="M"))
+    with pytest.raises(ValueError, match="monthly amounts must be finite numbers"):
+        bas_schedule(series)

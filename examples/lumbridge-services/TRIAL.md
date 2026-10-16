@@ -112,8 +112,8 @@ it contains no client or personal data.
 The channel you agreed with the maintainer is the default route for every finding.
 Anything that could be a security weakness goes through the private reporting
 process that [SECURITY.md](../../SECURITY.md) describes, and is never filed as a
-public issue. Issues are switched off in this repository, so there is no public
-issue route: return non-sensitive defects through the agreed channel as well. Once
+public issue. Return non-sensitive defects through the agreed channel too, or as a
+public issue reproduced with fabricated data. Once
 the consent block below says Yes to publication, the maintainer records the defect
 and its fix in a pull request that links your finding. Never send contact details or
 a screenshot containing personal data for publication.

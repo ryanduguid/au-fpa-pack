@@ -124,7 +124,8 @@ def refresh(actuals_path: Path, controls_path: Path, assumptions_path: Path) -> 
 
 def run(output: Path, data: Path = ROOT / "data") -> dict:
     result = refresh(data / "refresh-actuals.csv", data / "refresh-controls.json", data / "receipt-assumptions.csv")
-    output.mkdir(parents=True, exist_ok=False)
+    # Example CLI; the path is the operator's own --output or input file.
+    output.mkdir(parents=True, exist_ok=False)  # NOSONAR
     original = Snapshot(label="Original September forecast", created="2026-09-30",
                         assumptions=result["base"]["assumptions"], predicted=result["predicted"])
     original_path = output / "original-forecast.yaml"

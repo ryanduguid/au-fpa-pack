@@ -867,3 +867,28 @@ def test_multiple_yaml_documents_remain_invalid(tmp_path):
     path.write_text(_MISSPELLABLE_YAML.format(growth_key="growth_rate") + "\n---\n{}\n", encoding="utf-8")
     with pytest.raises(yaml.composer.ComposerError):
         load_config(path)
+
+
+def test_channel_name_must_not_be_blank():
+    with pytest.raises(ValidationError, match="name must not be empty"):
+        Channel(name="  ", annual_revenue=1200.0, seasonality=[1.0] * 12, cogs_pct=0.5)
+
+
+def test_seasonality_weights_must_be_non_negative():
+    with pytest.raises(ValidationError, match="seasonality weights must be non-negative"):
+        Channel(name="D2C", annual_revenue=1200.0, seasonality=[-1.0] + [1.0] * 11, cogs_pct=0.5)
+
+
+def test_seasonality_weights_must_not_all_be_zero():
+    with pytest.raises(ValidationError, match="seasonality weights must sum to a positive number"):
+        Channel(name="D2C", annual_revenue=1200.0, seasonality=[0.0] * 12, cogs_pct=0.5)
+
+
+def test_debt_name_must_not_be_blank():
+    with pytest.raises(ValidationError, match="name must not be empty"):
+        DebtInstrument(name=" ", kind="term_loan", opening_balance=0.0, annual_rate=0.0)
+
+
+def test_debt_name_is_trimmed():
+    debt = DebtInstrument(name=" Term ", kind="term_loan", opening_balance=0.0, annual_rate=0.0)
+    assert debt.name == "Term"  # nosec B101: pytest outcome assertion
