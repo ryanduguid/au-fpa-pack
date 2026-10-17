@@ -97,8 +97,13 @@ jobs:
           uv build --wheel --no-build-isolation
           uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file /tmp/wheel-runtime.txt
           uv venv --python 3.14 /tmp/wheel-consumer-env
-          uv pip install --python /tmp/wheel-consumer-env/bin/python --require-hashes -r /tmp/wheel-runtime.txt
-          uv pip install --python /tmp/wheel-consumer-env/bin/python --no-deps --no-index dist/au_fpa_pack-*.whl
+          uv pip install --python /tmp/wheel-consumer-env/bin/python --only-binary :all: --require-hashes -r /tmp/wheel-runtime.txt
+          wheels=(dist/au_fpa_pack-*.whl)
+          test "${#wheels[@]}" -eq 1
+          test -f "${wheels[0]}"
+          digest=$(sha256sum "${wheels[0]}")
+          printf '%s --hash=sha256:%s\n' "$GITHUB_WORKSPACE/${wheels[0]}" "${digest%% *}" > /tmp/wheel-project.txt
+          uv pip install --python /tmp/wheel-consumer-env/bin/python --only-binary :all: --no-deps --no-index --require-hashes -r /tmp/wheel-project.txt
           mkdir -p /tmp/wheel-consumer && cd /tmp/wheel-consumer
           /tmp/wheel-consumer-env/bin/python - <<'PY'
           from importlib.resources import as_file, files
