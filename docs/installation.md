@@ -1,4 +1,38 @@
-## Current quick start
+## Package-only first result
+
+On Python 3.14 or newer, install the published distribution in a virtual
+environment:
+
+```bash
+python -m pip install au-fpa-pack
+```
+
+Save this as `first_result.py` and run `python first_result.py` from any
+directory. The fabricated CSV is part of the installed package:
+
+```python
+from importlib.resources import as_file, files
+
+from pyfpa.io.xero_au import read_xero_report
+
+with as_file(files("pyfpa.io").joinpath("fixtures/xero_pl_au.csv")) as fixture:
+    accounts = read_xero_report(fixture).by_account()
+
+print(f"Sales - Domestic: {accounts['Sales - Domestic']:.2f}")
+print(f"Fixture profit: {sum(accounts.values()):.2f}")
+```
+
+```text
+Sales - Domestic: 99000.00
+Fixture profit: -4504.00
+```
+
+The parser reads local data without connecting to Xero or creating a company
+workspace. The example demonstrates the import and signed totals only. Real
+company work still needs source registration, mapping and reconciliation in
+the [Xero recipe](recipes/xero-au.md).
+
+## Source quick start
 
 Clone the repository and install the locked development environment with
 [uv](https://docs.astral.sh/uv/), on Python 3.14 or newer:

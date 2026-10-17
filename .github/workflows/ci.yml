@@ -91,6 +91,31 @@ jobs:
       - name: Install locked environment
         run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
+      - name: Verify the package-only first result away from the checkout
+        if: matrix.python-version == '3.14'
+        run: |
+          uv build --wheel --no-build-isolation
+          uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file /tmp/wheel-runtime.txt
+          uv venv --python 3.14 /tmp/wheel-consumer-env
+          uv pip install --python /tmp/wheel-consumer-env/bin/python --only-binary :all: --require-hashes -r /tmp/wheel-runtime.txt
+          wheels=(dist/au_fpa_pack-*.whl)
+          test "${#wheels[@]}" -eq 1
+          test -f "${wheels[0]}"
+          digest=$(sha256sum "${wheels[0]}")
+          printf '%s --hash=sha256:%s\n' "$GITHUB_WORKSPACE/${wheels[0]}" "${digest%% *}" > /tmp/wheel-project.txt
+          uv pip install --python /tmp/wheel-consumer-env/bin/python --only-binary :all: --no-deps --no-index --require-hashes -r /tmp/wheel-project.txt
+          mkdir -p /tmp/wheel-consumer && cd /tmp/wheel-consumer
+          /tmp/wheel-consumer-env/bin/python - <<'PY'
+          from importlib.resources import as_file, files
+          from pyfpa.io.xero_au import read_xero_report
+          with as_file(files("pyfpa.io").joinpath("fixtures/xero_pl_au.csv")) as fixture:
+              accounts = read_xero_report(fixture).by_account()
+          assert accounts["Sales - Domestic"] == 58000 + 41000
+          assert sum(accounts.values()) == -4504
+          print(f"Sales - Domestic: {accounts['Sales - Domestic']:.2f}")
+          print(f"Fixture profit: {sum(accounts.values()):.2f}")
+          PY
+
       - name: Run tests
         if: matrix.python-version != '3.14'
         run: uv run --locked --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
