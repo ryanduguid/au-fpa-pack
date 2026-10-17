@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import pytest
 
@@ -274,3 +276,81 @@ def test_disabled_line_does_not_require_supported_arithmetic():
     )
     assert result.fitness == 0.1
     assert result.per_line == {"cash": 0.1}
+
+
+@pytest.mark.parametrize("weights,miss", [
+    ({"perfect": 1e308, "miss": 1e-300}, 1e308),
+    ({"perfect": 2.0, "miss": math.ulp(0.0)}, 1e308),
+    ({"perfect": 2.0, "miss": math.ulp(0.0)}, 1.0),
+])
+def test_positive_weight_normalisation_refuses_lost_participation(weights, miss):
+    with pytest.raises(ValueError, match="positive scoring weight.*miss.*rounds to zero"):
+        score_forecast(
+            {"perfect": 1.0, "miss": miss}, {"perfect": 1.0, "miss": 1.0},
+            weights=weights,
+        )
+
+
+@pytest.mark.parametrize("dominant,expected", [
+    (1.0, math.ulp(0.0)),
+    (math.nextafter(2.0, 0.0), math.ulp(0.0)),
+    (2.0, None),
+    (math.nextafter(2.0, math.inf), None),
+])
+def test_positive_weight_normalisation_preserves_boundary(dominant, expected):
+    predicted = {"perfect": 1.0, "miss": 2.0}
+    actual = {"perfect": 1.0, "miss": 1.0}
+    weights = {"perfect": dominant, "miss": math.ulp(0.0)}
+    if expected is None:
+        with pytest.raises(ValueError, match="positive scoring weight.*miss.*rounds to zero"):
+            score_forecast(predicted, actual, weights=weights)
+    else:
+        result = score_forecast(predicted, actual, weights=weights)
+        assert result.per_line == {"perfect": 0.0, "miss": 1.0}
+        assert result.weights == {"perfect": 1.0, "miss": expected}
+        assert result.weights["miss"] > 0
+        assert result.fitness == expected
+
+
+def test_positive_weight_normalisation_allows_zero_product():
+    result = score_forecast(
+        {"perfect": 1.0, "miss": 1.5}, {"perfect": 1.0, "miss": 1.0},
+        weights={"perfect": 1.0, "miss": math.ulp(0.0)},
+    )
+    assert result.per_line == {"perfect": 0.0, "miss": 0.5}
+    assert result.weights == {"perfect": 1.0, "miss": math.ulp(0.0)}
+    assert result.fitness == 0.0
+
+
+@pytest.mark.parametrize("miss_weight", [1.0, math.ulp(0.0), 0.0])
+def test_stored_scoring_objective_replay_retains_participation(tmp_path, miss_weight):
+    from pyfpa.backtest.snapshot import Snapshot, load_snapshot, save_snapshot
+
+    predicted = {"perfect": 1.0, "miss": 1e308}
+    actual = {"perfect": 1.0, "miss": 1.0}
+    score = score_forecast(predicted, actual, weights={"perfect": 1.0, "miss": miss_weight})
+    snapshot = Snapshot(label="Synthetic", created="2026-10-17", assumptions={},
+                        predicted=predicted, score=score)
+    path = tmp_path / "synthetic.snapshot.yaml"
+    save_snapshot(snapshot, path)
+    loaded = load_snapshot(path)
+    assert loaded == snapshot
+    assert loaded.score is not None
+    replay = score_forecast(predicted, actual, weights=loaded.score.weights)
+    assert replay == score
+    corrected = score_forecast(
+        {**predicted, "miss": 1.0}, actual, weights=loaded.score.weights,
+    )
+    assert corrected.fitness == 0.0
+    assert corrected.weights == loaded.score.weights
+    expected_lines = {"perfect", "miss"} if miss_weight > 0 else {"perfect"}
+    assert set(corrected.per_line) == expected_lines
+    assert set(replay.per_line) == expected_lines
+    if miss_weight > 0:
+        assert corrected.per_line["miss"] == 0.0
+        assert corrected.weights["miss"] > 0
+
+
+def test_active_zero_actual_still_refuses_scoring():
+    with pytest.raises(ValueError, match="no scorable lines.*cash"):
+        score_forecast({"cash": 110.0}, {"cash": 0.0}, weights={"cash": 1.0})

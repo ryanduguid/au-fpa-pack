@@ -117,6 +117,7 @@ def score_forecast(
     Relative error is undefined for a zero actual; callers must choose an
     explicit alternative objective instead of silently omitting that line.
     Active relative errors and returned fitness must be finite.
+    Every positive input weight must retain a positive normalised coefficient.
     """
     weights = dict(DEFAULT_WEIGHTS if weights is None else weights)
     if any(not math.isfinite(weight) or weight < 0 for weight in weights.values()):
@@ -145,6 +146,11 @@ def score_forecast(
     if total_w <= 0:  # pragma: no cover
         raise ValueError("scoring weights must sum to a positive value")
     used = {line: weights[line] / total_w for line in lines}
+    for line, weight in used.items():
+        if weight == 0.0:
+            raise ValueError(
+                f"positive scoring weight for {line!r} rounds to zero during normalisation"
+            )
     fitness = sum(used[line] * abs(per_line[line]) for line in lines)
     if not math.isfinite(fitness):
         raise ValueError("scoring fitness must be finite")
