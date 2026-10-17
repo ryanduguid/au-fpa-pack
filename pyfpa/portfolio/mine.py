@@ -38,7 +38,10 @@ def _get_by_path(data: dict[str, Any], path: str) -> float | None:
         if not isinstance(node, dict) or segment not in node:
             return None
         node = node[segment]
-    return float(node) if isinstance(node, (int, float)) else None
+    try:
+        return float(node) if isinstance(node, (int, float)) else None
+    except OverflowError:
+        return None
 
 
 def client_driver_value(client: ClientRef, driver: str) -> float | None:

@@ -67,6 +67,7 @@ def aggregate_periods(
 
     Every flow and ratio input must be present and finite in every period;
     stocks require the final period's value. Missing evidence is never zero.
+    Required totals and returned aggregates must also be finite.
     """
     if not period_dicts:
         raise ValueError("at least one actual period is required")
@@ -89,9 +90,13 @@ def aggregate_periods(
         elif line == "gross_margin":
             revenue = sum(float(d["revenue"]) for d in period_dicts)
             gp = sum(float(d["gross_profit"]) for d in period_dicts)
+            if not math.isfinite(revenue) or not math.isfinite(gp):
+                raise ValueError("actual gross_margin must have finite totals")
             out[line] = (gp / revenue) if revenue else 0.0
         else:
             out[line] = sum(float(d[line]) for d in period_dicts)
+        if not math.isfinite(out[line]):
+            raise ValueError(f"actual {line!r} must have a finite aggregate")
     return out
 
 
@@ -111,6 +116,7 @@ def score_forecast(
 
     Relative error is undefined for a zero actual; callers must choose an
     explicit alternative objective instead of silently omitting that line.
+    Active relative errors and returned fitness must be finite.
     """
     weights = dict(DEFAULT_WEIGHTS if weights is None else weights)
     if any(not math.isfinite(weight) or weight < 0 for weight in weights.values()):
@@ -129,6 +135,9 @@ def score_forecast(
     rec = reconcile({line: predicted[line] for line in lines},
                     {line: actual[line] for line in lines})
     per_line = {line: float(rec.loc[line, "variance_pct"]) for line in lines}
+    for line, error in per_line.items():
+        if not math.isfinite(error):
+            raise ValueError(f"scoring error for {line!r} must be finite")
     total_w = sum(weights[line] for line in lines)
     if not math.isfinite(total_w):
         raise ValueError("scoring weights must sum to a finite number")
@@ -137,4 +146,6 @@ def score_forecast(
         raise ValueError("scoring weights must sum to a positive value")
     used = {line: weights[line] / total_w for line in lines}
     fitness = sum(used[line] * abs(per_line[line]) for line in lines)
+    if not math.isfinite(fitness):
+        raise ValueError("scoring fitness must be finite")
     return ScoreResult(fitness=fitness, per_line=per_line, weights=used)

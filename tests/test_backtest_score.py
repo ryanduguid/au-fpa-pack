@@ -215,3 +215,62 @@ def test_extract_lines_preserves_zero_revenue_margin_convention():
 
 def test_extract_lines_empty_selection_requires_no_evidence():
     assert extract_lines(pd.DataFrame(), []) == {}  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("predicted,actual", [
+    (1e308, -1e308), (-1e308, 1e308), (1e308, 1e-308),
+])
+def test_score_forecast_refuses_unsupported_derived_errors(predicted, actual):
+    with pytest.raises(ValueError, match="finite"):
+        score_forecast({"cash": predicted}, {"cash": actual}, weights={"cash": 1.0})
+
+
+@pytest.mark.parametrize("error", [float("nan"), float("inf"), -float("inf")])
+def test_score_forecast_enforces_its_own_error_postcondition(monkeypatch, error):
+    # A faulty reconciliation result must not become a usable score.
+    frame = pd.DataFrame({"variance_pct": [error]}, index=["cash"])
+    monkeypatch.setattr("pyfpa.backtest.score.reconcile", lambda model, actual: frame)
+    with pytest.raises(ValueError, match="cash.*finite"):
+        score_forecast({"cash": 110.0}, {"cash": 100.0}, weights={"cash": 1.0})
+
+
+def test_score_forecast_refuses_an_overflowed_weighted_result():
+    import sys
+
+    # Individually finite errors and normalised weights can still round beyond
+    # the finite range during their final reduction.
+    predicted = {str(i): sys.float_info.max for i in range(11)}
+    actual = {line: 1.0 for line in predicted}
+    with pytest.raises(ValueError, match="fitness.*finite"):
+        score_forecast(predicted, actual, weights=actual)
+
+
+@pytest.mark.parametrize("periods,lines", [
+    ([{"revenue": 1e308}, {"revenue": 1e308}], ["revenue"]),
+    ([{"revenue": 1e308, "gross_profit": 1.0}] * 2, ["gross_margin"]),
+    ([{"revenue": 1.0, "gross_profit": 1e308}] * 2, ["gross_margin"]),
+    ([{"revenue": 0.0, "gross_profit": 1e308}] * 2, ["gross_margin"]),
+    ([{"revenue": 1e-308, "gross_profit": 1e308}], ["gross_margin"]),
+])
+def test_aggregate_periods_refuses_unsupported_totals_and_ratios(periods, lines):
+    with pytest.raises(ValueError, match="finite"):
+        aggregate_periods(periods, lines)
+
+
+@pytest.mark.parametrize("periods", [
+    [{"revenue": 0.0, "gross_profit": 1.0}],
+    [{"revenue": -100.0, "gross_profit": 2.0},
+     {"revenue": 100.0, "gross_profit": 2.0}],
+])
+def test_aggregate_periods_preserves_the_finite_zero_revenue_convention(periods):
+    assert aggregate_periods(periods, ["gross_margin"]) == {"gross_margin": 0.0}
+
+
+def test_disabled_line_does_not_require_supported_arithmetic():
+    result = score_forecast(
+        {"cash": 110.0, "disabled": 1e308},
+        {"cash": 100.0, "disabled": -1e308},
+        weights={"cash": 1.0, "disabled": 0.0},
+    )
+    assert result.fitness == 0.1
+    assert result.per_line == {"cash": 0.1}
