@@ -162,6 +162,8 @@ def _require_validated_value(candidate: PriorCandidate, validated_values: list[f
     other value was not validated by this run, whatever its dispersion said.
     """
     tested = statistics.median(validated_values)
+    if not math.isfinite(tested):
+        raise ValueError("validation candidate median must be finite")
     if candidate.value != tested:
         raise ValueError(
             f"candidate value {candidate.value!r} is not the validated median "
