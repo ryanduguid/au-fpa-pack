@@ -15,12 +15,14 @@ on:
       - "**/requirements*.txt"
       - "**/package-lock.json"
       - ".github/workflows/snyk.yml"
+      - ".github/security/snyk-development.snyk"
   pull_request:
     paths:
       - "**/uv.lock"
       - "**/requirements*.txt"
       - "**/package-lock.json"
       - ".github/workflows/snyk.yml"
+      - ".github/security/snyk-development.snyk"
 
 permissions:
   contents: read
@@ -94,8 +96,28 @@ jobs:
             python -m venv "$work/venv"
             "$work/venv/bin/python" -m pip install --quiet --disable-pip-version-check --no-deps \
               --only-binary=:all: --requirement "$work/requirements.txt" || { status=1; continue; }
-            [ -z "$SNYK_TOKEN" ] || snyk test --file="$work/requirements.txt" --package-manager=pip --skip-unresolved \
-              --command="$work/venv/bin/python" --project-name="$kind:$target" || status=1
+            policy=()
+            case "$kind:$target" in
+              uv:.)
+                # This acceptance is bound to the reviewed development graph.
+                printf '%s\n' \
+                  '2fe86dd2945f6621ae9bc5aef34b3d2a9912629ad61658ff7f3512c7f489ab7c  uv.lock' \
+                  '9fe7ed2d9de2cab53074d2ff4303ae3af51a852cc828c98c90ec2eda88e8ab6c  pyproject.toml' \
+                  | sha256sum --check --status \
+                  || { echo "::error::Review the pathspec licence policy for the changed dependency graph."; status=1; continue; }
+                policy=(--policy-path="$GITHUB_WORKSPACE/.github/security/snyk-development.snyk") ;;
+            esac
+            [ -z "$SNYK_TOKEN" ] || snyk test --file="$work/requirements.txt" --package-manager=pip \
+              --command="$work/venv/bin/python" --project-name="$kind:$target" \
+              "${policy[@]}" --json-file-output="$RUNNER_TEMP/snyk-${kind}-${target//\//_}.json" || status=1
           done <<< "$SNYK_TARGETS"
           [ -n "$SNYK_TOKEN" ] || exit 1
           exit "$status"
+      - name: Retain Snyk scan reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: snyk-scan-reports
+          path: ${{ runner.temp }}/snyk-*.json
+          if-no-files-found: error
+          retention-days: 7
