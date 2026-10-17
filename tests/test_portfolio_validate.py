@@ -337,3 +337,49 @@ def test_validation_never_accepts_an_unsupported_returned_mean(tmp_path, monkeyp
     monkeypatch.setattr(module.statistics, "fmean", lambda values: mean)
     with pytest.raises(ValueError, match="validation.*mean.*finite"):
         validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
+
+
+@pytest.mark.parametrize("cash", [1e308, -1e308])
+@pytest.mark.parametrize("infinite_candidate", [False, True])
+def test_named_candidate_median_must_be_finite(tmp_path, cash, infinite_candidate):
+    import math
+
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    candidate = PriorCandidate(
+        business_type="d2c", driver="opening_balances.cash",
+        value=math.copysign(math.inf, cash) if infinite_candidate else cash,
+        support=[client.path for client in clients], dispersion=0.0,
+    )
+    with pytest.raises(ValueError, match="validation.*candidate.*median.*finite"):
+        validate_prior(candidate.driver, clients, candidate=candidate)
+
+
+@pytest.mark.parametrize("cash", [1e307, -1e307])
+def test_supported_named_candidate_median_stays_attested(tmp_path, cash):
+    from pyfpa.portfolio.approval import validation_is_attested
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    candidate = PriorCandidate(
+        business_type="d2c", driver="opening_balances.cash", value=cash,
+        support=[client.path for client in clients], dispersion=0.0,
+    )
+    result = validate_prior(candidate.driver, clients, candidate=candidate)
+    assert result.n_folds == 4
+    assert result.mean_delta == 0.0
+    assert result.validated
+    assert validation_is_attested(result.candidate_digest, result.n_folds,
+                                  result.mean_delta, result.attestation)
+
+
+@pytest.mark.parametrize("cash", [1e308, -1e308])
+def test_unnamed_validation_needs_only_the_finite_peer_medians(tmp_path, cash):
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    result = validate_prior("opening_balances.cash", clients)
+    assert result.n_folds == 4
+    assert result.mean_delta == 0.0
+    assert result.validated
+    assert result.candidate_digest == ""
+    assert result.attestation == ""
