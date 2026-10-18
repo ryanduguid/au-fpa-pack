@@ -35,7 +35,7 @@ Continue with the [three-month close simulation](examples/quarter-close/README.m
 [supplier payment plans](examples/creditor-cash/README.md) and
 [grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
 
-Synthetic example. Forecasting aid, not tax advice; a human approves the assumptions and funding decision.
+Synthetic example. A human approves the assumptions and funding decision.
 
 **Input:** [Lumbridge Services' fabricated records](examples/lumbridge-services/data/), NSW payroll assumptions and dated customer receipts and payments for October to December 2026.
 
