@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pandas as pd
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -25,6 +25,7 @@ from pyfpa.excel.toolkit import (
     add_named_row,
     fill_formula_row,
 )
+from pyfpa.io.atomic import staged_output
 from pyfpa.models.cashflow import cashflow_from_config
 from pyfpa.models.periods import month_index
 
@@ -545,4 +546,9 @@ def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
     channel_refs, opex_names, debt_refs = _build_assumptions(wb, cfg)
     _build_model(wb, cfg, channel_refs, opex_names, debt_refs)
 
-    wb.save(Path(path))
+    with staged_output(path) as staged:
+        with staged.open("wb") as stream:
+            wb.save(stream)
+        with staged.open("rb") as stream:
+            checked = load_workbook(stream, read_only=True)
+            checked.close()

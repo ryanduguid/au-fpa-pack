@@ -5,6 +5,8 @@ from typing import Any
 
 import pandas as pd
 
+from pyfpa.io.atomic import staged_output
+
 _REQUIRED_COLUMNS = {"revenue", "ebitda", "net_income", "ending_cash"}
 
 
@@ -70,4 +72,9 @@ def to_briefing_md(
 
 def forecast_to_excel(forecast_df: pd.DataFrame, path: str | Path) -> None:
     """Write a forecast DataFrame to an .xlsx workbook (sheet 'Forecast')."""
-    forecast_df.to_excel(Path(path), sheet_name="Forecast")
+    # The stream carries no suffix, so pandas always writes xlsx bytes.
+    if Path(path).suffix.lower() != ".xlsx":
+        raise ValueError(f"forecast_to_excel writes .xlsx only, not {Path(path).name}")
+    with staged_output(path) as staged:
+        with staged.open("wb") as stream:
+            forecast_df.to_excel(stream, sheet_name="Forecast")
