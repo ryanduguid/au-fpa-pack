@@ -203,3 +203,23 @@ def test_value_tag_alias_duplicate_fails_before_export_and_preserves_files(tmp_p
             assert output.read_bytes() == b"previous report"
         else:
             assert not output.exists()
+
+
+def test_failed_workbook_inspection_keeps_previous_export(tmp_path, run_cli, monkeypatch):
+    import pyfpa.excel.model_workbook as reporting
+
+    assert run_cli("init", str(tmp_path)).returncode == 0
+    out_path = tmp_path / "model.xlsx"
+    out_path.write_bytes(b"previous report")
+    before = set(tmp_path.iterdir())
+
+    def fail_read(path, **kwargs):
+        raise OSError("cannot inspect workbook")
+
+    monkeypatch.setattr(reporting, "load_workbook", fail_read)
+    result = run_cli("model-export", str(tmp_path), "--config",
+                     str(ROOT / "examples/ridgeline/config.yaml"), "--out", str(out_path))
+    assert result.returncode == 1
+    assert output_json(result)["error"]["type"] == "export_failed"
+    assert out_path.read_bytes() == b"previous report"
+    assert set(tmp_path.iterdir()) == before
