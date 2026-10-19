@@ -101,8 +101,8 @@ jobs:
               uv:.)
                 # This acceptance is bound to the reviewed development graph.
                 printf '%s\n' \
-                  '2fe86dd2945f6621ae9bc5aef34b3d2a9912629ad61658ff7f3512c7f489ab7c  uv.lock' \
-                  '9fe7ed2d9de2cab53074d2ff4303ae3af51a852cc828c98c90ec2eda88e8ab6c  pyproject.toml' \
+                  '32828df95e37803558361383ca94a28b5bc670fc99b6263ca43a4735cdfb8a7c  uv.lock' \
+                  'c2649046e3e2ccbba784a0fd8365e5dd9ac5d4fc330708eb687d4ac9e5b4fdac  pyproject.toml' \
                   | sha256sum --check --status \
                   || { echo "::error::Review the pathspec licence policy for the changed dependency graph."; status=1; continue; }
                 policy=(--policy-path="$GITHUB_WORKSPACE/.github/security/snyk-development.snyk") ;;
