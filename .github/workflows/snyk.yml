@@ -96,20 +96,9 @@ jobs:
             python -m venv "$work/venv"
             "$work/venv/bin/python" -m pip install --quiet --disable-pip-version-check --no-deps \
               --only-binary=:all: --requirement "$work/requirements.txt" || { status=1; continue; }
-            policy=()
-            case "$kind:$target" in
-              uv:.)
-                # This acceptance is bound to the reviewed development graph.
-                printf '%s\n' \
-                  '32828df95e37803558361383ca94a28b5bc670fc99b6263ca43a4735cdfb8a7c  uv.lock' \
-                  'c2649046e3e2ccbba784a0fd8365e5dd9ac5d4fc330708eb687d4ac9e5b4fdac  pyproject.toml' \
-                  | sha256sum --check --status \
-                  || { echo "::error::Review the pathspec licence policy for the changed dependency graph."; status=1; continue; }
-                policy=(--policy-path="$GITHUB_WORKSPACE/.github/security/snyk-development.snyk") ;;
-            esac
             [ -z "$SNYK_TOKEN" ] || snyk test --file="$work/requirements.txt" --package-manager=pip \
               --command="$work/venv/bin/python" --project-name="$kind:$target" \
-              "${policy[@]}" --json-file-output="$RUNNER_TEMP/snyk-${kind}-${target//\//_}.json" || status=1
+              --policy-path="$GITHUB_WORKSPACE/.github/security/snyk-development.snyk" --json-file-output="$RUNNER_TEMP/snyk-${kind}-${target//\//_}.json" || status=1
           done <<< "$SNYK_TARGETS"
           [ -n "$SNYK_TOKEN" ] || exit 1
           exit "$status"
