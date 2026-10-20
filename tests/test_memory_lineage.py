@@ -137,6 +137,27 @@ def test_reconcile_account_table_reports_unmapped_duplicates_and_variance(tmp_pa
     assert result["variances"]["revenue"]["within_tolerance"] is False
 
 
+def test_variance_pct_keeps_the_variance_sign_on_a_negative_line(tmp_path):
+    path = tmp_path / "actuals.csv"
+    path.write_text("Account,Amount\nRent,(25)\n")
+    mappings = MappingRegistry(mappings=[
+        MappingRule(source_id="gl-actuals", source_value="Rent", target="opex"),
+    ])
+
+    result = reconcile_account_table(
+        path,
+        source_id="gl-actuals",
+        mappings=mappings,
+        account_column="Account",
+        amount_column="Amount",
+        expected={"opex": -20},
+    )
+
+    variance = result["variances"]["opex"]
+    assert variance["variance"] == -5.0
+    assert variance["variance_pct"] == -0.25
+
+
 def test_ignored_mapping_does_not_count_as_unmapped(tmp_path):
     path = tmp_path / "actuals.csv"
     path.write_text("Account,Amount\nSubtotal,100\n")

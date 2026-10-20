@@ -15,8 +15,10 @@ def reconcile(
 ) -> pd.DataFrame:
     """Compare modelled versus actual line items.
 
-    ``variance = model - actual``, ``variance_pct = variance / actual``
-    (undefined when actual is 0). A line is within tolerance when
+    ``variance = model - actual``, ``variance_pct = variance / |actual|``
+    (undefined when actual is 0), so its sign is the variance's: positive when
+    the model is above the actual, also on a negative line such as a loss. A
+    line is within tolerance when
     ``|variance_pct| <= tolerance``, or when both values are 0.
 
     Parameters
@@ -41,7 +43,7 @@ def reconcile(
         m = float(model[line])
         a = float(actual[line])
         variance = m - a
-        variance_pct = (variance / a) if a else (0.0 if m == 0 else float("nan"))
+        variance_pct = (variance / abs(a)) if a else (0.0 if m == 0 else float("nan"))
         within = (m == a) if a == 0 else (abs(variance_pct) <= tolerance)
         rows.append({
             "line": line,
