@@ -90,6 +90,16 @@ def test_reconciliation_cannot_hide_missing_accounts_or_zero_denominator():
     assert not result.loc["line", "within_tolerance"]
 
 
+def test_reconciliation_variance_pct_keeps_its_sign_on_a_negative_actual():
+    # A loss of 80 modelled as 100: the model is 20 below the actual, so the
+    # percentage is negative, as the variance is. Dividing by -80 flipped it.
+    result = reconcile({"loss": -100, "revenue": 90}, {"loss": -80, "revenue": 100})
+    assert result.loc["loss", "variance"] == -20
+    assert result.loc["loss", "variance_pct"] == -0.25
+    assert result.loc["revenue", "variance_pct"] == -0.1
+    assert not result.loc["loss", "within_tolerance"]
+
+
 def test_empty_workspace_is_not_ready(tmp_path):
     (tmp_path / ".fpa").mkdir()
     assert not Workspace.open(tmp_path).is_ready()

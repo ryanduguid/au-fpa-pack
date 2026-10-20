@@ -296,7 +296,8 @@ def reconcile_account_table(
         mapped = float(mapped_totals[target]) if target in mapped_totals else None
         expected_value = float(expected[target]) if target in expected else None
         variance = mapped - expected_value if mapped is not None and expected_value is not None else None
-        variance_pct = variance / expected_value if expected_value and variance is not None else None
+        # Divide by the size of the expected value so a negative line keeps the variance's sign.
+        variance_pct = variance / abs(expected_value) if expected_value and variance is not None else None
         # Rounded to 9 places so float representation error cannot push an
         # exact boundary difference, such as half a cent, outside the limit.
         within = variance is not None and (
