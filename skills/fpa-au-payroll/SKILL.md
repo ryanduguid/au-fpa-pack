@@ -45,6 +45,11 @@ rate applying in any month, so backtests against FY2024 automatically
 use 11%, not today's 12%. Never hardcode a super or payroll tax rate in
 a generated model; load the table.
 
+Keep the returned `Schedule`, including its `reviewed_until` horizon, through
+the lookup. Converting it to a plain list loses that ceiling. A forecast beyond
+the reviewed horizon requires source review and an explicit table update;
+carrying the last entry forward is not evidence that it remains applicable.
+
 ## Known simplifications (state these to the user)
 
 - Payroll tax outside SA: marginal rate above annual threshold / 12 per month.
@@ -68,3 +73,13 @@ a generated model; load the table.
 - `pytest tests/test_au_payroll.py tests/test_au_rates.py`
 - Reconcile one historical month of actual payroll against the model
   before trusting the forward view; record differences as corrections.
+- For a calculator or policy-model comparison, fix the jurisdiction, dates,
+  wage base, grouping and interstate assumptions first. Compare wages, SG,
+  payroll tax and leave separately, including threshold and effective-date
+  boundaries. Derive expected amounts from the relevant primary sources;
+  a second tool with the same parameter data is not an independent check.
+- Keep employer payroll cost separate from an employee's take-home pay.
+  Establish whether a quoted package includes SG and which earnings form
+  its base before entering `annual_salary`; verify any package conversion.
+  This forecast does not calculate individual income tax, Medicare or HELP,
+  and annual estimated tax divided by pay periods is not a withholding check.

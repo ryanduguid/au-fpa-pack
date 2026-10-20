@@ -62,3 +62,19 @@ extensions for cash, override due dates in a generated company skill.
   partial trailing quarters are dropped, not prorated.
 - Refund positions (heavy capex) return as receipts; check the refund
   is plausible before banking it in week 4.
+
+## Calculator comparison
+
+Use a simple add/remove-GST calculator to check amount arithmetic only.
+Match the rate and inclusive/exclusive basis, then compare output GST,
+purchase credits and net settlement separately. Taxable sales and creditable
+purchases have independent evidence and proportions: a GST-free sale does
+not by itself establish that purchase credits are nil. Keep input-taxed
+treatment and any exceptions subject to review.
+
+Use fabricated all-taxable, GST-free, input-taxed and mixed scenarios from
+`docs/australian-pack.md` before a company-specific comparison. Record each
+component and rounding stage; keep full working precision until the required
+rounding point. A matching amount does not establish registration, attribution
+to a tax period or the actual BAS due date. Confirm those separately before
+using a settlement in the cash forecast.
