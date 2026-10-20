@@ -134,6 +134,31 @@ assumption, not a receipt promise. A period ending after
 re-checked. Explicit rate overrides must be finite and non-negative. Zero remains
 available for scenario modelling; it does not establish a GST exemption.
 
+### Comparing external calculators and policy models
+
+Record the comparator URL or source revision, retrieval date, selected period,
+inputs and exclusions. Match the component being checked to an implemented
+calculation; a published parameter or advertised program is not evidence that
+the model calculates it. Check the parameter's effective date and review horizon,
+including whether a calendar-year label has been mapped to the Australian
+financial year. Reperform threshold and effective-date boundaries against the
+primary source before relying on agreement between models.
+
+Compare a baseline and an alternative with the same inputs except for the
+intended change. Reconcile the difference by component, and keep employer cost,
+employee tax, household benefits, cash timing and accounting expense distinct.
+For super projections, distinguish gross contributions from net investment
+cashflows and nominal outcomes from inflation-adjusted outcomes. These are
+different modelling contracts; this pack does not supply a personal tax or
+tax-benefit microsimulation engine.
+
+[CheckTax's methodology](https://checktax.com.au/methodology/) prompted clearer
+component workings and scope disclosures. [PolicyEngine Australia's developer
+guide](https://policyengine.github.io/policyengine-au/developer-guide.html)
+prompted the parameter, assessment-unit and scenario checks. Both were inspected
+on 17 October 2026 as secondary design references. Their code, tables and prose
+were not imported; statutory values still require the relevant primary sources.
+
 Worked examples on this fork:
 
 - [`examples/lumbridge-services/`](../examples/lumbridge-services/) - synthetic
