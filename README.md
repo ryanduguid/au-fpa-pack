@@ -1,5 +1,7 @@
 # Australian financial planning and analysis with openfpa
 
+<div align="center">
+
 [![tests](https://img.shields.io/github/actions/workflow/status/ryanduguid/au-fpa-pack/ci.yml?branch=main&label=tests&labelColor=000000&style=flat)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/ryanduguid/au-fpa-pack?label=coverage&labelColor=000000&style=flat)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/ryanduguid/au-fpa-pack/codeql.yml?branch=main&label=CodeQL&labelColor=000000&style=flat)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
@@ -13,6 +15,8 @@
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
 [![python](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+
+</div>
 
 An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
 Guiderail: 30 June financial years, Xero AU account mapping, GST and BAS cash timing
