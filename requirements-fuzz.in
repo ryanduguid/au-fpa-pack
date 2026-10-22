@@ -1,5 +1,7 @@
 # Atheris for the fuzzing job, plus the runtime dependencies at their uv.lock
 # versions, so the harness imports pyfpa from the checkout.
+# pydantic-core is not listed: pydantic exact-pins it, so a second pin makes
+# Dependabot uv updates unsatisfiable when the pair drifts.
 atheris==3.1.0
 annotated-types==0.8.0
 et-xmlfile==2.0.0
@@ -7,7 +9,6 @@ numpy==2.5.4
 openpyxl==3.1.5
 pandas==3.0.6
 pydantic==2.14.1
-pydantic-core==2.50.1
 python-dateutil==2.9.0.post0
 pyyaml==6.0.3
 six==1.17.0

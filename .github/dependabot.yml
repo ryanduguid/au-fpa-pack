@@ -34,6 +34,17 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      # pydantic exact-pins pydantic-core. Solo updates are unsatisfiable
+      # (dependency_file_not_resolvable / unknown_error), so the pair must
+      # move in one lock refresh. Listed before the catch-all group.
+      pydantic:
+        patterns:
+          - "pydantic"
+          - "pydantic-core"
       python-dependencies:
         patterns:
           - "*"
+    ignore:
+      # Lockfile-only pydantic-core bumps cannot resolve against pydantic's
+      # exact pin. pydantic updates bring the matching core with them.
+      - dependency-name: "pydantic-core"
