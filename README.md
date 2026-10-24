@@ -12,8 +12,8 @@
 [![OpenSSF Best Practices](https://img.shields.io/cii/level/15426?label=Best%20Practices&labelColor=000000&style=flat)](https://www.bestpractices.dev/projects/15426)
 [![SLSA 3](https://img.shields.io/badge/SLSA-level%203-990024?labelColor=000000&style=flat&color=990024)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat&logo=virustotal&logoColor=FFD32A&color=990024)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
-[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack.svg?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
-[![python](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
+[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
+[![python: 3.14+](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
 
 </div>
