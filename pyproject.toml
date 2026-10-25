@@ -4,8 +4,8 @@ version = "0.3.0"
 description = "Australian FP&A pack on openfpa: 30 June years, Xero AU, GST/BAS. Upstream is Jeff Brines / Guiderail."
 readme = "README.md"
 requires-python = ">=3.14"
-license = "MIT"
-license-files = ["LICENSE"]
+license = "Apache-2.0 AND MIT"
+license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Guiderail" }]
 keywords = ["fpa", "cfo", "finance", "forecasting", "cash-flow", "fp&a", "netsuite", "quickbooks"]
 classifiers = [
