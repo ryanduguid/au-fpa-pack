@@ -87,7 +87,7 @@ real businesses. The contributions that help most:
   environment or an MCP server, never committed.
 - Keep modules small, pure, and immutable; config is pydantic-validated; disk I/O stays in
   the `io/` layer. Match the surrounding style.
-- Open-sourced under MIT. By contributing, you agree your work is offered under the same.
+- Open-sourced under Apache-2.0. By contributing, you agree your work is offered under the same.
 
 Questions or ideas about the shared core go to [openfpa's issues](https://github.com/JeffBrines/openfpa/issues);
 for the Australian layer, use [this repository's issues](https://github.com/ryanduguid/au-fpa-pack/issues).

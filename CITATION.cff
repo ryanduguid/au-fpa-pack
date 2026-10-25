@@ -8,7 +8,8 @@ authors:
 abstract: "Australian FP&A tools for openfpa (Jeff Brines / Guiderail), with 30 June years, Xero AU and GST/BAS."
 repository-code: "https://github.com/ryanduguid/au-fpa-pack"
 url: "https://duguid.com.au/evaluate/"
-license: MIT
+# CFF reads a licence list as alternatives (OR), so the retained MIT portion is declared in NOTICE and plugin.json.
+license: Apache-2.0
 keywords:
   - ai-agents
   - australia

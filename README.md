@@ -21,7 +21,7 @@
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat&logo=virustotal&logoColor=FFD32A&color=990024)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
 [![python: 3.14+](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
-[![licence: MIT](https://img.shields.io/badge/licence-MIT-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+[![licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
 
 </div>
 
@@ -115,7 +115,7 @@ is the worked example of a company-specific skill the workflow writes, not a
 skill the pack ships for every company.
 
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) declares the
-repository as the `openfpa` plugin, version 0.1.0, MIT. That manifest is what a
+repository as the `openfpa` plugin, version 0.1.0, licensed `Apache-2.0 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
 ## Kernel packages and how each is reached
@@ -141,6 +141,6 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 - [Supplier information for a firm's AI register](docs/ai-register-entry.md)
 - [Contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md)
 
-MIT licensed. Guiderail's upstream work and Ryan Duguid's additions retain their attribution in [LICENSE](LICENSE).
+Apache-2.0 licensed; see [LICENSE](LICENSE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
 
 </details>
