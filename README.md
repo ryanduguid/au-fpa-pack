@@ -21,7 +21,7 @@
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat&logo=virustotal&logoColor=FFD32A&color=990024)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://img.shields.io/pypi/v/au-fpa-pack?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
 [![python: 3.14+](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
-[![licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+[![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
 
 </div>
 
@@ -115,7 +115,7 @@ is the worked example of a company-specific skill the workflow writes, not a
 skill the pack ships for every company.
 
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) declares the
-repository as the `openfpa` plugin, version 0.1.0, licensed `Apache-2.0 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
+repository as the `openfpa` plugin, version 0.1.0, licensed `FSL-1.1-ALv2 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
 ## Kernel packages and how each is reached
@@ -141,6 +141,6 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 - [Supplier information for a firm's AI register](docs/ai-register-entry.md)
 - [Contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md)
 
-Apache-2.0 licensed; see [LICENSE](LICENSE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
+Licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 two years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
 
 </details>
