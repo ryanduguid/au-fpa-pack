@@ -4,7 +4,7 @@
 
 - Names: the distribution is `au-fpa-pack`, the import is `pyfpa` and the console script is `openfpa`. `.claude-plugin/plugin.json` declares the repository as the `openfpa` Claude Code plugin.
 - Install: `pip install au-fpa-pack` for the published release (see https://pypi.org/project/au-fpa-pack/), or `uv sync --locked --extra dev` from a clone. The development checkout requires Python 3.14 or later.
-- Upstream: [openfpa](https://github.com/JeffBrines/openfpa) by Jeff Brines and Guiderail. MIT licensed; its notice is kept in NOTICE. au-fpa-pack itself is Apache-2.0.
+- Upstream: [openfpa](https://github.com/JeffBrines/openfpa) by Jeff Brines and Guiderail. MIT licensed; its notice is kept in NOTICE. au-fpa-pack itself is FSL-1.1-ALv2 (Functional Source License); each version becomes available under Apache-2.0 2 years after it is made available.
 - A competent human approves the assumptions and any funding decision. Rates and dates in docs/australian-pack.md are recorded modelling assumptions with sources, not a tax engine.
 
 ## What is here

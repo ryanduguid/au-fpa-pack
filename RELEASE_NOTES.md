@@ -2,7 +2,7 @@
 
 Changed:
 
-- au-fpa-pack is now licensed under the Apache License 2.0 instead of MIT (#231). openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
+- au-fpa-pack is now licensed under FSL-1.1-ALv2 (Functional Source License, with Apache-2.0 as the future licence) instead of MIT. openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
 
 # v0.3.0
 
