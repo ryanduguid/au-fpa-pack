@@ -51,6 +51,19 @@ def test_best_snapshot_none_when_unscored_or_missing(tmp_path):
     assert best_snapshot(tmp_path) is None
 
 
+def test_best_snapshot_ignores_unusable_fitness(tmp_path):
+    forecasts = tmp_path / ".fpa" / "forecasts"
+    forecasts.mkdir(parents=True, exist_ok=True)
+    for name, fitness in (("a", -float("inf")), ("b", float("nan")), ("c", -0.5)):
+        save_snapshot(_snap(name, fitness, {"revenue": 1.0}, {"revenue": 0.0}),
+                      forecasts / f"{name}.snapshot.yaml")
+    assert best_snapshot(tmp_path) is None
+    save_snapshot(_snap("d", 0.2, {"revenue": 1.0}, {"revenue": 0.0}), forecasts / "d.snapshot.yaml")
+    best = best_snapshot(tmp_path)
+    assert best is not None
+    assert best.label == "d"
+
+
 @pytest.mark.parametrize("prediction,error", [
     (1e308, -0.9999999999999999),
     (float("inf"), 0.0),

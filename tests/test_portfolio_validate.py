@@ -234,6 +234,7 @@ def test_unsupported_scoring_refuses_fold_and_attempts_every_client(
     ("error", float("inf")), ("error", float("nan")),
     ("weight", float("inf")), ("weight", float("nan")),
     ("weight", -1.0), ("weight", 0.0), ("weight_total", 1e308),
+    ("weight_underflow", 1e308),
     ("driver", float("inf")),
     pytest.param("driver", 10**1000, id="unrepresentable-driver"),
 ])
@@ -252,6 +253,9 @@ def test_unusable_stored_evidence_is_excluded_before_candidate_scoring(tmp_path,
         snapshot.score.per_line["revenue"] = value
     elif field in ("weight", "weight_total"):
         snapshot.score.weights = {line: value for line in snapshot.score.weights}
+    elif field == "weight_underflow":
+        snapshot.score.weights = {line: 1e-300 for line in snapshot.score.weights}
+        snapshot.score.weights[next(iter(snapshot.score.weights))] = value
     else:
         snapshot.assumptions["working_capital"]["dio_days"] = value
     save_snapshot(snapshot, path, overwrite=True)

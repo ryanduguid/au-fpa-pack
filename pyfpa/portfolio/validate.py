@@ -90,6 +90,10 @@ def validate_prior(
             total_weight = sum(score.weights.values())
             if not math.isfinite(total_weight) or total_weight <= 0:
                 continue
+            # Scoring refuses a positive weight that normalises to zero; that is the
+            # baseline's fault, so it must not reach the candidate's fold.
+            if any(weight > 0 and weight / total_weight == 0 for weight in score.weights.values()):
+                continue
             try:
                 recovered = recover_actuals(snap)
             except ValueError:

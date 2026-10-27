@@ -35,10 +35,12 @@ def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
 
 def best_snapshot(client_path: str | Path) -> Snapshot | None:
     """The lowest-fitness scored snapshot in <client>/.fpa/forecasts/ - the
-    assumptions that worked best for that client. None if no scored snapshot."""
+    assumptions that worked best for that client. None if no snapshot has a finite,
+    non-negative fitness."""
     forecasts = Workspace.open(client_path).memory / "forecasts"
     if not forecasts.exists():
         return None
     snaps = [load_snapshot(f) for f in sorted(forecasts.glob("*.snapshot.yaml"))]
-    scored = [(s.score.fitness, s) for s in snaps if s.score is not None]
+    scored = [(s.score.fitness, s) for s in snaps
+              if s.score is not None and math.isfinite(s.score.fitness) and s.score.fitness >= 0]
     return min(scored, key=lambda pair: pair[0])[1] if scored else None

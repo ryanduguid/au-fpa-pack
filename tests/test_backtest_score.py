@@ -29,6 +29,14 @@ def test_extract_lines_flow_stock_ratio():
     assert out["gross_margin"] == pytest.approx(120.0 / 300.0)
 
 
+def test_extract_lines_sums_fixed_width_integers_without_wrapping():
+    forecast = pd.DataFrame({"revenue": pd.Series([2**62, 2**62], dtype="int64"),
+                             "gross_profit": pd.Series([2**62, 2**62], dtype="int64")})
+    lines = extract_lines(forecast, ["revenue", "gross_margin"])
+    assert lines["revenue"] == 2.0**63
+    assert lines["gross_margin"] == 1.0
+
+
 def test_aggregate_periods_matches_extract():
     periods = [
         {"revenue": 100.0, "gross_profit": 40.0, "ebitda": 30.0, "ending_cash": 50.0},
