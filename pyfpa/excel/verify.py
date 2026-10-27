@@ -12,6 +12,7 @@ from types import ModuleType
 
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.utils import get_column_letter
 from pydantic import BaseModel
 
@@ -52,6 +53,7 @@ def verify_workbook(
     expected: pd.DataFrame,
     *,
     rel_tol: float = 1e-6,
+    inputs: dict[str, float] | None = None,
 ) -> VerifyReport:
     """Evaluate the workbook's formulas in Python and compare every column of
     ``expected`` against the Model sheet, month by month.
@@ -66,15 +68,30 @@ def verify_workbook(
     Rows labelled ``check_*`` are the workbook's own ties: every month must
     evaluate to zero within ``rel_tol``, or the verification fails.
 
+    ``inputs`` maps ``'Sheet!A1'`` to a value that replaces that input cell
+    before calculation, as a user changing it in Excel would, so a scenario
+    control is tested in the file as shipped. Each must name an existing
+    non-formula cell; ``formulas`` would silently accept any other key.
+
     Key format confirmed against formulas 1.3.4:
         ``'[<filename_exact_case>]MODEL'!<COL><ROW>``
     The sheet name is stored as-uppercase in the solution dict.
     """
     formulas = _load_formulas()
     path = Path(path)
-    solution = formulas.ExcelModel().loads(str(path)).finish().calculate()
-
     wb = load_workbook(path)
+    overrides = {}
+    sheets = {name.upper(): wb[name] for name in wb.sheetnames}
+    for target, value in (inputs or {}).items():
+        sheet, _, ref = target.rpartition("!")
+        ws = sheets.get(sheet.strip("'").upper())
+        cell = ws[ref.replace("$", "")] if ws is not None and ref else None
+        # A range gives a tuple; a formula or empty cell is not an input.
+        if ws is None or not isinstance(cell, Cell) or cell.value is None or cell.data_type == "f":
+            raise ValueError(f"input {target!r} is not an existing value cell")
+        overrides[f"'[{path.name}]{ws.title.upper()}'!{cell.coordinate}"] = value
+    solution = formulas.ExcelModel().loads(str(path)).finish().calculate(inputs=overrides)
+
     model_ws = wb["Model"]
     labels = {
         model_ws.cell(row=r, column=1).value: r
