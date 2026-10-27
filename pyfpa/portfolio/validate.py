@@ -92,7 +92,7 @@ def validate_prior(
                 continue
             # Scoring refuses a positive weight that normalises to zero; that is the
             # baseline's fault, so it must not reach the candidate's fold.
-            if any(weight > 0 and weight / total_weight == 0 for weight in score.weights.values()):
+            if any(weight > 0 and weight / total_weight <= 0 for weight in score.weights.values()):
                 continue
             try:
                 recovered = recover_actuals(snap)

@@ -150,7 +150,7 @@ def score_forecast(
         raise ValueError("scoring weights must sum to a positive value")
     used = {line: weights[line] / total_w for line in lines}
     for line, weight in used.items():
-        if weight == 0.0:
+        if weight <= 0.0:  # normalised weights are never negative; this catches underflow
             raise ValueError(
                 f"positive scoring weight for {line!r} rounds to zero during normalisation"
             )
