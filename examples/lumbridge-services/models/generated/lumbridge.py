@@ -247,9 +247,10 @@ def export_workbook(path: Path, result: dict) -> None:
     status_row = len(rows) + len(check_rows) + 2
     last_col = get_column_letter(len(MONTHS) + 1)
     status = '"All checks pass"'
+    # The same zero tolerance verify_workbook applies to check_* rows, so the cell and the export agree.
     for label, row in reversed(check_rows.items()):
         area = f"B{row}:{last_col}{row}"
-        status = f'IF(MAX(MAX({area}),-MIN({area}))>0.005,"{label} fails",{status})'
+        status = f'IF(MAX(MAX({area}),-MIN({area}))>0.000001,"{label} fails",{status})'
     ws.cell(status_row, 1, "Workbook checks")
     ws.cell(status_row, 2, "=" + status)
     ws.cell(ws.max_row + 2, 1, "Profit is before income tax. PAYG instalments reduce cash, not pre-tax profit.")
