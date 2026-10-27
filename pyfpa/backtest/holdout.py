@@ -26,14 +26,20 @@ def holdout_backtest(
     score_lines: Sequence[str] = DEFAULT_SCORE_LINES,
     weights: Mapping[str, float] | None = None,
 ) -> ScoreResult:
-    """Fit on all but the last `holdout` periods, predict the holdout, and score
+    """Fit on all but the last `holdout` months, predict the holdout, and score
     predicted versus the held-out actuals. The business-specific `build_cfg_fn`
     (fit actuals -> a config that forecasts the holdout window) is supplied by the
     caller; this harness only owns the split and the scoring. Nothing is scored on
-    data it was fit on."""
+    data it was fit on. Actual labels must identify unique monthly periods, and
+    the generated forecast must cover exactly the held-out months in order."""
     if holdout < 1:
         raise ValueError("holdout must be at least one")
-    periods = sorted(actuals_by_period, key=lambda period: pd.Period(period).start_time)
+    months = {label: pd.Period(label) for label in actuals_by_period}
+    if any(not isinstance(month, pd.Period) or month.freqstr != "M" for month in months.values()):
+        raise ValueError("actual periods must be monthly")
+    if len(set(months.values())) != len(months):
+        raise ValueError("actual periods must be unique months")
+    periods = sorted(actuals_by_period, key=months.__getitem__)
     if len(periods) <= holdout:
         raise ValueError(f"need more than {holdout} periods, got {len(periods)}")
     fit_periods = periods[:-holdout]
@@ -49,6 +55,10 @@ def holdout_backtest(
     # aggregated: evidence missing for a disabled line must not stop the rest.
     scored = [line for line in score_lines if selected_weights.get(line, 0) > 0]
     cfg = build_cfg_fn(fit_actuals)
-    predicted = extract_lines(cashflow_from_config(cfg), scored)
+    forecast = cashflow_from_config(cfg)
+    expected = pd.PeriodIndex([months[period] for period in holdout_periods], freq="M")
+    if not forecast.index.equals(expected):
+        raise ValueError("forecast periods must match the held-out months")
+    predicted = extract_lines(forecast, scored)
     actual = aggregate_periods([dict(actuals_by_period[p]) for p in holdout_periods], scored)
     return score_forecast(predicted, actual, weights=selected_weights)

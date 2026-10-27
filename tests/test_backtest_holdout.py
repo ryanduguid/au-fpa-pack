@@ -73,3 +73,51 @@ def test_holdout_uses_chronology_instead_of_insertion_order():
     ordered = holdout_backtest(actuals, _build_cfg(0), holdout=3, score_lines=["revenue"])
     shuffled = holdout_backtest(dict(reversed(list(actuals.items()))), _build_cfg(0), holdout=3, score_lines=["revenue"])
     assert shuffled == ordered
+
+
+@pytest.mark.parametrize("labels", [
+    ("2026-01", "2026-1"),
+    ("2026-01", "2026-01-01"),
+    ("2025-12", "2026Q1"),
+    ("2025-12", "2026"),
+    ("2025-12", "NaT"),
+])
+def test_holdout_refuses_ambiguous_or_nonmonthly_periods_before_fitting(labels):
+    def build(_):
+        pytest.fail("invalid evidence reached the fitting callback")
+
+    actuals = {label: {"revenue": 100.0} for label in labels}
+    with pytest.raises(ValueError, match="month"):
+        holdout_backtest(actuals, build, holdout=1, score_lines=["revenue"])
+
+
+@pytest.mark.parametrize("start,horizon", [("2026-01", 1), ("2026-02", 2)])
+def test_holdout_refuses_a_forecast_for_different_months(start, horizon):
+    cfg = _build_cfg(0)({"2026-01": {"revenue": 100.0}})
+    cfg = cfg.model_copy(update={"start_month": start, "horizon_months": horizon})
+    actuals = {"2026-01": {"revenue": 100.0}, "2026-02": {"revenue": 100.0}}
+    with pytest.raises(ValueError, match="held-out months"):
+        holdout_backtest(actuals, lambda _: cfg, holdout=1, score_lines=["revenue"])
+
+
+def test_holdout_refuses_gaps_in_held_out_months():
+    cfg = _build_cfg(0)({"2026-01": {"revenue": 100.0}})
+    cfg = cfg.model_copy(update={"start_month": "2026-03", "horizon_months": 2})
+    actuals = {month: {"revenue": 100.0} for month in ("2026-01", "2026-03", "2026-05")}
+    with pytest.raises(ValueError, match="held-out months"):
+        holdout_backtest(actuals, lambda _: cfg, holdout=2, score_lines=["revenue"])
+
+
+def test_holdout_allows_training_gaps_and_preserves_original_month_labels():
+    cfg = _build_cfg(0)({"2026-01": {"revenue": 100.0}})
+    cfg = cfg.model_copy(update={"start_month": "2026-02", "horizon_months": 1})
+    seen = {}
+
+    def build(fit):
+        seen.update(fit)
+        return cfg
+
+    actuals = {month: {"revenue": 100.0} for month in ("2026-02", "2025/01", "2026-1")}
+    result = holdout_backtest(actuals, build, holdout=1, score_lines=["revenue"])
+    assert list(seen) == ["2025/01", "2026-1"]
+    assert result.fitness == 0

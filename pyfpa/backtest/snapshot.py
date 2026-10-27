@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from pyfpa.backtest.score import DEFAULT_SCORE_LINES, ScoreResult, extract_lines
 from pyfpa.config.schemas import EntityConfig
+from pyfpa.models.periods import month_index
 
 
 class Snapshot(BaseModel):
@@ -32,6 +33,8 @@ def snapshot_forecast(
     score_lines: Sequence[str] = DEFAULT_SCORE_LINES,
 ) -> Snapshot:
     """Capture a forecast snapshot from an EntityConfig and its computed DataFrame."""
+    if not forecast_df.index.equals(month_index(cfg.start_month, cfg.horizon_months)):
+        raise ValueError("forecast periods must match the configured months")
     return Snapshot(
         label=label,
         created=created,
