@@ -8,6 +8,10 @@ Changed:
 
 - au-fpa-pack is now licensed under FSL-1.1-ALv2 (Functional Source License, with Apache-2.0 as the future licence) instead of MIT. openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
 
+Fixed:
+
+- `recover_actuals` recovers negative actuals. Since #219, `score_forecast` stores each line's error as `(predicted - actual) / |actual|`, but `recover_actuals` still inverted it as `predicted / (1 + error)`, so a loss of 100 forecast as 80 came back as a loss of 66.67 and portfolio prior validation rescored its folds against that. `ScoreResult.actual_signs` now records the sign of each scored actual, and `recover_actuals` inverts by it. A score without it, such as one written by 0.3.0, is recovered only where the 0.3.0 signed reading and the `|actual|` reading give the same actual; any other line raises `ValueError` naming it, and `validate_prior` leaves that client out of its folds. Rescore such a snapshot to record its signs. A line whose forecast is too small relative to its actual for the stored error to fix it (`|1 + sign * error|` below `1e-8`) also raises `ValueError` rather than returning an imprecise actual.
+
 # v0.3.0
 
 Breaking for code and configurations written against 0.2.0:
