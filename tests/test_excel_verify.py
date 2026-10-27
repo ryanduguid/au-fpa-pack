@@ -224,8 +224,8 @@ def test_verify_reports_a_cell_that_evaluates_to_nothing(tmp_path, monkeypatch, 
             self.inner.finish()
             return self
 
-        def calculate(self):
-            solution = dict(self.inner.calculate())
+        def calculate(self, **kwargs):
+            solution = dict(self.inner.calculate(**kwargs))
             solution[f"'[m.xlsx]MODEL'!C{row}"] = types.SimpleNamespace(value=[[raw]])
             return solution
 

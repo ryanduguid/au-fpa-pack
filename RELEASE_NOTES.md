@@ -1,5 +1,9 @@
 # Unreleased
 
+Added:
+
+- `verify_workbook(..., inputs={"Sheet!A1": value})` recalculates the workbook with input cells replaced, as a user changing them in Excel would, and refuses a key that is not an existing value cell. The Lumbridge test now changes `Assumptions!B2` in one exported workbook to 0, 1, 44, 45, 46 and 120 and checks both `Model` and `Cash 13 weeks` against the engine.
+
 Changed:
 
 - au-fpa-pack is now licensed under FSL-1.1-ALv2 (Functional Source License, with Apache-2.0 as the future licence) instead of MIT. openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
