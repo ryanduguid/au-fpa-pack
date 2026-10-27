@@ -28,7 +28,7 @@ def _forecast_values(
         finite = False
     if not finite:
         raise ValueError(f"forecast {column!r} must contain finite numeric values")
-    if pd.api.types.is_integer_dtype(values):
+    if pd.api.types.is_integer_dtype(values) or all(isinstance(value, int) for value in values):
         # Fixed-width integer sums wrap silently; Python integers keep the exact total.
         return values.astype(object)
     return values.astype(float)  # narrower floats would sum in their own precision
