@@ -21,6 +21,7 @@ Open this after completing the trial.
 | Monthly gross / net wage payments | $24,000 gross / $19,000 net |
 | Monthly super | $2,880, separate from net wages |
 | Cash reconciliation differences | $0.00 in all 3 months and both cases |
+| Workbook checks, `Model!B26` | All checks pass in both cases |
 | Extra cash needed at the late-case trough | $25,160 to reach zero; $40,160 to retain a $15,000 buffer |
 
 A delay changes the bank receipt and debtor balance, not service revenue or

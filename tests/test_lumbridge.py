@@ -101,3 +101,51 @@ def test_the_shipped_workbook_follows_its_receipt_delay_control(tmp_path):
     for target in ("Assumptions!Z99", "Assumptions!B2:B3", "Cash 13 weeks!B20", "Nowhere!B2"):
         with pytest.raises(ValueError, match="not an existing value cell"):
             verify_workbook(path, api["forecast"]()["monthly"], inputs={target: 1})
+
+
+def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
+    """Change one source cell per tie, as an Excel user could, and require that
+    tie alone to fail and the status cell to name it; unchanged, all pass."""
+    import formulas
+    from openpyxl import load_workbook
+
+    from pyfpa.excel.verify import verify_workbook
+
+    api = functions()
+    path = tmp_path / "lumbridge.xlsx"
+    result = api["forecast"]()
+    monthly = result["monthly"]
+    api["export_workbook"](path, result)
+    wb = load_workbook(path)
+    labels = {cell.value: cell.row for cell in wb["Model"]["A"] if cell.value}
+    assert labels["Workbook checks"] == 26, "the README and reviewer key cite Model!B26"
+    status = f"'[{path.name}]MODEL'!B{labels['Workbook checks']}"
+    checks = {label for label in labels if label.startswith("check_")}
+    assert checks == {"check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability"}
+    model = formulas.ExcelModel().loads(str(path)).finish()
+
+    for delay in (0, 45):
+        report = verify_workbook(path, api["forecast"](delay_days=delay)["monthly"], inputs={"Assumptions!B2": delay})
+        assert report.passed, (delay, report.failures)
+        solution = model.calculate(inputs={f"'[{path.name}]ASSUMPTIONS'!B2": delay})
+        assert solution[status].value[0][0] == "All checks pass", delay
+
+    def row_of(sheet, column, text):
+        return next(cell.row for cell in wb[sheet][column] if cell.value == text)
+
+    september_30 = (pd.Timestamp("2026-09-30") - pd.Timestamp("1899-12-30")).days
+    perturbations = {
+        # A receipt dated before the forecast drops out of every monthly window.
+        "check_cash_roll_forward": ("Cash dates", f"B{row_of('Cash dates', 'A', 'OPEN-F')}", september_30),
+        # Interest expense moves profit but no dated payment.
+        "check_direct_vs_indirect_cash": ("Sources", f"B{row_of('Sources', 'A', 'Interest expense')}", -300),
+        # A part settlement leaves some opening GST in the liability.
+        "check_gst_liability": ("Cash dates", f"E{row_of('Cash dates', 'F', 'GST settlement')}", 12000),
+    }
+    assert set(perturbations) == checks
+    for check, (sheet, cell, value) in perturbations.items():
+        report = verify_workbook(path, monthly, inputs={f"{sheet}!{cell}": value})
+        failed = {failure.split()[0] for failure in report.failures if failure.startswith("check_")}
+        assert failed == {check}, (check, report.failures)
+        solution = model.calculate(inputs={f"'[{path.name}]{sheet.upper()}'!{cell}": value})
+        assert solution[status].value[0][0] == f"{check} fails"
