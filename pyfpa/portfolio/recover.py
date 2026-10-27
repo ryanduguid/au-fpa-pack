@@ -6,6 +6,10 @@ from pathlib import Path
 from pyfpa.backtest.snapshot import Snapshot, load_snapshot
 from pyfpa.memory.workspace import Workspace
 
+# 1 + sign * error is predicted / actual. Below this the forecast is lost in the
+# actual's rounding, and the recovered value can be far from the real one.
+MIN_RECOVERY_DIVISOR = 1e-8
+
 
 def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
     """Recover the realised actuals from a scored snapshot by inverting the stored
@@ -21,8 +25,10 @@ def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
     ValueError naming it, and rescoring the snapshot records its signs.
 
     Only scored lines are recoverable; an unscored snapshot yields {}. A line
-    whose error makes the divisor 0 is unrecoverable and raises ValueError.
-    Consumed predictions, errors and recovered actuals must be finite."""
+    whose error makes the divisor 0, or smaller in magnitude than
+    MIN_RECOVERY_DIVISOR so that the stored error no longer fixes the actual, is
+    unrecoverable and raises ValueError. Consumed predictions, errors and
+    recovered actuals must be finite."""
     score = snapshot.score
     if score is None:
         return {}
@@ -41,17 +47,22 @@ def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
         try:
             if not math.isfinite(predicted) or not math.isfinite(error):
                 raise ValueError(message)
-            out[line] = predicted / (1.0 + sign * error)
+            divisor = 1.0 + sign * error
+            out[line] = predicted / divisor
             if not math.isfinite(out[line]):
                 raise ValueError(message)
+            if abs(divisor) < MIN_RECOVERY_DIVISOR:
+                raise ValueError(f"cannot recover actual {line!r}: the forecast is too small "
+                                 "relative to the actual for its stored error to fix it")
         except (TypeError, OverflowError) as invalid:
             raise ValueError(message) from invalid
         if signs is None:
             # predicted / (1 - error) is a second, negative fit when it is below 0
-            # and differs from predicted / (1 + error); with predicted 0 and error 1
-            # every negative actual fits.
+            # and differs from predicted / (1 + error). Under |actual| an error of
+            # exactly 1 means a forecast of 0, or one that rounded away against a
+            # negative actual, so any negative actual fits.
             if ((predicted > 0 and error > 1) or (predicted < 0 and error < 1 and error != 0)
-                    or (predicted == 0 and error == 1)):
+                    or error == 1):
                 refused.append(line)
         elif out[line] == 0 or (out[line] > 0) != (sign > 0):
             refused.append(line)

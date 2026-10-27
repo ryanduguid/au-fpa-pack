@@ -174,3 +174,31 @@ def test_recover_actuals_refuses_a_missing_or_contradicted_sign():
     snapshot.score.actual_signs = {"revenue": 1, "ebitda": -1}
     with pytest.raises(ValueError, match=r"lines \['ebitda'\].*recorded sign"):
         recover_actuals(snapshot)
+
+
+def test_v030_snapshot_recovers_an_exact_forecast_of_a_loss():
+    # Error 0 means predicted == actual under either formula, whatever the sign.
+    snapshot = _snap("p", 0.0, {"net_income": -80.0}, {"net_income": 0.0})
+    assert recover_actuals(snapshot) == {"net_income": -80.0}
+
+
+@pytest.mark.parametrize("predicted", [0.0, 1e-13, -1e-13])
+def test_unsigned_error_of_one_is_refused(predicted):
+    # Under |actual| a forecast of 0, or one rounded away against a loss of 5000,
+    # scores exactly 1, so the stored error cannot fix the actual.
+    assert (predicted - -5000.0) / abs(-5000.0) == 1.0
+    snapshot = _snap("p", 1.0, {"x": predicted}, {"x": 1.0})
+    with pytest.raises(ValueError, match=r"lines \['x'\].*no actual signs"):
+        recover_actuals(snapshot)
+
+
+@pytest.mark.parametrize("actual", [1000.0, -1000.0])
+def test_a_forecast_lost_in_the_actuals_rounding_is_refused(tmp_path, actual):
+    # 3e-13 against 1000 leaves 1 + sign * error near 0, where it no longer
+    # fixes the actual: the inversion gave 900.72 or -675.54.
+    predicted = {"x": 3e-13}
+    score = score_forecast(predicted, {"x": actual}, weights={"x": 1.0})
+    snapshot = Snapshot(label="p", created="2026-10-28", assumptions={},
+                        predicted=predicted, score=score)
+    with pytest.raises(ValueError, match=r"cannot recover actual 'x'.*too small"):
+        recover_actuals(_round_trip(snapshot, tmp_path))
