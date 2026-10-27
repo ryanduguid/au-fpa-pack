@@ -69,3 +69,35 @@ def test_workbook_formulas_match_both_cash_scenarios(tmp_path):
         report = verify_workbook(path, result["monthly"])
         assert report.passed, report.failures
         assert report.lines_checked == len(result["monthly"].columns)
+
+
+def test_the_shipped_workbook_follows_its_receipt_delay_control(tmp_path):
+    """Change Assumptions!B2 in one exported file, as the README tells users to,
+    and check both Model and Cash 13 weeks against the engine at that delay."""
+    import formulas
+
+    from pyfpa.excel.verify import verify_workbook
+
+    api = functions()
+    path = tmp_path / "lumbridge.xlsx"
+    api["export_workbook"](path, api["forecast"](delay_days=0))
+    model = formulas.ExcelModel().loads(str(path)).finish()
+    columns = {"C": "receipts", "D": "disbursements", "E": "net_cash", "F": "ending_cash"}
+    for delay in (0, 1, 44, 45, 46, 120):
+        result = api["forecast"](delay_days=delay)
+        report = verify_workbook(path, result["monthly"], inputs={"Assumptions!B2": delay})
+        assert report.passed, (delay, report.failures)
+        solution = model.calculate(inputs={f"'[{path.name}]ASSUMPTIONS'!B2": delay})
+        assert solution[f"'[{path.name}]CASH 13 WEEKS'!B20"].value[0][0] == delay
+        for week, (_, row) in enumerate(result["weekly"].iterrows(), start=2):
+            for col, name in columns.items():
+                got = solution[f"'[{path.name}]CASH 13 WEEKS'!{col}{week}"].value[0][0]
+                assert float(got) == pytest.approx(row[name]), (delay, week, name)
+    # The control must move the answer, or the loop above proves nothing.
+    # Every spelling of the control must reach it, or an override could do nothing.
+    for target in ("Assumptions!B2", "assumptions!$B$2", "'Assumptions'!b2"):
+        late = verify_workbook(path, api["forecast"](delay_days=0)["monthly"], inputs={target: 45})
+        assert not late.passed, target
+    for target in ("Assumptions!Z99", "Assumptions!B2:B3", "Cash 13 weeks!B20", "Nowhere!B2"):
+        with pytest.raises(ValueError, match="not an existing value cell"):
+            verify_workbook(path, api["forecast"]()["monthly"], inputs={target: 1})
