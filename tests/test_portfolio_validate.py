@@ -167,3 +167,223 @@ def test_repeated_workspaces_cannot_fill_the_folds(tmp_path):
     client = _make_client(tmp_path, "a", 45.0)
     with pytest.raises(ValueError, match="same workspace twice"):
         validate_prior("working_capital.dio_days", [client, client, client])
+
+
+def _make_cash_client(tmp_path, name, cash):
+    cfg = EntityConfig.model_validate({
+        "name": "Synthetic cash fixture", "start_month": "2026-01",
+        "horizon_months": 1, "tax_rate": 0.0,
+        "channels": [{"name": "Zero sales", "annual_revenue": 0.0,
+                      "seasonality": [1.0] * 12, "cogs_pct": 0.0}],
+        "working_capital": {"dso_days": 0.0, "dpo_days": 0.0, "dio_days": 0.0},
+        "opening_balances": {"cash": cash},
+    })
+    snapshot = snapshot_forecast(cfg, cashflow_from_config(cfg), label="2026",
+                                 created="2026-01-01", score_lines=["ending_cash"])
+    snapshot.score = score_forecast(snapshot.predicted, snapshot.predicted,
+                                    weights={"ending_cash": 1.0})
+    root = tmp_path / name
+    destination = root / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+    destination.parent.mkdir(parents=True)
+    save_snapshot(snapshot, destination)
+    return ClientRef(path=str(root), type="d2c")
+
+
+@pytest.mark.parametrize("named", [False, True])
+@pytest.mark.parametrize("tolerance", [0.0, float("inf")])
+def test_unsupported_scoring_refuses_fold_and_attempts_every_client(
+    tmp_path, monkeypatch, named, tolerance,
+):
+    import importlib
+
+    from pyfpa.portfolio.approval import PromotionDenied, validation_is_attested
+    from pyfpa.portfolio.library import promote_prior
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_cash_client(tmp_path, str(i), cash)
+               for i, cash in enumerate([-1.1e308, 8e307, 8e307, 8e307])]
+    generate = module.cashflow_from_config
+    calls = []
+
+    def observe_generation(config):
+        calls.append(config)
+        return generate(config)
+
+    monkeypatch.setattr(module, "cashflow_from_config", observe_generation)
+    candidate = PriorCandidate(
+        business_type="d2c", driver="opening_balances.cash", value=8e307,
+        support=[client.path for client in clients], dispersion=0.0,
+    ) if named else None
+    result = validate_prior("opening_balances.cash", clients, tolerance=tolerance,
+                            candidate=candidate)
+    assert len(calls) == 4
+    assert result.n_folds == 4
+    assert result.mean_delta == float("inf")
+    assert not result.validated
+    if candidate is not None:
+        assert validation_is_attested(result.candidate_digest, result.n_folds,
+                                      result.mean_delta, result.attestation)
+        with pytest.raises(PromotionDenied, match="successful validation"):
+            promote_prior(tmp_path / "library", candidate, result)
+        assert not (tmp_path / "library").exists()
+
+
+@pytest.mark.parametrize("field,value", [
+    ("fitness", float("inf")), ("fitness", float("nan")), ("fitness", -1.0),
+    ("error", float("inf")), ("error", float("nan")),
+    ("weight", float("inf")), ("weight", float("nan")),
+    ("weight", -1.0), ("weight", 0.0), ("weight_total", 1e308),
+    ("weight_underflow", 1e308),
+    ("driver", float("inf")),
+    pytest.param("driver", 10**1000, id="unrepresentable-driver"),
+])
+def test_unusable_stored_evidence_is_excluded_before_candidate_scoring(tmp_path, field, value):
+    from pathlib import Path
+
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    path = Path(clients[0].path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+    snapshot = load_snapshot(path)
+    assert snapshot.score is not None
+    if field == "fitness":
+        snapshot.score.fitness = value
+    elif field == "error":
+        snapshot.score.per_line["revenue"] = value
+    elif field in ("weight", "weight_total"):
+        snapshot.score.weights = {line: value for line in snapshot.score.weights}
+    elif field == "weight_underflow":
+        snapshot.score.weights = {line: 1e-300 for line in snapshot.score.weights}
+        snapshot.score.weights[next(iter(snapshot.score.weights))] = value
+    else:
+        snapshot.assumptions["working_capital"]["dio_days"] = value
+    save_snapshot(snapshot, path, overwrite=True)
+    result = validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
+    assert result.n_folds == 2
+    assert result.mean_delta == 0.0
+    assert result.validated
+
+
+def test_overflowed_recovery_is_a_baseline_failure(tmp_path):
+    from pathlib import Path
+
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    clients = [_make_cash_client(tmp_path, name, 100.0) for name in ("a", "b", "c")]
+    path = Path(clients[0].path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+    snapshot = load_snapshot(path)
+    assert snapshot.score is not None
+    snapshot.predicted["ending_cash"] = 1e308
+    snapshot.score.per_line["ending_cash"] = -0.9999999999999999
+    snapshot.score.fitness = 0.9999999999999999
+    save_snapshot(snapshot, path, overwrite=True)
+    result = validate_prior("opening_balances.cash", clients, tolerance=float("inf"))
+    assert result.n_folds == 2
+    assert result.mean_delta == 0.0
+    assert result.validated
+
+
+def test_recovered_evidence_is_consumed_once_per_selected_baseline(tmp_path, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    recover = module.recover_actuals
+    calls = []
+
+    def observe_recovery(snapshot):
+        calls.append(snapshot.label)
+        return recover(snapshot)
+
+    monkeypatch.setattr(module, "recover_actuals", observe_recovery)
+    assert validate_prior("working_capital.dio_days", clients).validated
+    assert len(calls) == 3
+
+
+def test_stored_weights_need_not_be_unit_or_all_positive(tmp_path):
+    from pathlib import Path
+
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    for client in clients:
+        path = Path(client.path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+        snapshot = load_snapshot(path)
+        assert snapshot.score is not None
+        snapshot.score.weights = {line: weight * 10 for line, weight in snapshot.score.weights.items()}
+        snapshot.score.weights["ebitda"] = 0.0
+        save_snapshot(snapshot, path, overwrite=True)
+    result = validate_prior("working_capital.dio_days", clients)
+    assert result.n_folds == 3
+    assert result.validated
+
+
+def test_validation_reports_unsupported_peer_median(tmp_path):
+    clients = [_make_cash_client(tmp_path, name, 1e308) for name in ("a", "b", "c")]
+    with pytest.raises(ValueError, match="validation.*median.*finite"):
+        validate_prior("opening_balances.cash", clients)
+
+
+def test_validation_reports_unsupported_mean_arithmetic(tmp_path):
+    clients = [_make_cash_client(tmp_path, str(i), cash)
+               for i, cash in enumerate([1.0, 1.0, 1e308, 1e308])]
+    with pytest.raises(ValueError, match="validation.*mean.*finite"):
+        validate_prior("opening_balances.cash", clients)
+
+
+@pytest.mark.parametrize("mean", [float("nan"), float("inf"), -float("inf")])
+def test_validation_never_accepts_an_unsupported_returned_mean(tmp_path, monkeypatch, mean):
+    import importlib
+
+    module = importlib.import_module("pyfpa.portfolio.validate")
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    monkeypatch.setattr(module.statistics, "fmean", lambda values: mean)
+    with pytest.raises(ValueError, match="validation.*mean.*finite"):
+        validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
+
+
+@pytest.mark.parametrize("cash", [1e308, -1e308])
+@pytest.mark.parametrize("infinite_candidate", [False, True])
+def test_named_candidate_median_must_be_finite(tmp_path, cash, infinite_candidate):
+    import math
+
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    candidate = PriorCandidate(
+        business_type="d2c", driver="opening_balances.cash",
+        value=math.copysign(math.inf, cash) if infinite_candidate else cash,
+        support=[client.path for client in clients], dispersion=0.0,
+    )
+    with pytest.raises(ValueError, match="validation.*candidate.*median.*finite"):
+        validate_prior(candidate.driver, clients, candidate=candidate)
+
+
+@pytest.mark.parametrize("cash", [1e307, -1e307])
+def test_supported_named_candidate_median_stays_attested(tmp_path, cash):
+    from pyfpa.portfolio.approval import validation_is_attested
+    from pyfpa.portfolio.mine import PriorCandidate
+
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    candidate = PriorCandidate(
+        business_type="d2c", driver="opening_balances.cash", value=cash,
+        support=[client.path for client in clients], dispersion=0.0,
+    )
+    result = validate_prior(candidate.driver, clients, candidate=candidate)
+    assert result.n_folds == 4
+    assert result.mean_delta == 0.0
+    assert result.validated
+    assert validation_is_attested(result.candidate_digest, result.n_folds,
+                                  result.mean_delta, result.attestation)
+
+
+@pytest.mark.parametrize("cash", [1e308, -1e308])
+def test_unnamed_validation_needs_only_the_finite_peer_medians(tmp_path, cash):
+    clients = [_make_cash_client(tmp_path, name, cash) for name in ("a", "b", "c", "d")]
+    result = validate_prior("opening_balances.cash", clients)
+    assert result.n_folds == 4
+    assert result.mean_delta == 0.0
+    assert result.validated
+    assert result.candidate_digest == ""
+    assert result.attestation == ""

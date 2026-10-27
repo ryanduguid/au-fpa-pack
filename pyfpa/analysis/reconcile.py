@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 
 import pandas as pd
@@ -20,6 +21,8 @@ def reconcile(
     the model is above the actual, also on a negative line such as a loss. A
     line is within tolerance when
     ``|variance_pct| <= tolerance``, or when both values are 0.
+    Operands, absolute variance and defined percentages must be finite;
+    unsupported arithmetic raises ValueError identifying the line.
 
     Parameters
     ----------
@@ -40,10 +43,19 @@ def reconcile(
         raise ValueError(f"reconciliation line sets differ: {sorted(set(model) ^ set(actual))}")
     rows = []
     for line in actual:
-        m = float(model[line])
-        a = float(actual[line])
+        try:
+            m = float(model[line])
+            a = float(actual[line])
+        except (TypeError, ValueError, OverflowError) as error:
+            raise ValueError(f"reconciliation {line!r} operands must be finite") from error
+        if not math.isfinite(m) or not math.isfinite(a):
+            raise ValueError(f"reconciliation {line!r} operands must be finite")
         variance = m - a
+        if not math.isfinite(variance):
+            raise ValueError(f"reconciliation {line!r} variance must be finite")
         variance_pct = (variance / abs(a)) if a else (0.0 if m == 0 else float("nan"))
+        if a and not math.isfinite(variance_pct):
+            raise ValueError(f"reconciliation {line!r} percentage must be finite")
         within = (m == a) if a == 0 else (abs(variance_pct) <= tolerance)
         rows.append({
             "line": line,
