@@ -35,10 +35,46 @@ def test_snapshot_forecast_captures_assumptions_and_predictions():
 
 
 def test_snapshot_forecast_refuses_incomplete_caller_supplied_evidence():
-    frame = pd.DataFrame({"revenue": [100.0, float("nan")]})
+    cfg = _cfg().model_copy(update={"horizon_months": 2})
+    frame = pd.DataFrame({"revenue": [100.0, float("nan")]},
+                         index=pd.period_range("2026-01", periods=2, freq="M"))
     with pytest.raises(ValueError, match="finite"):
-        snapshot_forecast(_cfg(), frame, label="Synthetic", created="2026-10-12",
+        snapshot_forecast(cfg, frame, label="Synthetic", created="2026-10-12",
                           score_lines=["revenue"])
+
+
+@pytest.mark.parametrize("change", ["reversed", "missing", "duplicate", "extra", "year", "daily", "range"])
+def test_snapshot_refuses_periods_that_differ_from_the_configuration(change):
+    cfg = _cfg()
+    frame = cashflow_from_config(cfg)
+    if change == "reversed":
+        frame = frame.iloc[::-1]
+    elif change == "missing":
+        frame = frame.iloc[:-1]
+    elif change == "duplicate":
+        frame.index = pd.PeriodIndex([frame.index[0], *frame.index[:-1]], freq="M")
+    elif change == "extra":
+        frame = pd.concat([frame, frame.iloc[-1:]])
+        frame.index = pd.period_range("2026-01", periods=13, freq="M")
+    elif change == "year":
+        frame.index = frame.index + 12
+    elif change == "daily":
+        frame.index = pd.period_range("2026-01-01", periods=12, freq="D")
+    else:
+        frame = frame.reset_index(drop=True)
+    with pytest.raises(ValueError, match="configured months"):
+        snapshot_forecast(cfg, frame, label="Synthetic", created="2026-10-17",
+                          score_lines=["revenue", "ending_cash"])
+
+
+def test_snapshot_accepts_selected_columns_with_the_configured_months():
+    cfg = _cfg()
+    frame = cashflow_from_config(cfg)[["revenue", "ending_cash"]]
+    frame.index.name = "month"
+    result = snapshot_forecast(cfg, frame, label="Synthetic", created="2026-10-17",
+                               score_lines=["revenue", "ending_cash"])
+    assert result.predicted["revenue"] == pytest.approx(1_200_000.0)
+    assert result.predicted["ending_cash"] == frame.iloc[-1]["ending_cash"]
 
 
 def test_snapshot_round_trip(tmp_path):
