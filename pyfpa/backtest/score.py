@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import pandas as pd
 from pydantic import BaseModel
@@ -105,8 +106,12 @@ def aggregate_periods(
 
 class ScoreResult(BaseModel):
     fitness: float                       # weighted MAPE across scored lines; lower is better
-    per_line: dict[str, float]           # signed error %, predicted/actual - 1
+    per_line: dict[str, float]           # signed error, (predicted - actual) / |actual|
     weights: dict[str, float]            # the (renormalized) weights actually used
+    # The sign of each scored actual. per_line divides by |actual|, so the error
+    # alone cannot always recover a negative actual. None on scores written
+    # before this was recorded; see pyfpa.portfolio.recover.recover_actuals.
+    actual_signs: dict[str, Literal[-1, 1]] | None = None
 
 
 def score_forecast(
@@ -157,4 +162,5 @@ def score_forecast(
     fitness = sum(used[line] * abs(per_line[line]) for line in lines)
     if not math.isfinite(fitness):
         raise ValueError("scoring fitness must be finite")
-    return ScoreResult(fitness=fitness, per_line=per_line, weights=used)
+    signs: dict[str, Literal[-1, 1]] = {line: 1 if actual[line] > 0 else -1 for line in lines}
+    return ScoreResult(fitness=fitness, per_line=per_line, weights=used, actual_signs=signs)
