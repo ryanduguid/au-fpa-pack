@@ -201,7 +201,11 @@ def export_workbook(path: Path, result: dict) -> None:
     ws = wb["Model"]
     ws.append(["Lumbridge Services: monthly forecast (AUD)", *[m.start_time.to_pydatetime() for m in MONTHS]])
     rows = {name: i for i, name in enumerate(result["monthly"].columns, 2)}
-    for name, row in rows.items():
+    # Ties sit below the engine lines; verify_workbook requires each to be zero every month.
+    check_names = ("check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability")
+    check_rows = {name: i for i, name in enumerate(check_names, len(rows) + 2)}
+    lines = {**rows, **check_rows}
+    for name, row in lines.items():
         ws.cell(row, 1, name)
     input_lines = {"Materials": "Materials", "Overhead": "Operating overhead", "Gross wages": "Wages and Salaries",
                    "Super": "Superannuation", "Workers compensation": "Workers Compensation", "Leave provision": "Leave provision expense",
@@ -227,9 +231,28 @@ def export_workbook(path: Path, result: dict) -> None:
             "Cash from profit bridge": f"={ref('Profit before tax')}+{ref('Depreciation')}+{ref('Leave provision')}-({ref('Receivables')}-{prior('Receivables', refs['Accounts Receivable'])})+({ref('GST payable')}-{prior('GST payable', '-' + refs['GST'])})-{ref('Loan principal paid')}-{ref('Income tax instalment')}",
             "Cash reconciliation difference": f"={ref('Cash from profit bridge')}-{ref('Customer receipts')}+{ref('Cash payments')}",
         })
+        # Each tie compares separately built amounts, so a changed source value can break it.
+        quarter = lambda label, col=col: f"SUM($B{rows[label]}:{col}{rows[label]})"
+        formulas.update({
+            # Chained monthly windows against every dated movement since the opening balance.
+            "check_cash_roll_forward": f'={ref("Closing cash")}-({opening_cash}+SUMIFS({receipts},{dates},"<="&{end_expr})-SUMIFS({payments},{dates},"<="&{end_expr}))',
+            # Profit-to-cash bridge against the dated bank schedule.
+            "check_direct_vs_indirect_cash": f"={ref('Cash reconciliation difference')}",
+            # Opening GST is settled in October, so the liability is this quarter's net GST.
+            "check_gst_liability": f"={ref('GST payable')}-({quarter('Revenue')}-{quarter('Materials')}-{quarter('Overhead')})*{gst_ref}",
+        })
         for label, formula in formulas.items():
-            ws.cell(rows[label], i, formula)
+            ws.cell(lines[label], i, formula)
         ws.cell(1, i).number_format = "mmm-yy"
+    status_row = len(rows) + len(check_rows) + 2
+    last_col = get_column_letter(len(MONTHS) + 1)
+    status = '"All checks pass"'
+    # The same zero tolerance verify_workbook applies to check_* rows, so the cell and the export agree.
+    for label, row in reversed(check_rows.items()):
+        area = f"B{row}:{last_col}{row}"
+        status = f'IF(MAX(MAX({area}),-MIN({area}))>0.000001,"{label} fails",{status})'
+    ws.cell(status_row, 1, "Workbook checks")
+    ws.cell(status_row, 2, "=" + status)
     ws.cell(ws.max_row + 2, 1, "Profit is before income tax. PAYG instalments reduce cash, not pre-tax profit.")
     ws.cell(ws.max_row + 1, 1, "GST, supplier and withholding balances remain payable after the forecast.")
     ws.cell(ws.max_row + 1, 1, "Select the receipt delay on Assumptions. No actual forecast accuracy has been measured.")
@@ -289,13 +312,15 @@ def export_workbook(path: Path, result: dict) -> None:
         for col in range(1, sheet.max_column + 1):
             sheet.column_dimensions[get_column_letter(col)].width = 20
     ws.column_dimensions["A"].width = 43
-    for row in (rows["Profit before tax"], rows["Closing cash"], rows["Cash reconciliation difference"]):
+    for row in (rows["Profit before tax"], rows["Closing cash"], rows["Cash reconciliation difference"], status_row):
         for cell in ws[row]:
             cell.fill = PatternFill("solid", fgColor="E8EEE7")
             cell.font = Font(name="Calibri", size=11, bold=True, color="20352D")
-    for cell in ws[rows["Cash reconciliation difference"]][1:]:
-        cell.number_format = "0.00;(0.00);0.00"
-    for row in range(rows["Cash reconciliation difference"] + 2, ws.max_row):
+    for row in (rows["Cash reconciliation difference"], *check_rows.values()):
+        for cell in ws[row][1:]:
+            cell.number_format = "0.00;(0.00);0.00"
+    ws.merge_cells(start_row=status_row, start_column=2, end_row=status_row, end_column=len(MONTHS) + 1)
+    for row in range(status_row + 2, ws.max_row):
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
         ws.row_dimensions[row].height = 30
         ws.cell(row, 1).alignment = Alignment(wrap_text=True)
