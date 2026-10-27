@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import pytest
 
@@ -25,6 +27,18 @@ def test_extract_lines_flow_stock_ratio():
     assert out["ebitda"] == 90.0
     assert out["ending_cash"] == 90.0
     assert out["gross_margin"] == pytest.approx(120.0 / 300.0)
+
+
+def test_extract_lines_sums_fixed_width_integers_without_wrapping():
+    forecast = pd.DataFrame({"revenue": pd.Series([2**62, 2**62], dtype="int64"),
+                             "gross_profit": pd.Series([2**62, 2**62], dtype="int64")})
+    lines = extract_lines(forecast, ["revenue", "gross_margin"])
+    assert lines["revenue"] == 2.0**63
+    assert lines["gross_margin"] == 1.0
+    net = pd.DataFrame({"revenue": pd.Series([2**53 + 1, -(2**53)], dtype="int64")})
+    assert extract_lines(net, ["revenue"])["revenue"] == 1.0
+    narrow = pd.DataFrame({"revenue": pd.Series([2**24, 1], dtype="float32")})
+    assert extract_lines(narrow, ["revenue"])["revenue"] == 2.0**24 + 1
 
 
 def test_aggregate_periods_matches_extract():
@@ -215,3 +229,140 @@ def test_extract_lines_preserves_zero_revenue_margin_convention():
 
 def test_extract_lines_empty_selection_requires_no_evidence():
     assert extract_lines(pd.DataFrame(), []) == {}  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("predicted,actual", [
+    (1e308, -1e308), (-1e308, 1e308), (1e308, 1e-308),
+])
+def test_score_forecast_refuses_unsupported_derived_errors(predicted, actual):
+    with pytest.raises(ValueError, match="finite"):
+        score_forecast({"cash": predicted}, {"cash": actual}, weights={"cash": 1.0})
+
+
+@pytest.mark.parametrize("error", [float("nan"), float("inf"), -float("inf")])
+def test_score_forecast_enforces_its_own_error_postcondition(monkeypatch, error):
+    # A faulty reconciliation result must not become a usable score.
+    frame = pd.DataFrame({"variance_pct": [error]}, index=["cash"])
+    monkeypatch.setattr("pyfpa.backtest.score.reconcile", lambda model, actual: frame)
+    with pytest.raises(ValueError, match="cash.*finite"):
+        score_forecast({"cash": 110.0}, {"cash": 100.0}, weights={"cash": 1.0})
+
+
+def test_score_forecast_refuses_an_overflowed_weighted_result():
+    import sys
+
+    # Individually finite errors and normalised weights can still round beyond
+    # the finite range during their final reduction.
+    predicted = {str(i): sys.float_info.max for i in range(11)}
+    actual = {line: 1.0 for line in predicted}
+    with pytest.raises(ValueError, match="fitness.*finite"):
+        score_forecast(predicted, actual, weights=actual)
+
+
+@pytest.mark.parametrize("periods,lines", [
+    ([{"revenue": 1e308}, {"revenue": 1e308}], ["revenue"]),
+    ([{"revenue": 1e308, "gross_profit": 1.0}] * 2, ["gross_margin"]),
+    ([{"revenue": 1.0, "gross_profit": 1e308}] * 2, ["gross_margin"]),
+    ([{"revenue": 0.0, "gross_profit": 1e308}] * 2, ["gross_margin"]),
+    ([{"revenue": 1e-308, "gross_profit": 1e308}], ["gross_margin"]),
+])
+def test_aggregate_periods_refuses_unsupported_totals_and_ratios(periods, lines):
+    with pytest.raises(ValueError, match="finite"):
+        aggregate_periods(periods, lines)
+
+
+@pytest.mark.parametrize("periods", [
+    [{"revenue": 0.0, "gross_profit": 1.0}],
+    [{"revenue": -100.0, "gross_profit": 2.0},
+     {"revenue": 100.0, "gross_profit": 2.0}],
+])
+def test_aggregate_periods_preserves_the_finite_zero_revenue_convention(periods):
+    assert aggregate_periods(periods, ["gross_margin"]) == {"gross_margin": 0.0}
+
+
+def test_disabled_line_does_not_require_supported_arithmetic():
+    result = score_forecast(
+        {"cash": 110.0, "disabled": 1e308},
+        {"cash": 100.0, "disabled": -1e308},
+        weights={"cash": 1.0, "disabled": 0.0},
+    )
+    assert result.fitness == 0.1
+    assert result.per_line == {"cash": 0.1}
+
+
+@pytest.mark.parametrize("weights,miss", [
+    ({"perfect": 1e308, "miss": 1e-300}, 1e308),
+    ({"perfect": 2.0, "miss": math.ulp(0.0)}, 1e308),
+    ({"perfect": 2.0, "miss": math.ulp(0.0)}, 1.0),
+])
+def test_positive_weight_normalisation_refuses_lost_participation(weights, miss):
+    with pytest.raises(ValueError, match="positive scoring weight.*miss.*rounds to zero"):
+        score_forecast(
+            {"perfect": 1.0, "miss": miss}, {"perfect": 1.0, "miss": 1.0},
+            weights=weights,
+        )
+
+
+@pytest.mark.parametrize("dominant,expected", [
+    (1.0, math.ulp(0.0)),
+    (math.nextafter(2.0, 0.0), math.ulp(0.0)),
+    (2.0, None),
+    (math.nextafter(2.0, math.inf), None),
+])
+def test_positive_weight_normalisation_preserves_boundary(dominant, expected):
+    predicted = {"perfect": 1.0, "miss": 2.0}
+    actual = {"perfect": 1.0, "miss": 1.0}
+    weights = {"perfect": dominant, "miss": math.ulp(0.0)}
+    if expected is None:
+        with pytest.raises(ValueError, match="positive scoring weight.*miss.*rounds to zero"):
+            score_forecast(predicted, actual, weights=weights)
+    else:
+        result = score_forecast(predicted, actual, weights=weights)
+        assert result.per_line == {"perfect": 0.0, "miss": 1.0}
+        assert result.weights == {"perfect": 1.0, "miss": expected}
+        assert result.weights["miss"] > 0
+        assert result.fitness == expected
+
+
+def test_positive_weight_normalisation_allows_zero_product():
+    result = score_forecast(
+        {"perfect": 1.0, "miss": 1.5}, {"perfect": 1.0, "miss": 1.0},
+        weights={"perfect": 1.0, "miss": math.ulp(0.0)},
+    )
+    assert result.per_line == {"perfect": 0.0, "miss": 0.5}
+    assert result.weights == {"perfect": 1.0, "miss": math.ulp(0.0)}
+    assert result.fitness == 0.0
+
+
+@pytest.mark.parametrize("miss_weight", [1.0, math.ulp(0.0), 0.0])
+def test_stored_scoring_objective_replay_retains_participation(tmp_path, miss_weight):
+    from pyfpa.backtest.snapshot import Snapshot, load_snapshot, save_snapshot
+
+    predicted = {"perfect": 1.0, "miss": 1e308}
+    actual = {"perfect": 1.0, "miss": 1.0}
+    score = score_forecast(predicted, actual, weights={"perfect": 1.0, "miss": miss_weight})
+    snapshot = Snapshot(label="Synthetic", created="2026-10-17", assumptions={},
+                        predicted=predicted, score=score)
+    path = tmp_path / "synthetic.snapshot.yaml"
+    save_snapshot(snapshot, path)
+    loaded = load_snapshot(path)
+    assert loaded == snapshot
+    assert loaded.score is not None
+    replay = score_forecast(predicted, actual, weights=loaded.score.weights)
+    assert replay == score
+    corrected = score_forecast(
+        {**predicted, "miss": 1.0}, actual, weights=loaded.score.weights,
+    )
+    assert corrected.fitness == 0.0
+    assert corrected.weights == loaded.score.weights
+    expected_lines = {"perfect", "miss"} if miss_weight > 0 else {"perfect"}
+    assert set(corrected.per_line) == expected_lines
+    assert set(replay.per_line) == expected_lines
+    if miss_weight > 0:
+        assert corrected.per_line["miss"] == 0.0
+        assert corrected.weights["miss"] > 0
+
+
+def test_active_zero_actual_still_refuses_scoring():
+    with pytest.raises(ValueError, match="no scorable lines.*cash"):
+        score_forecast({"cash": 110.0}, {"cash": 0.0}, weights={"cash": 1.0})
