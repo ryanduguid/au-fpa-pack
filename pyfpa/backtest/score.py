@@ -31,7 +31,7 @@ def _forecast_values(
     if pd.api.types.is_integer_dtype(values):
         # Fixed-width integer sums wrap silently; Python integers keep the exact total.
         return values.astype(object)
-    return values
+    return values.astype(float)  # narrower floats would sum in their own precision
 
 
 def extract_lines(forecast_df: pd.DataFrame, score_lines: Sequence[str]) -> dict[str, float]:

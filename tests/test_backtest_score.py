@@ -37,6 +37,8 @@ def test_extract_lines_sums_fixed_width_integers_without_wrapping():
     assert lines["gross_margin"] == 1.0
     net = pd.DataFrame({"revenue": pd.Series([2**53 + 1, -(2**53)], dtype="int64")})
     assert extract_lines(net, ["revenue"])["revenue"] == 1.0
+    narrow = pd.DataFrame({"revenue": pd.Series([2**24, 1], dtype="float32")})
+    assert extract_lines(narrow, ["revenue"])["revenue"] == 2.0**24 + 1
 
 
 def test_aggregate_periods_matches_extract():
