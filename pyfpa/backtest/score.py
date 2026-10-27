@@ -28,7 +28,10 @@ def _forecast_values(
         finite = False
     if not finite:
         raise ValueError(f"forecast {column!r} must contain finite numeric values")
-    return values.astype(float)  # fixed-width integer sums wrap silently
+    if pd.api.types.is_integer_dtype(values):
+        # Fixed-width integer sums wrap silently; Python integers keep the exact total.
+        return values.astype(object)
+    return values
 
 
 def extract_lines(forecast_df: pd.DataFrame, score_lines: Sequence[str]) -> dict[str, float]:
