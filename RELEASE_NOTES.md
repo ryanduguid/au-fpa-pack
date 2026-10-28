@@ -1,3 +1,9 @@
+# Unreleased
+
+Added:
+
+- `openfpa model-assumptions <workspace> --config <config.yaml> [--previous-config <previous.yaml>]` reports each effective model input as JSON with whether it was supplied or defaulted, the receipts, inventory and income tax methods, and, against a previous configuration, changed, added and removed inputs with entity, horizon, start-month and method differences. Named channel, expense and debt lines stay aligned when reordered, and SHA-256 digests identify both files. It runs no forecast.
+
 # v0.4.0
 
 Breaking for code and configurations written against 0.3.0:

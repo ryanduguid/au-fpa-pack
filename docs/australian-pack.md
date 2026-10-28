@@ -197,3 +197,19 @@ Two points worth stating plainly for practice use:
 Proposed upstream in
 [JeffBrines/openfpa#14](https://github.com/JeffBrines/openfpa/issues/14).
 This fork is not a claim to be upstream.
+
+## Review model assumptions
+
+Use `openfpa model-assumptions <workspace> --config <config.yaml>` to inspect
+effective model inputs as JSON. Add `--previous-config <previous.yaml>` to show
+changed, added and removed assumptions. The workspace must already be initialised.
+
+Each input shows whether it was supplied or defaulted. An explicit zero remains
+distinct from an omitted zero. Named channel, expense and debt lines stay aligned
+when their order changes. The report describes receipts, inventory and income tax
+methods and flags entity, horizon, start-month or method differences before treating
+the configurations as comparable. Exact file digests identify both inputs.
+
+Supplied inputs still need source evidence and approval. This command presents
+configuration choices; it performs no forecast or statutory calculation. Review
+the reported defaults and changed assumptions before running a scenario.

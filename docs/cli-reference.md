@@ -31,6 +31,7 @@ openfpa experiment-list
 openfpa context-pack
 openfpa onboarding-render
 openfpa model-export
+openfpa model-assumptions
 ```
 
 In a source checkout without the `openfpa` console script installed, every
