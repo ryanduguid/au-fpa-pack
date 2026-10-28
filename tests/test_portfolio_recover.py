@@ -120,6 +120,21 @@ def test_recover_actuals_inverts_mixed_signs(tmp_path):
     assert recovered == {line: pytest.approx(value) for line, value in actual.items()}
 
 
+@pytest.mark.parametrize("line", ["net_income", "ending_cash"])
+@pytest.mark.parametrize("predicted,actual,error", [
+    (-150.0, -100.0, -0.5),   # recovered as -300 before #244
+    (-200.0, -100.0, -1.0),   # refused as unrecoverable before #244
+    (110.0, 100.0, 0.1),
+    (90.0, 100.0, -0.1),
+])
+def test_score_round_trips_to_the_actual_for_either_sign(tmp_path, line, predicted, actual, error):
+    score = score_forecast({line: predicted}, {line: actual}, weights={line: 1.0})
+    assert score.per_line == {line: pytest.approx(error)}
+    snapshot = Snapshot(label="p", created="2026-10-28", assumptions={},
+                        predicted={line: predicted}, score=score)
+    assert recover_actuals(_round_trip(snapshot, tmp_path)) == {line: pytest.approx(actual)}
+
+
 def _v030_snapshot(tmp_path, predicted, actual):
     """A snapshot as 0.3.0 wrote it: no actual_signs, error = predicted / actual - 1."""
     per_line = {line: predicted[line] / actual[line] - 1 for line in actual}

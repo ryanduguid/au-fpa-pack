@@ -158,6 +158,31 @@ def test_unrecoverable_actuals_do_not_count_as_validation(tmp_path):
     assert not result.validated
 
 
+def test_validation_scores_folds_against_a_recovered_negative_cash_actual(tmp_path):
+    from pathlib import Path
+
+    from pyfpa.backtest.score import extract_lines
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    # A forecast of -200 against cash of -100 scores -1 over |actual|. Before #244
+    # recovery refused that error and every fold was dropped.
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    for client in clients:
+        path = Path(client.path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+        snapshot = load_snapshot(path)
+        snapshot.predicted["ending_cash"] = -200.0
+        score = score_forecast({"ending_cash": -200.0}, {"ending_cash": -100.0},
+                               weights={"ending_cash": 1.0})
+        assert score.per_line == {"ending_cash": pytest.approx(-1.0)}
+        save_snapshot(snapshot.model_copy(update={"score": score}), path, overwrite=True)
+    cfg = _base_cfg(45.0)
+    reforecast = extract_lines(cashflow_from_config(cfg), ["ending_cash"])["ending_cash"]
+    result = validate_prior("working_capital.dio_days", clients)
+    assert result.n_folds == 3
+    # Each fold re-forecasts the same config and scores it against cash of -100.
+    assert result.mean_delta == pytest.approx(abs(reforecast + 100.0) / 100.0 - 1.0)
+
+
 def test_repeated_workspaces_cannot_fill_the_folds(tmp_path):
     # F080: one client listed three times used to report 3 folds, zero mean
     # degradation and validated=True, although every peer was a copy of the
