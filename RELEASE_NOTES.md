@@ -1,15 +1,24 @@
-# Unreleased
+# v0.4.0
+
+Breaking for code and configurations written against 0.3.0:
+
+- au-fpa-pack is now licensed under FSL-1.1-ALv2 (Functional Source License, with Apache-2.0 as the future licence) instead of MIT (#235). openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
+- `load_config` refuses a YAML file that repeats a key in one mapping, including a repeated `<<` merge key, before validating it (#203). PyYAML used to keep the last value. The forecast builders and `model_to_excel` validate the configuration's current state again, so an `EntityConfig` edited into an invalid state after loading raises `ValueError` instead of being modelled or exported.
+- The 13-week cash configuration refuses NaN and infinite `opening_cash` and flow `amount` values, as the monthly schemas already did, and correction slugs made only of dots are refused before any write (#201).
+- `model-export` refuses an output path that does not end in `.xlsx` (#210), and `forecast_to_excel` refuses any destination that is not `.xlsx` (#214).
+- `holdout_backtest` refuses actuals whose periods are not unique months and a forecast that does not cover the held-out months, and `snapshot_forecast` refuses a forecast whose index differs from the configured months (#238). Both used to score or save misaligned data.
+- Reconciliation, `score_forecast`, `recover_actuals`, snapshot selection and portfolio validation and mining refuse non-finite or overflowed arithmetic instead of carrying `nan` or `inf` into a score, prior or recovered actual (#241). `score_forecast` refuses a positive weight that normalises to 0, `best_snapshot` ignores a snapshot whose fitness is not finite and non-negative, and `validate_prior` skips baselines with unusable stored evidence or weights. Integer and `float32` totals are now summed exactly.
+- `reconcile` and `reconcile_account_table` divide the variance by the absolute actual, so `variance_pct` on a negative line has the same sign as the variance (#219). A loss of 80 modelled as 100 used to read +25% although the model was 20 below. A forecast score's per-line errors change sign on negative lines in the same way; tolerance results and fitness are unchanged.
 
 Added:
 
-- `verify_workbook(..., inputs={"Sheet!A1": value})` recalculates the workbook with input cells replaced, as a user changing them in Excel would, and refuses a key that is not an existing value cell. The Lumbridge test now changes `Assumptions!B2` in one exported workbook to 0, 1, 44, 45, 46 and 120 and checks both `Model` and `Cash 13 weeks` against the engine.
-
-Changed:
-
-- au-fpa-pack is now licensed under FSL-1.1-ALv2 (Functional Source License, with Apache-2.0 as the future licence) instead of MIT. openfpa's MIT notice moves from LICENSE to NOTICE, and wheels and source distributions include both. Releases up to and including 0.3.0 remain MIT.
+- `verify_workbook(..., inputs={"Sheet!A1": value})` recalculates the workbook with input cells replaced, as a user changing them in Excel would, and refuses a key that is not an existing value cell (#237). The Lumbridge test now changes `Assumptions!B2` in one exported workbook to 0, 1, 44, 45, 46 and 120 and checks both `Model` and `Cash 13 weeks` against the engine.
+- `docs/australian-pack.md` and the GST/BAS and payroll skills explain how to compare this pack's results with external calculators and policy models, so a match between tools is not taken as evidence (#221).
 
 Fixed:
 
+- `model_to_excel` and `forecast_to_excel` write each workbook beside its destination and replace the destination only after the file is closed, so a failed save or replacement keeps the previous report (#214). `model_to_excel` also reopens the staged workbook read-only first, and `model-export` no longer leaves the finished workbook open.
+- The model workbook's receivables, payables and inventory formulas group the days ratio, keeping large finite working-capital values in step with the engine (#203).
 - `recover_actuals` recovers negative actuals. Since #219, `score_forecast` stores each line's error as `(predicted - actual) / |actual|`, but `recover_actuals` still inverted it as `predicted / (1 + error)`, so a loss of 100 forecast as 80 came back as a loss of 66.67 and portfolio prior validation rescored its folds against that. `ScoreResult.actual_signs` now records the sign of each scored actual, and `recover_actuals` inverts by it. A score without it, such as one written by 0.3.0, is recovered only where the 0.3.0 signed reading and the `|actual|` reading give the same actual; any other line raises `ValueError` naming it, and `validate_prior` leaves that client out of its folds. Rescore such a snapshot to record its signs. A line whose forecast is too small relative to its actual for the stored error to fix it (`|1 + sign * error|` below `1e-8`) also raises `ValueError` rather than returning an imprecise actual.
 
 # v0.3.0
