@@ -12,21 +12,20 @@ from pyfpa.memory.workspace import Workspace
 
 def command_model_assumptions(args: argparse.Namespace) -> int:
     from pyfpa.analysis.assumptions import assumption_report
-    from pyfpa.config.loader import load_config
+    from pyfpa.config.loader import config_from_bytes
 
     root = Workspace.open(args.path).root
     if (failure := _require_initialized('model-assumptions', args, 'reviewing model assumptions')) is not None:
         return failure
     try:
         paths = [Path(args.config)] + ([Path(args.previous_config)] if args.previous_config else [])
+        # Each file is read once, so its digest describes exactly the bytes that were parsed.
         original = [path.read_bytes() for path in paths]
-        configs = [load_config(path) for path in paths]
-        if any(path.read_bytes() != raw for path, raw in zip(paths, original, strict=True)):
-            raise ValueError('configuration changed while being read')
+        configs = [config_from_bytes(raw) for raw in original]
         report = assumption_report(configs[0], configs[1] if len(configs) == 2 else None)
         report['config_sha256'] = hashlib.sha256(original[0]).hexdigest()
         report['previous_config_sha256'] = hashlib.sha256(original[1]).hexdigest() if len(original) == 2 else None
-    except (OSError, ValueError, yaml.YAMLError) as exc:
+    except (OSError, ValueError, RecursionError, yaml.YAMLError) as exc:
         return _failure('model-assumptions', root, 'invalid_config', str(exc))
     return _success('model-assumptions', root, report)
 

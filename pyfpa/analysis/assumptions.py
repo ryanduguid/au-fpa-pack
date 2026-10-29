@@ -8,21 +8,33 @@ from pydantic import BaseModel
 from pyfpa.config.schemas import EntityConfig
 
 
+def _segment(name: object) -> str:
+    return str(name).replace('~', '~0').replace('/', '~1')
+
+
 def _inputs(model: BaseModel, prefix: str = '', supplied: bool = True) -> dict[str, dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for field in type(model).model_fields:
         value = getattr(model, field)
         path = f'{prefix}/{field}'
         explicit = supplied and field in model.model_fields_set
+        origin = 'supplied' if explicit else 'default'
+        # Objects, named lines and payment months also get their own row, so an explicit
+        # empty object, an emptied list or a null-to-object change is reported as such.
         if isinstance(value, BaseModel):
+            rows[path] = {'value': 'present', 'origin': origin}
             rows.update(_inputs(value, path, explicit))
         elif isinstance(value, list) and value and all(isinstance(item, BaseModel) for item in value):
+            rows[path] = {'value': [str(item.name) for item in value], 'origin': origin}
             for item in value:
                 # Named lines stay aligned if a scenario reorders or adds channels.
-                name = str(item.name).replace('~', '~0').replace('/', '~1')
-                rows.update(_inputs(item, f'{path}/{name}', explicit))
+                rows.update(_inputs(item, f'{path}/{_segment(item.name)}', explicit))
+        elif isinstance(value, dict):
+            rows[path] = {'value': sorted(value), 'origin': origin}
+            for key, item in value.items():
+                rows[f'{path}/{_segment(key)}'] = {'value': item, 'origin': origin}
         else:
-            rows[path] = {'value': value, 'origin': 'supplied' if explicit else 'default'}
+            rows[path] = {'value': value, 'origin': origin}
     return rows
 
 

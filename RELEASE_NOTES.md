@@ -2,7 +2,8 @@
 
 Added:
 
-- `openfpa model-assumptions <workspace> --config <config.yaml> [--previous-config <previous.yaml>]` reports each effective model input as JSON with whether it was supplied or defaulted, the receipts, inventory and income tax methods, and, against a previous configuration, changed, added and removed inputs with entity, horizon, start-month and method differences. Named channel, expense and debt lines stay aligned when reordered, and SHA-256 digests identify both files. It runs no forecast.
+- `openfpa model-assumptions <workspace> --config <config.yaml> [--previous-config <previous.yaml>]` reports each effective model input as JSON with whether it was supplied or defaulted, the receipts, inventory and income tax methods, and, against a previous configuration, changed, added and removed inputs with entity, horizon, start-month and method differences. Objects, line lists and tax payment maps have their own rows; named channel, expense and debt lines stay aligned when reordered, payment months are compared individually, and SHA-256 digests identify the exact bytes parsed. It runs no forecast.
+- `pyfpa.config.loader.config_from_bytes` validates an `EntityConfig` from the exact bytes of a YAML file; `load_config` now uses it, with the same UTF-8 and newline handling.
 
 # v0.4.0
 

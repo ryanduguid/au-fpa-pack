@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 import yaml
@@ -66,6 +67,57 @@ def test_assumption_cli_reports_hashes_without_writing_config(tmp_path, run_cli)
 def test_malformed_yaml_is_a_controlled_cli_failure(tmp_path, run_cli):
     source = tmp_path / 'bad.yaml'
     source.write_text('channels: [', encoding='utf-8')
+    run_cli('init', str(tmp_path), '--business-name', 'Synthetic Co')
+    result = run_cli('model-assumptions', str(tmp_path), '--config', str(source))
+    assert result.returncode == 1
+    assert json.loads(result.stdout)['error']['type'] == 'invalid_config'
+
+
+def test_containers_report_empty_lists_null_models_and_explicit_empty_objects():
+    rent = {'name': 'Rent', 'kind': 'fixed', 'monthly_amount': 100}
+    rows = {row['path']: row for row in assumption_report(
+        config(opex=[rent], income_tax={}), config(opex=[]))['assumptions']}
+    assert rows['/opex']['change'] == 'changed'
+    assert rows['/opex']['value'] == ['Rent'] and rows['/opex']['previous_value'] == []
+    assert rows['/opex/Rent/monthly_amount']['change'] == 'added'
+    assert rows['/income_tax']['previous_value'] is None and rows['/income_tax']['change'] == 'changed'
+    assert rows['/income_tax']['origin'] == 'supplied'
+    assert not [path for path, row in rows.items() if row['change'] == 'removed']
+    rows = {row['path']: row for row in assumption_report(config(opening_balances={}))['assumptions']}
+    assert rows['/opening_balances']['origin'] == 'supplied'
+    assert rows['/opening_balances/cash']['origin'] == 'default'
+    assert {row['path']: row for row in assumption_report(config())['assumptions']}[
+        '/opening_balances']['origin'] == 'default'
+
+
+def test_payment_months_are_compared_individually():
+    old = config(income_tax={'payments': {'2026-10': 100.0, '2027-01': 50.0}})
+    new = config(income_tax={'payments': {'2026-10': 120.0, '2027-04': 50.0}})
+    rows = {row['path']: row for row in assumption_report(new, old)['assumptions']}
+    assert rows['/income_tax/payments/2026-10']['change'] == 'changed'
+    assert rows['/income_tax/payments/2027-01']['change'] == 'removed'
+    assert rows['/income_tax/payments/2027-04']['change'] == 'added'
+
+
+def test_minimal_yaml_reports_defaults_and_the_digest_of_the_parsed_bytes(tmp_path, run_cli):
+    source = tmp_path / 'minimal.yaml'
+    raw = (b"name: Synthetic Co\r\nstart_month: '2026-07'\r\ntax_rate: 0.25\r\nchannels:\r\n"
+           b"  - {name: Retail, annual_revenue: 1200, cogs_pct: 0.4, seasonality: [1,1,1,1,1,1,1,1,1,1,1,1]}\r\n"
+           b"working_capital: {dso_days: 30, dpo_days: 30, dio_days: 0}\r\n")
+    source.write_bytes(raw)
+    run_cli('init', str(tmp_path), '--business-name', 'Synthetic Co')
+    result = run_cli('model-assumptions', str(tmp_path), '--config', str(source))
+    assert result.returncode == 0, result.stdout
+    data = json.loads(result.stdout)['data']
+    rows = {row['path']: row for row in data['assumptions']}
+    assert rows['/da_monthly']['origin'] == 'default'
+    assert rows['/tax_rate']['origin'] == 'supplied'
+    assert data['config_sha256'] == hashlib.sha256(raw).hexdigest()
+
+
+def test_deeply_nested_yaml_is_a_controlled_cli_failure(tmp_path, run_cli):
+    source = tmp_path / 'deep.yaml'
+    source.write_text('channels: ' + '[' * 20000 + ']' * 20000, encoding='utf-8')
     run_cli('init', str(tmp_path), '--business-name', 'Synthetic Co')
     result = run_cli('model-assumptions', str(tmp_path), '--config', str(source))
     assert result.returncode == 1

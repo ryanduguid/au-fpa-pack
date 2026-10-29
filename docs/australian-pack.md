@@ -205,10 +205,14 @@ effective model inputs as JSON. Add `--previous-config <previous.yaml>` to show
 changed, added and removed assumptions. The workspace must already be initialised.
 
 Each input shows whether it was supplied or defaulted. An explicit zero remains
-distinct from an omitted zero. Named channel, expense and debt lines stay aligned
-when their order changes. The report describes receipts, inventory and income tax
-methods and flags entity, horizon, start-month or method differences before treating
-the configurations as comparable. Exact file digests identify both inputs.
+distinct from an omitted zero. Nested objects, line lists and tax payment maps also
+have their own row, so an explicit empty object, an emptied list or a change from
+null to an object is reported. Named channel, expense and debt lines stay aligned
+when their order changes, and tax payment months are compared one by one. The
+report describes receipts, inventory and income tax methods and flags entity,
+horizon, start-month or method differences before treating the configurations as
+comparable. Each file is read once, and its SHA-256 digest identifies the bytes
+that were parsed.
 
 Supplied inputs still need source evidence and approval. This command presents
 configuration choices; it performs no forecast or statutory calculation. Review
