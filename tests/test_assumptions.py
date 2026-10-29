@@ -122,3 +122,16 @@ def test_deeply_nested_yaml_is_a_controlled_cli_failure(tmp_path, run_cli):
     result = run_cli('model-assumptions', str(tmp_path), '--config', str(source))
     assert result.returncode == 1
     assert json.loads(result.stdout)['error']['type'] == 'invalid_config'
+
+
+def test_reordered_named_lines_are_unchanged():
+    retail = {'name': 'Retail', 'annual_revenue': 1200, 'cogs_pct': 0.4, 'seasonality': [1.0] * 12}
+    wholesale = {'name': 'Wholesale', 'annual_revenue': 600, 'cogs_pct': 0.2, 'seasonality': [1.0] * 12}
+    rent = {'name': 'Rent', 'kind': 'fixed', 'monthly_amount': 100}
+    ads = {'name': 'Ads', 'kind': 'variable', 'pct_of_revenue': 0.05}
+    loan = {'name': 'Loan', 'kind': 'term_loan', 'opening_balance': 1000, 'annual_rate': 0.08}
+    card = {'name': 'Card', 'kind': 'loc', 'opening_balance': 0, 'annual_rate': 0.2}
+    old = config(channels=[retail, wholesale], opex=[rent, ads], debt=[loan, card])
+    new = config(channels=[wholesale, retail], opex=[ads, rent], debt=[card, loan])
+    report = assumption_report(new, old)
+    assert {row['change'] for row in report['assumptions']} == {'unchanged'}

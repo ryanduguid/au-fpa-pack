@@ -25,7 +25,7 @@ def _inputs(model: BaseModel, prefix: str = '', supplied: bool = True) -> dict[s
             rows[path] = {'value': 'present', 'origin': origin}
             rows.update(_inputs(value, path, explicit))
         elif isinstance(value, list) and value and all(isinstance(item, BaseModel) for item in value):
-            rows[path] = {'value': [str(item.name) for item in value], 'origin': origin}
+            rows[path] = {'value': sorted(str(item.name) for item in value), 'origin': origin}
             for item in value:
                 # Named lines stay aligned if a scenario reorders or adds channels.
                 rows.update(_inputs(item, f'{path}/{_segment(item.name)}', explicit))
