@@ -28,7 +28,7 @@ At 31 December, $12,600 GST, $5,000 PAYG withholding and $13,200 supplier invoic
 
 ## Decisions for the owner
 
-- Confirm the $44,000 OPEN-V receipt date. In this synthetic case, with every other date as forecast, lowest daily cash stays at or above zero if it is up to 14 days late and at or above the assumed $15,000 buffer if it is up to 6 days late. The 45-day delay needs $25,160 of additional cash at the trough, or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged.
+- Confirm the $44,000 OPEN-V receipt date. In this synthetic case, with every other date as forecast, lowest daily cash stays at or above zero if OPEN-V is up to 14 days late and stays at or above the assumed $15,000 buffer if OPEN-V is up to 6 days late. The 45-day delay needs $25,160 of additional cash at the trough, or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged.
 - Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. The forecast currently includes no capital expenditure.
 - Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.
 

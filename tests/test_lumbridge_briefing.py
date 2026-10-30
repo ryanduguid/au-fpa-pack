@@ -16,12 +16,14 @@ from __future__ import annotations
 import json
 import re
 import runpy
+import shutil
 from collections.abc import Callable
 from functools import cache
 from pathlib import Path
 
 import pandas as pd
 import pytest
+from openpyxl import load_workbook
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "lumbridge-services"
 OUTPUT = EXAMPLE / "output"
@@ -222,12 +224,30 @@ def test_the_flip_points_are_where_the_funding_conclusion_changes():
 
 
 def test_the_briefing_and_workbook_state_the_flip_points(tmp_path):
-    from openpyxl import load_workbook
-
     module = runpy.run_path(str(GENERATOR))
-    sentence = "up to 14 days late and at or above the assumed $15,000 buffer if it is up to 6 days late"
+    sentence = ("stays at or above zero if OPEN-V is up to 14 days late and "
+                "stays at or above the assumed $15,000 buffer if OPEN-V is up to 6 days late")
     assert sentence in (OUTPUT / "briefing.md").read_text(encoding="utf-8")
     path = tmp_path / "lumbridge.xlsx"
     module["export_workbook"](path, module["forecast"]())
     note = load_workbook(path)["Assumptions"]["C2"].value
     assert "14 days late" in note and "6 days late" in note and "synthetic" in note.lower()
+
+
+def test_a_threshold_missed_on_time_is_not_stated_as_met(tmp_path):
+    module = runpy.run_path(str(GENERATOR))
+    data = tmp_path / "data"
+    shutil.copytree(DATA, data)
+    assumptions = json.loads((data / "assumptions.json").read_text(encoding="utf-8"))
+    assumptions["minimum_cash_buffer"] = 20000
+    (data / "assumptions.json").write_text(json.dumps(assumptions), encoding="utf-8")
+    assert module["flip_points"](data) == {"zero": 14, "buffer": None}
+    path = tmp_path / "lumbridge.xlsx"
+    module["export_workbook"](path, module["forecast"](data))
+    note = load_workbook(path)["Assumptions"]["C2"].value
+    assert "is below the buffer even if OPEN-V is on time" in note
+
+
+def test_a_delay_safe_to_the_search_limit_is_not_stated_as_the_largest():
+    clause = runpy.run_path(str(GENERATOR))["_limit_clause"](120, "zero")
+    assert clause == "stays at or above zero for any delay to the model's 120-day limit"

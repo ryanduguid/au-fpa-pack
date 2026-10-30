@@ -15,7 +15,9 @@ monthly = pyfpa.cashflow_from_config(config)
 
 cash_config = pyfpa.load_cash13_config("examples/ridgeline/cash13.yaml")
 weekly = pyfpa.cash13_forecast(cash_config)
-runway = pyfpa.runway_summary(weekly)  # a stated facility_limit also gives headroom and its first breach week
+# The buffer is passed on because the summary cannot read it from the config.
+# A stated facility_limit also gives headroom and its first breach week.
+runway = pyfpa.runway_summary(weekly, cash_config.headroom_buffer)
 
 print(pyfpa.to_briefing_md(monthly, title="My Company", runway=runway))
 ```
