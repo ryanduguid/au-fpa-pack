@@ -24,7 +24,7 @@ from pyfpa.cli_commands.lineage import (
     command_source_profile,
     command_source_register,
 )
-from pyfpa.cli_commands.reporting import command_model_export
+from pyfpa.cli_commands.reporting import command_model_assumptions, command_model_export
 from pyfpa.cli_helpers import (
     JsonArgumentParser,
     _failure,
@@ -520,6 +520,13 @@ def build_parser() -> JsonArgumentParser:
     model_export_parser.add_argument("--config", required=True)
     model_export_parser.add_argument("--out", required=True)
     model_export_parser.set_defaults(handler=command_model_export)
+
+    assumptions_parser = subparsers.add_parser(
+        'model-assumptions', parents=[common], help='Review effective model assumptions and defaults as JSON',
+    )
+    assumptions_parser.add_argument('--config', required=True)
+    assumptions_parser.add_argument('--previous-config')
+    assumptions_parser.set_defaults(handler=command_model_assumptions)
 
     doctor_parser = subparsers.add_parser("doctor", parents=[common], help="Validate workspace contracts")
     doctor_parser.set_defaults(handler=command_doctor)
