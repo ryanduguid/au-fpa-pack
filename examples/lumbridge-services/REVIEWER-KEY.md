@@ -23,6 +23,7 @@ Open this after completing the trial.
 | Cash reconciliation differences | $0.00 in all 3 months and both cases |
 | Workbook checks, `Model!B26` | All checks pass in both cases |
 | Extra cash needed at the late-case trough | $25,160 to reach zero; $40,160 to retain a $15,000 buffer |
+| Largest OPEN-V delay keeping lowest daily cash at or above | Zero: 14 days; $15,000 buffer: 6 days |
 
 A delay changes the bank receipt and debtor balance, not service revenue or
 profit. October includes $12,600 opening GST and a $3,000 tax instalment.

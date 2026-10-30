@@ -17,7 +17,8 @@ def _sum_flows(flows: list[WeeklyFlow], weeks: int) -> list[float]:
 
 def cash13_forecast(cfg: Cash13Config) -> pd.DataFrame:
     """Weekly direct-method cash forecast: receipts, disbursements, net, and
-    cumulative ending cash. Raw cash position - no auto-draws."""
+    cumulative ending cash, plus headroom (ending cash plus the limit) when the
+    config states a facility limit. Raw cash position - no auto-draws."""
     weeks = cfg.weeks
     receipts = _sum_flows(cfg.receipts, weeks)
     disbursements = _sum_flows(cfg.disbursements, weeks)
@@ -30,7 +31,7 @@ def cash13_forecast(cfg: Cash13Config) -> pd.DataFrame:
         ending_cash.append(balance)
 
     idx = pd.RangeIndex(start=1, stop=weeks + 1, name="week")
-    return pd.DataFrame(
+    frame = pd.DataFrame(
         {
             "receipts": receipts,
             "disbursements": disbursements,
@@ -39,3 +40,6 @@ def cash13_forecast(cfg: Cash13Config) -> pd.DataFrame:
         },
         index=idx,
     )
+    if cfg.facility_limit is not None:
+        frame["headroom"] = frame["ending_cash"] + cfg.facility_limit
+    return frame

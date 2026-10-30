@@ -79,7 +79,10 @@ def compare_scenarios(cfg: Cash13Config, scenarios: list[Scenario]) -> pd.DataFr
     rows = []
     for name, config in [("base", cfg)] + [(s.name, apply_scenario(cfg, s)) for s in scenarios]:
         weekly = cash13_forecast(config)
-        rows.append({"scenario": name, **runway_summary(weekly),
+        rows.append({"scenario": name, **runway_summary(weekly, config.headroom_buffer),
                      "ending_cash": float(weekly["ending_cash"].iloc[-1])})
     # Nullable integer, so a scenario that never goes negative reads as missing, not NaN.
-    return pd.DataFrame(rows).astype({"first_negative_week": "Int64"}).set_index("scenario")
+    integers = {"first_negative_week": "Int64"}
+    if cfg.facility_limit is not None:
+        integers["first_headroom_breach_week"] = "Int64"
+    return pd.DataFrame(rows).astype(integers).set_index("scenario")
