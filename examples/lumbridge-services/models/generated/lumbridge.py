@@ -148,6 +148,26 @@ def forecast(data: Path = ROOT / "data", delay_days: int = 0) -> dict:
             "pl": pl, "bs": bs, "assumptions": a, "delay_days": delay_days, "data": data}
 
 
+def flip_points(data: Path = ROOT / "data") -> dict[str, int | None]:
+    """The largest OPEN-V delay, in whole days, that keeps lowest daily cash at or
+    above zero and at or above the buffer; None if on-time cash already misses it.
+    Every other date stays as forecast."""
+    points: dict[str, int | None] = {"zero": None, "buffer": None}
+    for delay in range(121):
+        result = forecast(data, delay)
+        lowest = float(result["daily"]["ending_cash"].min())
+        if lowest < 0:
+            break
+        points["zero"] = delay
+        if lowest >= result["assumptions"]["minimum_cash_buffer"]:
+            points["buffer"] = delay
+    return points
+
+
+def _days_late(days: int | None) -> str:
+    return "no delay at all" if days is None else f"{days} days late"
+
+
 def export_workbook(path: Path, result: dict) -> None:
     """Use the repository toolkit; replace output only after formula verification."""
     wb = Workbook()
@@ -170,6 +190,9 @@ def export_workbook(path: Path, result: dict) -> None:
     validation.add(control["B2"])
     control["B2"].fill = PatternFill("solid", fgColor="FFF0C2")
     control["B2"].font = Font(color="0000FF", bold=True)
+    points = flip_points(result["data"])
+    control["C2"] = (f"Synthetic flip points: lowest daily cash stays at or above zero up to {_days_late(points['zero'])} "
+                     f"and at or above the buffer up to {_days_late(points['buffer'])}. Fixed at build; rebuild after changing source data.")
     source = wb["Sources"]
     source.append(["Synthetic source record", "Value", "Source / period"])
     refs = {}
@@ -362,6 +385,7 @@ def run(output: Path, delay_days: int = 0) -> dict:
                "maximum_cash_reconciliation_difference": float(result["monthly"]["Cash reconciliation difference"].abs().max())}
     (output / "results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     base, late = forecast(), forecast(delay_days=45)
+    points = flip_points()
     lines = [
         "# Lumbridge Services management briefing", "",
         ("Synthetic Newcastle maintenance business. October to December 2026, AUD. "
@@ -391,7 +415,9 @@ def run(output: Path, delay_days: int = 0) -> dict:
               "The loan balance is $17,000 and the quarter adds $6,762.45 of unused leave provisions. "
               "A positive closing bank balance does not settle those obligations."), "",
               "## Decisions for the owner", "",
-              ("- Confirm the $44,000 OPEN-V receipt date. The 45-day delay needs $25,160 of additional cash at the trough, "
+              (f"- Confirm the $44,000 OPEN-V receipt date. In this synthetic case, with every other date as forecast, lowest daily cash "
+               f"stays at or above zero if it is up to {_days_late(points['zero'])} and at or above the assumed $15,000 buffer "
+               f"if it is up to {_days_late(points['buffer'])}. The 45-day delay needs $25,160 of additional cash at the trough, "
                "or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged."),
               ("- Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. "
                "The forecast currently includes no capital expenditure."),

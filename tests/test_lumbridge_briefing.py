@@ -203,3 +203,31 @@ def test_the_committed_outputs_regenerate_unchanged(tmp_path):
         committed = (OUTPUT / name).read_bytes().replace(b"\r\n", b"\n")
         regenerated = (tmp_path / name).read_bytes().replace(b"\r\n", b"\n")
         assert regenerated == committed, name
+
+
+def test_the_flip_points_are_where_the_funding_conclusion_changes():
+    """Each stated delay holds its line and one more day breaks it."""
+    module = runpy.run_path(str(GENERATOR))
+    points = module["flip_points"]()
+    assert points == {"zero": 14, "buffer": 6}
+    buffer = sources()["assumptions"]["minimum_cash_buffer"]
+
+    def lowest(days: int) -> float:
+        return module["forecast"](delay_days=days)["daily"]["ending_cash"].min()
+
+    assert lowest(points["zero"]) >= 0 > lowest(points["zero"] + 1)
+    assert lowest(points["buffer"]) >= buffer > lowest(points["buffer"] + 1)
+    # The headline late case sits past both, so the briefing's two claims agree.
+    assert points["zero"] < LATE_DAYS
+
+
+def test_the_briefing_and_workbook_state_the_flip_points(tmp_path):
+    from openpyxl import load_workbook
+
+    module = runpy.run_path(str(GENERATOR))
+    sentence = "up to 14 days late and at or above the assumed $15,000 buffer if it is up to 6 days late"
+    assert sentence in (OUTPUT / "briefing.md").read_text(encoding="utf-8")
+    path = tmp_path / "lumbridge.xlsx"
+    module["export_workbook"](path, module["forecast"]())
+    note = load_workbook(path)["Assumptions"]["C2"].value
+    assert "14 days late" in note and "6 days late" in note and "synthetic" in note.lower()
