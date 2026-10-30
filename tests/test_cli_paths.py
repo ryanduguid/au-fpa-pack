@@ -57,6 +57,7 @@ UNINITIALISED_COMMANDS = [
         "registering mappings",
     ),
     ("mapping-list", [], "listing mappings"),
+    ("model-assumptions", ["--config", "config.yaml"], "reviewing model assumptions"),
     (
         "connector-scaffold",
         ["--name", "gl-pull", "--source-id", "gl", "--description", "Pull GL",
