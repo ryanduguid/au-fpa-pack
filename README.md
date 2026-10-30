@@ -19,7 +19,7 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
 [![SLSA 3](.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 [![VirusTotal](.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
-[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
+[![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
 [![python: 3.14+](.github/assets/badges/python.svg)](https://www.python.org/)
 [![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](LICENSE)
 
