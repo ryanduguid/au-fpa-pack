@@ -91,4 +91,4 @@ def config_from_bytes(raw: bytes) -> EntityConfig:
     Decoded as ``load_config`` reads a file: UTF-8 with universal newlines.
     """
     text = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-    return EntityConfig.model_validate(yaml.load(text, Loader=_UniqueKeySafeLoader))
+    return EntityConfig.model_validate(yaml.load(text, Loader=_UniqueKeySafeLoader))  # nosec B506: subclasses yaml.SafeLoader
