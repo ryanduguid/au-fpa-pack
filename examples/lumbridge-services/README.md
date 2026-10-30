@@ -10,7 +10,9 @@ October actuals and carries a partly paid invoice into November exactly once.
 The owner expects $35,957.55 profit before income tax for October to December
 2026. Delaying one $44,000 receipt by 45 days leaves a $25,160 cash shortfall on
 6 November. Both cases end December with $67,320 because the delayed receipt
-eventually arrives. That recovery cannot fund payments due earlier.
+eventually arrives. That recovery cannot fund payments due earlier. With every
+other date as forecast, lowest daily cash stays at or above zero if that receipt is
+up to 14 days late, and at or above the $15,000 buffer if it is up to 6 days late.
 
 ## Run the example
 
