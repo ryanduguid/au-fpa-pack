@@ -15,7 +15,11 @@
 #     pre-commit install --hook-type commit-msg
 #
 # pre-commit refuses to install while any core.hooksPath is set, including a
-# global one; use the copy above in that case. Use one route, not both:
+# global one. Git also ignores the copy above whilst any core.hooksPath is set,
+# so this check would be silently skipped: either unset core.hooksPath first or
+# copy the hook into the directory it names. The copy above runs only when
+# `git config --show-origin --get-all core.hooksPath` prints nothing.
+# Use one route, not both:
 # `pre-commit install` moves an existing copy to commit-msg.legacy and still
 # runs it. Recopy the hook after reviewing a change to it on the default branch.
 #
