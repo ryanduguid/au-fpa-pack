@@ -1,9 +1,9 @@
 <p align="center">
   <picture>
-    <source media="(max-width: 600px) and (prefers-color-scheme: light)" srcset=".github/assets/banner-phone-light.svg">
-    <source media="(max-width: 600px)" srcset=".github/assets/banner-phone.svg">
-    <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.svg">
-    <img src=".github/assets/banner.svg" width="100%" alt="AU FP&amp;A. Cash, budgets and variance on Australian 30 June years. Pixel art of a bar chart with a rising arrow beside the AU FP&amp;A wordmark in slab-serif block letters.">
+    <source media="(max-width: 600px) and (prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-phone-light.svg">
+    <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-phone.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-light.svg">
+    <img src="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner.svg" width="100%" alt="AU FP&amp;A. Cash, budgets and variance on Australian 30 June years. Pixel art of a bar chart with a rising arrow beside the AU FP&amp;A wordmark in slab-serif block letters.">
   </picture>
 </p>
 
@@ -15,13 +15,13 @@
 [![Snyk](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml)
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=ryanduguid_au-fpa-pack&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
 [![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
-[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/ryanduguid/au-fpa-pack?label=Scorecard&labelColor=000000&style=flat)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
+[![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/ryanduguid/au-fpa-pack.svg)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
-[![SLSA 3](.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
-[![VirusTotal](.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
+[![SLSA 3](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
+[![VirusTotal](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
-[![python: 3.14+](.github/assets/badges/python.svg)](https://www.python.org/)
-[![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](LICENSE)
+[![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
+[![licence: FSL-1.1-ALv2](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
 
 </div>
 
