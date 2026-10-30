@@ -9,19 +9,19 @@
 
 <div align="center">
 
-[![tests](https://img.shields.io/github/actions/workflow/status/ryanduguid/au-fpa-pack/ci.yml?branch=main&label=tests&labelColor=000000&style=flat)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
-[![Codecov](https://img.shields.io/codecov/c/github/ryanduguid/au-fpa-pack?label=coverage&labelColor=000000&style=flat)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/ryanduguid/au-fpa-pack/codeql.yml?branch=main&label=CodeQL&labelColor=000000&style=flat)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
-[![Snyk](https://img.shields.io/github/actions/workflow/status/ryanduguid/au-fpa-pack/snyk.yml?branch=main&label=Snyk&labelColor=000000&style=flat)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml)
-[![SonarCloud](https://img.shields.io/sonar/quality_gate/ryanduguid_au-fpa-pack?server=https%3A%2F%2Fsonarcloud.io&label=SonarCloud&labelColor=000000&style=flat)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
-[![Codacy code quality](https://img.shields.io/codacy/grade/04c98b58f66e4339b598720a05aa6bc7?label=Codacy&labelColor=000000&style=flat)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
+[![tests](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/ryanduguid/au-fpa-pack/graph/badge.svg)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
+[![CodeQL](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
+[![Snyk](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/snyk.yml)
+[![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=ryanduguid_au-fpa-pack&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
+[![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/ryanduguid/au-fpa-pack?label=Scorecard&labelColor=000000&style=flat)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
-[![OpenSSF Best Practices](https://img.shields.io/cii/level/15426?label=Best%20Practices&labelColor=000000&style=flat)](https://www.bestpractices.dev/projects/15426)
-[![SLSA 3](https://img.shields.io/badge/SLSA-level%203-990024?labelColor=000000&style=flat&color=990024)](https://github.com/ryanduguid/au-fpa-pack/attestations)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-scanned-990024?labelColor=000000&style=flat&logo=virustotal&logoColor=FFD32A&color=990024)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
-[![PyPI](https://img.shields.io/pypi/v/au-fpa-pack?color=66023C&labelColor=000000&style=flat)](https://pypi.org/project/au-fpa-pack/)
-[![python: 3.14+](https://img.shields.io/badge/python-3.14%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.python.org/)
-[![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
+[![SLSA 3](.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
+[![VirusTotal](.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
+[![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
+[![python: 3.14+](.github/assets/badges/python.svg)](https://www.python.org/)
+[![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](LICENSE)
 
 </div>
 
