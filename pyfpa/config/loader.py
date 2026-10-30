@@ -82,5 +82,13 @@ def load_config(path: str | Path) -> EntityConfig:
     Read as UTF-8, not the platform's preferred encoding, so a config written
     on one machine loads on another.
     """
-    raw = yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_UniqueKeySafeLoader)
-    return EntityConfig.model_validate(raw)
+    return config_from_bytes(Path(path).read_bytes())
+
+
+def config_from_bytes(raw: bytes) -> EntityConfig:
+    """Validate an EntityConfig from the exact bytes of a YAML file.
+
+    Decoded as ``load_config`` reads a file: UTF-8 with universal newlines.
+    """
+    text = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return EntityConfig.model_validate(yaml.load(text, Loader=_UniqueKeySafeLoader))
