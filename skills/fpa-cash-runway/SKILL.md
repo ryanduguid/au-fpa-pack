@@ -32,6 +32,7 @@ Build the 13-week direct-method cash forecast - the operator's near-term liquidi
    # {'min_cash': -146000.0, 'min_week': 7, 'first_negative_week': 3}
    ```
 4. **Interpret** (see **fpa-cfo-judgment**): a negative `min_cash` means 'needs a draw of at least this much,' not "insolvent." `first_negative_week` is the deadline to act. Size the credit line to the trough plus a buffer.
+   With an approved overdraft or facility, set `facility_limit` (and optionally `headroom_buffer`) on the config: the forecast adds a `headroom` column, and `pyfpa.runway_summary(weekly, cfg.headroom_buffer)` adds `min_headroom` and `first_headroom_breach_week`. The limit is capacity only, so `ending_cash` stays the raw position; take the limit from the facility document, not from memory.
 5. **Report**: trough amount + week, first-negative week, and the recommended line size / action.
 
 ## Common mistakes

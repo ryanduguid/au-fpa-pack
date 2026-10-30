@@ -37,3 +37,13 @@ class Cash13Config(BaseModel):
     weeks: int = Field(default=13, ge=1, le=52)
     receipts: list[WeeklyFlow] = Field(default_factory=list)
     disbursements: list[WeeklyFlow] = Field(default_factory=list)
+    # A magnitude: the approved overdraft or facility limit. Capacity only; the
+    # forecast still draws nothing, so ending cash stays the raw position.
+    facility_limit: float | None = Field(default=None, ge=0)
+    headroom_buffer: float = Field(default=0.0, ge=0)
+
+    @model_validator(mode="after")
+    def _buffer_needs_a_limit(self) -> Cash13Config:
+        if self.headroom_buffer > 0 and self.facility_limit is None:
+            raise ValueError("headroom_buffer needs a facility_limit")
+        return self
