@@ -106,6 +106,8 @@ def test_epoch_round_trip_and_promotion_gate(tmp_path):
         hypothesis="Add a collections lag.",
         champion_id="model-v1",
         challenger_id="model-v2",
+        training_periods=["FY2024"],
+        holdout_periods=["FY2025"],
         checks=_checks(),
         evaluation=evaluation,
     )
@@ -190,6 +192,57 @@ def test_ineligible_epoch_cannot_be_proposed():
             challenger_id="model-v2",
             evaluation=evaluation,
         )
+
+
+@pytest.mark.parametrize("status", ["proposed", "promoted"])
+@pytest.mark.parametrize(
+    ("training", "holdout", "message"),
+    [
+        (["2024"], [], "holdout period"),
+        (["2024"], ["  "], "holdout period"),
+        (["2024", "2025"], ["2025"], "training and holdout"),
+    ],
+)
+def test_epoch_needs_a_separate_holdout_to_be_proposed_or_promoted(
+    status, training, holdout, message
+):
+    evaluation = evaluate_challenger(
+        _objective(),
+        {"cash_error": 0.20, "bias_control": 0.80},
+        {"cash_error": 0.10, "bias_control": 0.88},
+        _checks(),
+    )
+    with pytest.raises(ValidationError, match=message):
+        ResearchEpoch(
+            epoch_id="no-holdout",
+            created="2026-06-09",
+            status=status,
+            hypothesis="In-sample candidate",
+            champion_id="model-v1",
+            challenger_id="model-v2",
+            training_periods=training,
+            holdout_periods=holdout,
+            evaluation=evaluation,
+        )
+
+
+def test_evaluated_epoch_may_omit_periods():
+    evaluation = evaluate_challenger(
+        _objective(),
+        {"cash_error": 0.20, "bias_control": 0.80},
+        {"cash_error": 0.10, "bias_control": 0.88},
+        _checks(),
+    )
+    epoch = ResearchEpoch(
+        epoch_id="evaluated",
+        created="2026-06-09",
+        status="evaluated",
+        hypothesis="Not yet proposed",
+        champion_id="model-v1",
+        challenger_id="model-v2",
+        evaluation=evaluation,
+    )
+    assert epoch.holdout_periods == []
 
 
 def _guarded_objective(max_regression=0.5):
