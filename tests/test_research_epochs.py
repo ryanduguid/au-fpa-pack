@@ -201,6 +201,7 @@ def test_ineligible_epoch_cannot_be_proposed():
         (["2024"], [], "holdout period"),
         (["2024"], ["  "], "holdout period"),
         (["2024", "2025"], ["2025"], "training and holdout"),
+        (["2025"], [" 2025 "], "training and holdout"),
     ],
 )
 def test_epoch_needs_a_separate_holdout_to_be_proposed_or_promoted(

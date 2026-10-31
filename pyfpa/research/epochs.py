@@ -62,9 +62,11 @@ class ResearchEpoch(BaseModel):
         if self.status in {"proposed", "promoted"} and not self.evaluation.promotion_eligible:
             raise ValueError("only promotion-eligible epochs may be proposed or promoted")
         if self.status in {"proposed", "promoted"}:
-            if not any(period.strip() for period in self.holdout_periods):
+            training = {period.strip() for period in self.training_periods}
+            holdout = {period.strip() for period in self.holdout_periods} - {""}
+            if not holdout:
                 raise ValueError("proposed or promoted epochs require a holdout period")
-            if not set(self.training_periods).isdisjoint(self.holdout_periods):
+            if not training.isdisjoint(holdout):
                 raise ValueError("training and holdout periods must not overlap")
         return self
 
