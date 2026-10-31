@@ -34,6 +34,7 @@ def _epoch(challenger_id="model-v2", *, eligible=True):
         hypothesis="Improve collections timing",
         champion_id="model-v1",
         challenger_id=challenger_id,
+        holdout_periods=["FY2025"],
         checks=[ExperimentCheck(name="reconcile", result="pass")],
         evaluation=evaluation,
     )
@@ -131,6 +132,7 @@ def _doctored_epoch() -> ResearchEpoch:
         hypothesis="Doctored",
         champion_id="model-v1",
         challenger_id="model-v2",
+        holdout_periods=["FY2025"],
         checks=[ExperimentCheck(name="reconcile", result="pass")],
         evaluation=bad_eval,
     )

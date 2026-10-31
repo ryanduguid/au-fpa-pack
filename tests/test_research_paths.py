@@ -42,6 +42,7 @@ def _epoch(*, status: str = "proposed", objective: ResearchObjective | None = No
         "hypothesis": "Improve collections timing",
         "champion_id": "model-v1",
         "challenger_id": "model-v2",
+        "holdout_periods": ["FY2025"],
         "checks": CHECKS,
         "evaluation": evaluate_challenger(
             objective or _objective(), {"cash_error": 0.20}, {"cash_error": 0.10}, CHECKS,
