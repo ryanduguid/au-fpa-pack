@@ -41,7 +41,7 @@ Source examples also cover [refreshing the cash forecast from actuals](examples/
 [tracing WIP into project cash](examples/job-to-cash/README.md) and
 [separating restricted cash](examples/restricted-cash/README.md).
 
-Continue with the [three-month close simulation](examples/quarter-close/README.md),
+Continue with the [3-month close simulation](examples/quarter-close/README.md),
 [supplier payment plans](examples/creditor-cash/README.md) and
 [grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
 
@@ -83,9 +83,7 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 <details>
 <summary>Setup, Australian scope, skills, kernel packages, upstream workbench and reference</summary>
 
-## What this repository adds
-
-An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by Guiderail: 30 June years, Xero AU mapping, GST/BAS cash timing and payroll on-cost assumptions.
+## Package
 
 **Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa`, and the command is `openfpa`. Version 0.4.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
 
