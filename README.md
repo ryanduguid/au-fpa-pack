@@ -41,7 +41,7 @@ Source examples also cover [refreshing the cash forecast from actuals](examples/
 [tracing WIP into project cash](examples/job-to-cash/README.md) and
 [separating restricted cash](examples/restricted-cash/README.md).
 
-Continue with the [3-month close simulation](examples/quarter-close/README.md),
+Continue with the [three-month close simulation](examples/quarter-close/README.md),
 [supplier payment plans](examples/creditor-cash/README.md) and
 [grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
 
