@@ -14,7 +14,7 @@ python3 run_foxf.py --replace-epochs   # all four phases → output/ + research 
 
 `run_foxf.py` saves a research epoch per holdout challenger and refuses to
 overwrite one that already exists, which is the guard against losing research
-history. This example ships its two epochs, so a replay needs `--replace-epochs`
+history. This example ships its 2 epochs, so a replay needs `--replace-epochs`
 to rewrite them in place. Leave the flag off in a real company workspace: there
 an existing epoch is history, not a regenerable artefact.
 
@@ -32,7 +32,7 @@ not called a forecast proof because the target-year drivers are inputs.
 **Phase B - historical holdout research**
 ([`output/historical-holdout.md`](output/historical-holdout.md)). The model uses
 FY2023-FY2024 only and holds FY2025 out. An AutoResearch-style loop rejects a
-broad mean-reversion challenger, refines the hypothesis, and proposes a
+broad mean-reversion challenger, refines the hypothesis and proposes a
 revenue-recovery / slow-margin-recovery challenger that improves every weighted
 holdout metric. The challenger is recorded in `.fpa/research/` and remains
 unpromoted pending human approval.
@@ -73,7 +73,7 @@ This is the honest part - surfaced, not hidden.
 | File | What |
 |---|---|
 | `pull_edgar.py` | Reproducible EDGAR pull → `data/*.csv` + `SOURCES.md` |
-| `foxf_model.py` | Reproduction, holdout research, forecast, and sensitivity assembly |
+| `foxf_model.py` | Reproduction, holdout research, forecast and sensitivity assembly |
 | `run_foxf.py` | Orchestration → `output/` |
 | `.fpa/business-profile.md` | `fpa-learn-business` output, grounded in the filings |
 | `.fpa/intake.md` | Evidence-seeded company intake used by the agent toolbelt |
@@ -81,8 +81,8 @@ This is the honest part - surfaced, not hidden.
 | `.fpa/research/` | Objective + rejected/proposed historical holdout epochs |
 | `.fpa/models/registry.yaml` | Flat champion + unpromoted recovery challenger |
 | `.fpa/models/entrypoints.yaml` | Registered command for the complete Fox pipeline |
-| `.fpa/sources/registry.yaml` | SEC extract provenance, entities, currencies, and period coverage |
+| `.fpa/sources/registry.yaml` | SEC extract provenance, entities, currencies and period coverage |
 | `.fpa/mappings/registry.yaml` | Explicit source-field to normalised-model mappings |
 | `skills/generated/segment-rollup/` | The bespoke self-extension skill |
 | `data/` | Committed actuals + source trail |
-| `output/` | Generated reproduction, holdout, forecast, sensitivity, and Excel artefacts |
+| `output/` | Generated reproduction, holdout, forecast, sensitivity and Excel artefacts |

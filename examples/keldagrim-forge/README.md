@@ -1,7 +1,7 @@
 # Keldagrim Forge: the timed model drill
 
 Keldagrim Forge is a fictional Hunter Valley metal fabricator. Its Anvil and
-Blast furnace lines and its two lenders are Old School RuneScape references; no
+Blast furnace lines and its 2 lenders are Old School RuneScape references; no
 game knowledge is needed. Every figure in [config.yaml](config.yaml) is
 fabricated for practice. All amounts are AUD. Synthetic example. Forecasting
 aid, not tax advice; a human approves the assumptions and any funding decision.
@@ -18,12 +18,12 @@ timed exercise:
    input row, holding values, in blue font (`0000FF`). This is the only sheet
    a reviewer should ever need to edit.
 2. **Model sheet.** Line labels in column A, one month per column from column B
-   (the 12 months of FY2026-27, July 2026 to June 2027), and formulas in every
+   (the 12 months of FY2026-27, July 2026 to June 2027) and formulas in every
    calculation cell. Formula vocabulary: arithmetic, `^`, `SUM`, `MIN`, `MAX`
    and `IF` only.
 3. **Check rows.** At least one row labelled `check_*` carrying self-checks
-   that evaluate to zero while the model is intact (cash roll-forward, gross
-   profit build, net income build are the usual three).
+   that evaluate to zero whilst the model is intact (cash roll-forward, gross
+   profit build, net income build are the usual 3).
 
 The workbook must reproduce these engine lines for every month: `revenue`,
 `cogs`, `gross_profit`, `opex`, `ebitda`, `da`, `interest`, `pretax_income`,

@@ -3,7 +3,7 @@ Xero report importer, in both of its modes, and with the two-column P&L reader.
 A malformed export must be refused with `ValueError`, and every amount an
 importer accepts must be finite. Unexpected exceptions and failed invariants
 fail the run. The seed corpus holds the package's Xero and QuickBooks fixtures,
-truncated to 4 KiB, and two small exports.
+truncated to 4 KiB, and 2 small exports.
 
 On Linux with Python 3.14, from the repository root, run:
 

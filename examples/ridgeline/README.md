@@ -1,6 +1,6 @@
 # Review Ridgeline cash decisions
 
-Compare the baseline with delayed wholesale receipts, lower D2C sales and two
+Compare the baseline with delayed wholesale receipts, lower D2C sales and 2
 additional staff using the existing weekly scenario engine. These are fabricated
 sensitivities for review, with no approval of funding or management action.
 
@@ -17,7 +17,7 @@ model currency units and ordinal forecast weeks: `cash13.yaml` supplies neither
 a currency nor a calendar start date.
 
 The wholesale scenario delays both flows named `Wholesale AR collection` by
-five weeks. One moves from week 9 to week 14, outside the thirteen-week horizon;
+5 weeks. One moves from week 9 to week 14, outside the 13-week horizon;
 it is deferred, not cancelled. The D2C scenario applies its factor to the named
 weekly sales flow. The hiring scenario adds payroll from week 5. Inspect their
 cash troughs and first negative weeks before accepting the proposed timing.
@@ -28,7 +28,7 @@ continues to demonstrate the monthly model and verified workbook.
 
 ## Test a weekly cash floor
 
-Run the fixed grid of receipt delays from zero to five weeks, each with and
+Run the fixed grid of receipt delays from zero to 5 weeks, each with and
 without the existing hiring package:
 
 ```powershell
