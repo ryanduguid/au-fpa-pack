@@ -134,3 +134,15 @@ def test_forecast_snapshots_list_the_files_that_failed_to_parse(tmp_path):
     snapshots, errors = load_forecast_snapshots(tmp_path)
     assert [snapshot.label for snapshot in snapshots] == ["Good"]  # nosec B101: pytest outcome assertion
     assert len(errors) == 1 and errors[0].startswith("b.yaml: ")  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("content", [b"label: Missing fields\n", b"label: \xff\n"])
+def test_forecast_snapshots_list_invalid_and_undecodable_files(tmp_path, content):
+    from pyfpa.backtest.snapshot import load_forecast_snapshots
+
+    forecasts = tmp_path / "forecasts"
+    forecasts.mkdir()
+    (forecasts / "bad.yaml").write_bytes(content)
+    snapshots, errors = load_forecast_snapshots(tmp_path)
+    assert snapshots == [] and len(errors) == 1  # nosec B101: pytest outcome assertion
+    assert errors[0].startswith("bad.yaml: ")  # nosec B101: pytest outcome assertion
