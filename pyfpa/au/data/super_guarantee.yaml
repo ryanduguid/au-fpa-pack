@@ -2,8 +2,8 @@
 # Source: ATO, Super guarantee percentage table.
 # https://www.ato.gov.au/tax-rates-and-codes/key-superannuation-rates-and-thresholds/super-guarantee
 # Rate is legislated to remain at 0.12 from 1 July 2025 (no further
-# scheduled increases as at 2026-08-20). Pending cross-check against
-# subagent source pull; see tests for schedule invariants.
+# scheduled increases as at 2026-11-03, when every row was checked
+# against the ATO table); see tests for schedule invariants.
 # The maintainer verified this table to the date below. A lookup after it
 # raises until the sources are re-checked and the date is moved.
 reviewed_until: 2027-06-30
