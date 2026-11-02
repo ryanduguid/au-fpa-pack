@@ -22,7 +22,7 @@
 [![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
 [![licence: FSL-1.1-ALv2](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
 
-[Worked example](#worked-example) · [Package](#package) · [Reproduce and inspect](#reproduce-and-inspect) · [Skills](#skills)
+[Worked example](#worked-example) · [Package](#package) · [Reproduce and inspect](#reproduce-and-inspect) · [Skills](#skills) · [Licence](#licence)
 
 </div>
 
@@ -143,11 +143,13 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 - [Supplier information for a firm's AI register](docs/ai-register-entry.md)
 - [Contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md)
 
+</details>
+
+## Licence
+
 Licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 2 years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
 
 The licence does not cover the scripture quotation in the footer. Scripture quoted by permission. Quotations designated (NET) are from the NET Bible® copyright ©1996, 2019 by Biblical Studies Press, L.L.C. [netbible.com](https://netbible.com) All rights reserved.
-
-</details>
 
 ---
 
