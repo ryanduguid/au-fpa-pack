@@ -14,7 +14,7 @@ python -m fuzz.xero_import fuzz/corpus -max_total_time=60 -max_len=4096 -timeout
 
 `requirements-fuzz.txt` pins Atheris and the runtime dependencies at their
 `uv.lock` versions, so the harness imports `pyfpa` from the checkout. CI runs
-the target after main pushes, weekly and on demand, with read-only repository
+the target weekly and on demand, with read-only repository
 access and a 5-minute timeout. `tests/test_fuzz_harness.py` replays the
 corpus on every supported platform. Atheris does not support Windows, so
 coverage-guided fuzzing runs on Linux. A successful run is bounded evidence,

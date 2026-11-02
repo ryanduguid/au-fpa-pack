@@ -60,7 +60,8 @@ def load_forecast_snapshots(workspace: Path) -> tuple[list[Snapshot], list[str]]
         for path in sorted(forecasts_dir.glob("*.yaml")):
             try:
                 snapshots.append(load_snapshot(path))
-            except Exception as exc:
+            # ValueError covers schema failures (ValidationError) and bad UTF-8.
+            except (OSError, ValueError, yaml.YAMLError) as exc:
                 errors.append(f"{path.name}: {exc}")
     return snapshots, errors
 

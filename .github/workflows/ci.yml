@@ -26,11 +26,39 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    env:
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+      SHELLCHECK_VERSION: "0.11.0"
+      # Computed from the v0.11.0 release tarball at pin time; koalaman
+      # publishes no checksums file.
+      SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Download and verify shellcheck
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --proto-redir '=https' -sSLO "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          echo "${SHELLCHECK_SHA256}  shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | sha256sum --check
+          tar -xJf "shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
+
+      - name: Shellcheck the commit-msg hook
+        run: |
+          "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck" -x .githooks/commit-msg
+
+      - name: Download and verify actionlint
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --proto-redir '=https' -sSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" | sha256sum --check
+          tar -xzf "actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" actionlint
+
+      - name: Lint the workflows with actionlint
+        run: ./actionlint -shellcheck "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
 
       # Run lint and type checks on the minimum supported Python version.
       - name: Set up Python 3.14
@@ -257,8 +285,8 @@ jobs:
   fuzzing:
     name: fuzz the Xero CSV importers
     # A 60-second random exploration is not a repeatable merge gate, so it
-    # runs after merge, weekly and on demand rather than on pull requests.
-    if: github.event_name != 'pull_request'
+    # runs weekly and on demand rather than on pull requests or merges.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 5
     runs-on: ubuntu-latest
     permissions:

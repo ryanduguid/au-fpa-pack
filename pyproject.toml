@@ -72,10 +72,11 @@ exclude_also = ['if __name__ == "__main__":']
 target-version = "py314"
 
 [tool.ruff.lint]
-# Pin the selection instead of inheriting it: pycodestyle errors, Pyflakes and
-# import sorting. Today this is ruff's default set plus "I", but stating it
-# means a ruff release cannot quietly add or drop a rule from the merge gate.
-select = ["E4", "E7", "E9", "F", "I"]
+# Pin the selection instead of inheriting it: blind except, pycodestyle errors,
+# Pyflakes and import sorting. Today this is ruff's default set plus "BLE" and
+# "I", but stating it means a ruff release cannot quietly add or drop a rule
+# from the merge gate.
+select = ["BLE", "E4", "E7", "E9", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 # E402: these runners and their tests put the example or repository directory on
