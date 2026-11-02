@@ -29,7 +29,7 @@ The opening GST and GST Clearing liabilities total $3,850. This synthetic
 example assumes both are paid on 28 July 2026. Opening receivables, payables
 and inventory remain at their starting balances. GST on forecast sales and
 purchases is assumed to move through the bank in the same month; overhead
-and supplier payments are fully creditable, while the GST-free sales remain
+and supplier payments are fully creditable, whilst the GST-free sales remain
 untaxed. These assumptions require confirmation for another company.
 
 Annual cash reconciles as follows:
@@ -53,12 +53,12 @@ the weekly and monthly closing balances differ with pay dates.
 
 - Monthly GST settlement (this entity is quarterly).
 - Live Xero OAuth. Fixtures only.
-- Franking, PAYG instalments, or grouping.
+- Franking, PAYG instalments or grouping.
 - A separate PAYG withholding settlement schedule, loan repayments or capital
   expenditure based on the opening balance sheet. The forecast is limited to
   the configured flows; positive cash does not establish funds available to spend.
 
-See `.fpa/` for lineage, intake, and the registered `harbour-light-pipeline`
+See `.fpa/` for lineage, intake and the registered `harbour-light-pipeline`
 entrypoint. The separate `harbour-light-workbook` report runs
 `python3 -m models.generated.harbour_excel` from this directory and uses the
 same verification before delivery.

@@ -28,7 +28,7 @@ The same folder holds monthly, weekly and daily CSVs and a JSON summary.
 The runner verifies all 21 monthly workbook lines against the Python model
 before replacing the workbook. It also requires 3 `check_*` rows below them to be
 zero in every month: closing cash against every dated movement since the opening
-balance, the profit-to-cash bridge against the dated bank schedule, and GST payable
+balance, the profit-to-cash bridge against the dated bank schedule and GST payable
 against the quarter's net GST once the opening balance is paid in October.
 `Model!B26` reads 'All checks pass' in Excel or names the first failing check.
 The briefing, CSVs and JSON summary are committed so the result can be read without running anything; the workbook is rebuilt locally and ignored by Git.

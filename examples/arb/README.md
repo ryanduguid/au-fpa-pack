@@ -10,7 +10,7 @@ python3 examples/arb/run_arb.py --replace-epochs     # regenerate the committed 
 
 `run_arb.py` saves a research epoch per retrospective challenger and refuses to
 overwrite one that already exists, which is the guard against losing research
-history. This example ships its two epochs, so replaying over them needs
+history. This example ships its 2 epochs, so replaying over them needs
 `--output-dir` or, to regenerate the committed files, `--replace-epochs`.
 
 Every figure traces to [`data/SOURCES.md`](data/SOURCES.md).
@@ -38,5 +38,5 @@ not a kernel FX engine.
 2. No channel EBITDA in the filing: allocated from consolidated EBIT + D&A.
 3. Trade receivables used as AR, not the broader receivables line.
 4. No FY2023 balance sheet in this 4E, so Phase A is FY2025 only.
-5. Franking, associates (ORW), and acquisitions are outside the engine.
+5. Franking, associates (ORW) and acquisitions are outside the engine.
 6. GST/BAS belongs to Harbour Light, not this annual public proof.
