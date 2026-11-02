@@ -24,7 +24,7 @@ This is arithmetic, not a forecast.
 **Phase B** compares scenarios against FY2025 retrospectively. Both challengers
 use FY2025 realised export growth of 16.4%, so neither passes the independent
 holdout check. Both are discarded for promotion, including the export-led
-scenario whose revenue fits within 0.1%. A separate period with inputs fixed
+scenario whose revenue error rounds to 0.1%. A separate period with inputs fixed
 in advance is required to test forecasting accuracy.
 
 **Phase C** forecasts FY2026 to FY2027 from the August 2025 4E view.

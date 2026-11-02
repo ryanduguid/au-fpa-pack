@@ -1,4 +1,4 @@
-# A three-month close and cash simulation
+# A 3-month close and cash simulation
 
 The included fabricated case starts on 30 September 2026 and closes October, November and December. It retains original document IDs, linked credits, unique bank settlements and explicit dated plans. It is separate from the Lumbridge forecast.
 
