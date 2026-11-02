@@ -22,6 +22,8 @@
 [![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
 [![licence: FSL-1.1-ALv2](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
 
+[Worked example](#worked-example) · [Package](#package) · [Reproduce and inspect](#reproduce-and-inspect) · [Skills](#skills) · [Licence](#licence)
+
 </div>
 
 An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
@@ -41,9 +43,11 @@ Source examples also cover [refreshing the cash forecast from actuals](examples/
 [tracing WIP into project cash](examples/job-to-cash/README.md) and
 [separating restricted cash](examples/restricted-cash/README.md).
 
-Continue with the [three-month close simulation](examples/quarter-close/README.md),
+Continue with the [3-month close simulation](examples/quarter-close/README.md),
 [supplier payment plans](examples/creditor-cash/README.md) and
 [grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
+
+## Worked example
 
 Synthetic example. A human approves the assumptions and funding decision.
 
@@ -80,9 +84,6 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 
 [Harbour Light](examples/harbour-light/README.md) provides a separate Victorian wholesale example with FY2027 reporting and quarterly BAS cash timing.
 
-<details>
-<summary>Setup, Australian scope, skills, kernel packages, upstream workbench and reference</summary>
-
 ## Package
 
 **Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.4.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
@@ -115,6 +116,9 @@ skill the pack ships for every company.
 repository as the `openfpa` plugin, version 0.1.0, licensed `FSL-1.1-ALv2 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
+<details>
+<summary>Kernel packages, upstream workbench and reference</summary>
+
 ## Kernel packages and how each is reached
 
 | Package | What it is for | How it is reached |
@@ -139,11 +143,13 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 - [Supplier information for a firm's AI register](docs/ai-register-entry.md)
 - [Contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md)
 
+</details>
+
+## Licence
+
 Licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 2 years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
 
 The licence does not cover the scripture quotation in the footer. Scripture quoted by permission. Quotations designated (NET) are from the NET Bible® copyright ©1996, 2019 by Biblical Studies Press, L.L.C. [netbible.com](https://netbible.com) All rights reserved.
-
-</details>
 
 ---
 

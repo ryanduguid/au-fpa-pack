@@ -46,7 +46,7 @@ uv run --locked --extra dev python examples/keldagrim-forge/drill.py path/to/you
 ```
 
 The drill runs `verify_structure` and `verify_workbook` against the engine and
-prints one JSON document to stdout: structure, numbers, and any failure by line
+prints one JSON document to stdout: structure, numbers and any failure by line
 and month, with the same scorecard in words on stderr. It reads your workbook
 and computes locally. Record your own time; the drill records nothing.
 
