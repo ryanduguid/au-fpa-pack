@@ -152,6 +152,8 @@ Licensed under the Functional Source License, Version 1.1, ALv2 Future License (
 
 The licence does not cover the scripture quotation in the footer. Scripture quoted by permission. Quotations designated (NET) are from the NET Bible® copyright ©1996, 2019 by Biblical Studies Press, L.L.C. [netbible.com](https://netbible.com) All rights reserved.
 
+<sub>Planning aid, not professional advice, an assessment, a private ruling or a statutory lodgement; confirm rates, caps, thresholds and treatments against current rules. See [DISCLAIMER.md](DISCLAIMER.md).</sub>
+
 ---
 
 <p align="center"><sub><i>'The plans of the diligent lead only to plenty.'</i> Proverbs 21:5 (<a href="https://netbible.org/">NET</a>)<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
