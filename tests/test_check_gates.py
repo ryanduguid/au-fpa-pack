@@ -331,7 +331,7 @@ class GateCliTests(unittest.TestCase):
                              self.git_command("rev-parse", "HEAD^{tree}").stdout)
         for filename, gate, needs, flags in (
             ("ci.yml", "ci-gates", ("lint", "test", "minimum-resolution", "connector-security-windows"),
-             ("--exempt", "codecov", "--exempt", "fuzzing")),
+             ("--exempt", "codecov", "--exempt", "fuzzing", "--exempt", "live-network")),
             ("joined-fixtures.yml", "public-fixtures-gates", ("public-fixtures",), ()),
             ("codeql.yml", "codeql-gates", ("analyze",), ()),
         ):
@@ -421,7 +421,7 @@ class GateCliTests(unittest.TestCase):
 
     def test_cli_accepts_declared_removals_from_a_git_quoted_path(self):
         result = self.run_cli_fixture(quoted_path=True,
-            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, minimum-resolution, test")
+            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, live-network, minimum-resolution, test")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_cli_accepts_an_unrelated_new_context(self):
@@ -430,7 +430,7 @@ class GateCliTests(unittest.TestCase):
 
     def test_cli_deduplicates_an_existing_path(self):
         result = self.run_cli_fixture(filename="ci.yml",
-            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, minimum-resolution, test")
+            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, live-network, minimum-resolution, test")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @unittest.skipIf(os.name == "nt", "CR/LF filenames require a POSIX working tree")
@@ -442,7 +442,7 @@ class GateCliTests(unittest.TestCase):
     @unittest.skipIf(os.name == "nt", "CR/LF filenames require a POSIX working tree")
     def test_distinct_cr_lf_paths_accept_declared_removals(self):
         result = self.run_cli_fixture(control_paths=True,
-            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, minimum-resolution, test")
+            declaration="ci-gates, codecov, connector-security-windows, fuzzing, lint, live-network, minimum-resolution, test")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @unittest.skipIf(os.name == "nt", "CR/LF filenames require a POSIX working tree")

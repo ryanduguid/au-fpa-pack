@@ -7,6 +7,10 @@ environment:
 python -m pip install au-fpa-pack
 ```
 
+The PyPI distribution named `pyfpa` is an unrelated project that also installs
+a top-level `pyfpa` package. Do not install it in the same environment: each
+would overwrite the other's files.
+
 Save this as `first_result.py` and run `python first_result.py` from any
 directory. The fabricated CSV is part of the installed package:
 
