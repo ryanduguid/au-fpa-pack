@@ -3,8 +3,8 @@
 Keldagrim Forge is a fictional Hunter Valley metal fabricator. Its Anvil and
 Blast furnace lines and its 2 lenders are Old School RuneScape references; no
 game knowledge is needed. Every figure in [config.yaml](config.yaml) is
-fabricated for practice. All amounts are AUD. Synthetic example. Forecasting
-aid, not tax advice; a human approves the assumptions and any funding decision.
+fabricated for practice. All amounts are AUD. Synthetic example. A human
+approves the assumptions and any funding decision.
 
 **Human decision (the point of the drill):** can the business service the
 Dwarven Bank term loan if the Anvil line's largest receipt slips a month?
