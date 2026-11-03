@@ -85,7 +85,12 @@ real businesses. The contributions that help most:
 
 - **No real client data, ever, and no secrets.** Use synthetic data or public filings
   only (the Fox example uses nothing but public SEC data). Credentials come from the host
-  environment or an MCP server, never committed.
+  environment or an MCP server, never committed. The `fixture-screen` job in `ci.yml` fails
+  on a checksum-valid TFN, ABN, ACN or Medicare number in any tracked file, and on a file
+  that is not UTF-8. It skips a match only when its first and last digit groups are both
+  inside numbers: a hexadecimal token of 16 or more characters, a `0x` literal, a float's
+  exponent or a percentage. Use a value whose check digit fails, or list a documented test
+  value for its file, with its reason, in `tools/fixture-screen/tests/synthetic-identifiers.txt`.
 - Keep modules small, pure, and immutable; config is pydantic-validated; disk I/O stays in
   the `io/` layer. Match the surrounding style.
 - Licensed under FSL-1.1-ALv2. By contributing, you agree your work is offered under the same.

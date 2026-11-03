@@ -6,6 +6,8 @@ docs/demo/*.xlsx
 examples/*/output/*.xlsx
 dist/
 build/
+# Cargo build output, such as tools/fixture-screen's.
+target/
 .coverage
 coverage.xml
 

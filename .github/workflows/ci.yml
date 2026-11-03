@@ -256,6 +256,29 @@ jobs:
       - name: Verify connector trust boundaries
         run: uv run --locked --extra dev pytest -q tests/test_memory_connectors.py
 
+  # tools/fixture-screen runs evatt's detectors over every tracked file, so it
+  # has no path filter.
+  fixture-screen:
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/fixture-screen
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned toolchain
+        run: rustup toolchain install 1.99 --profile minimal --component rustfmt,clippy
+
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked --release
+
   # The upload runs apart from the tests so the OIDC token is never available
   # while test code runs. It is exempt from ci-gates: a Codecov outage must
   # not block merges.
@@ -348,7 +371,7 @@ jobs:
     # unless every job it needs succeeded, when a job in this file is missing
     # from needs, or when a pull request removes a job without adding a
     # "# removed-jobs: <job>" comment to this file.
-    needs: [lint, test, minimum-resolution, connector-security-windows]
+    needs: [lint, test, minimum-resolution, connector-security-windows, fixture-screen]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

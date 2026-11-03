@@ -27,6 +27,13 @@ updates:
       # assertion. Dependabot bumps fail the POLICY pin test and add
       # unapproved SHAs to the portfolio audit, so re-pin by hand instead.
       - dependency-name: "ryanduguid/release-policy/.github/workflows/*"
+  - package-ecosystem: cargo
+    directory: /tools/fixture-screen
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
   - package-ecosystem: uv
     directory: /
     schedule:
