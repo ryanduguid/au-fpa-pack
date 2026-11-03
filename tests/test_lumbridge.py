@@ -125,7 +125,7 @@ def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
                       "check_receivables_open_invoices"]
     model = formulas.ExcelModel().loads(str(path)).finish()
 
-    for delay in (0, 45):
+    for delay in (0, 45, 120):
         report = verify_workbook(path, api["forecast"](delay_days=delay)["monthly"], inputs={"Assumptions!B2": delay})
         assert report.passed, (delay, report.failures)
         solution = model.calculate(inputs={f"'[{path.name}]ASSUMPTIONS'!B2": delay})
@@ -149,6 +149,8 @@ def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
         # 2,000 of the opening bank balance misclassified as receivables; the balance sheet still balances.
         ({f"Sources!B{row_of('Sources', 'A', 'Business Bank Account')}": 28000,
           f"Sources!B{row_of('Sources', 'A', 'Accounts Receivable')}": 68000}, {"check_receivables_open_invoices"}),
+        # Revenue overstated by 1,000 with no invoice behind it: receivables absorb it, so the other ties hold.
+        ({f"Sources!B{row_of('Sources', 'A', 'Sales - Varrock maintenance')}": 41000}, {"check_receivables_open_invoices"}),
     ]
     assert set().union(*(failing for _, failing in perturbations)) == set(checks)
     for inputs, failing in perturbations:
