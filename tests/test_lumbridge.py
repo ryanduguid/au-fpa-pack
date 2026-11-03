@@ -104,8 +104,8 @@ def test_the_shipped_workbook_follows_its_receipt_delay_control(tmp_path):
 
 
 def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
-    """Change one source cell per tie, as an Excel user could, and require that
-    tie alone to fail and the status cell to name it; unchanged, all pass."""
+    """Change source cells, as an Excel user could, and require exactly the
+    expected ties to fail and the status cell to name the first; unchanged, all pass."""
     import formulas
     from openpyxl import load_workbook
 
@@ -118,10 +118,11 @@ def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
     api["export_workbook"](path, result)
     wb = load_workbook(path)
     labels = {cell.value: cell.row for cell in wb["Model"]["A"] if cell.value}
-    assert labels["Workbook checks"] == 26, "the README and reviewer key cite Model!B26"
+    assert labels["Workbook checks"] == 27, "the README and reviewer key cite Model!B27"
     status = f"'[{path.name}]MODEL'!B{labels['Workbook checks']}"
-    checks = {label for label in labels if label.startswith("check_")}
-    assert checks == {"check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability"}
+    checks = [label for label, _ in sorted(labels.items(), key=lambda item: item[1]) if label.startswith("check_")]
+    assert checks == ["check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability",
+                      "check_receivables_open_invoices"]
     model = formulas.ExcelModel().loads(str(path)).finish()
 
     for delay in (0, 45):
@@ -134,18 +135,28 @@ def test_each_workbook_check_fails_when_its_source_value_changes(tmp_path):
         return next(cell.row for cell in wb[sheet][column] if cell.value == text)
 
     september_30 = (pd.Timestamp("2026-09-30") - pd.Timestamp("1899-12-30")).days
-    perturbations = {
-        # A receipt dated before the forecast drops out of every monthly window.
-        "check_cash_roll_forward": ("Cash dates", f"B{row_of('Cash dates', 'A', 'OPEN-F')}", september_30),
+    open_f = row_of("Cash dates", "A", "OPEN-F")
+    perturbations = [
+        # A receipt dated before the forecast drops out of every monthly window,
+        # so its invoice also stops matching the receivables.
+        ({f"Cash dates!B{open_f}": september_30}, {"check_cash_roll_forward", "check_receivables_open_invoices"}),
         # Interest expense moves profit but no dated payment.
-        "check_direct_vs_indirect_cash": ("Sources", f"B{row_of('Sources', 'A', 'Interest expense')}", -300),
+        ({f"Sources!B{row_of('Sources', 'A', 'Interest expense')}": -300}, {"check_direct_vs_indirect_cash"}),
         # A part settlement leaves some opening GST in the liability.
-        "check_gst_liability": ("Cash dates", f"E{row_of('Cash dates', 'F', 'GST settlement')}", 12000),
-    }
-    assert set(perturbations) == checks
-    for check, (sheet, cell, value) in perturbations.items():
-        report = verify_workbook(path, monthly, inputs={f"{sheet}!{cell}": value})
+        ({f"Cash dates!E{row_of('Cash dates', 'F', 'GST settlement')}": 12000}, {"check_gst_liability"}),
+        # A missing customer receipt: receivables absorb it, so the profit bridge still ties.
+        ({f"Cash dates!D{open_f}": 0}, {"check_receivables_open_invoices"}),
+        # 2,000 of the opening bank balance misclassified as receivables; the balance sheet still balances.
+        ({f"Sources!B{row_of('Sources', 'A', 'Business Bank Account')}": 28000,
+          f"Sources!B{row_of('Sources', 'A', 'Accounts Receivable')}": 68000}, {"check_receivables_open_invoices"}),
+    ]
+    assert set().union(*(failing for _, failing in perturbations)) == set(checks)
+    for inputs, failing in perturbations:
+        report = verify_workbook(path, monthly, inputs=inputs)
         failed = {failure.split()[0] for failure in report.failures if failure.startswith("check_")}
-        assert failed == {check}, (check, report.failures)
-        solution = model.calculate(inputs={f"'[{path.name}]{sheet.upper()}'!{cell}": value})
-        assert solution[status].value[0][0] == f"{check} fails"
+        assert failed == failing, (inputs, report.failures)
+        solution = model.calculate(inputs={
+            f"'[{path.name}]{target.rpartition('!')[0].upper()}'!{target.rpartition('!')[2]}": value
+            for target, value in inputs.items()})
+        first = next(check for check in checks if check in failing)
+        assert solution[status].value[0][0] == f"{first} fails", inputs

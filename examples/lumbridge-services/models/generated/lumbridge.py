@@ -105,9 +105,11 @@ def forecast(data: Path = ROOT / "data", delay_days: int = 0) -> dict:
     invoices["base_date"] = invoices["receipt_date"]
     invoices.loc[invoices["id"] == a["delay_invoice"], "receipt_date"] += timedelta(days=delay_days)
     receipts = pd.DataFrame({"id": invoices["id"], "base_date": invoices["base_date"], "date": invoices["receipt_date"],
-                             "category": "Customer receipt", "receipts": invoices["net"] + invoices["gst"], "payments": 0.0})
+                             "category": "Customer receipt", "receipts": invoices["net"] + invoices["gst"], "payments": 0.0,
+                             "invoice_month": pd.to_datetime(invoices["service_month"], format="%Y-%m")})
     outgoing = pd.DataFrame({"id": [f"PAY-{i + 1:02}" for i in range(len(payments))], "base_date": payments["date"],
-                            "date": payments["date"], "category": payments["category"], "receipts": 0.0, "payments": payments["amount"]})
+                            "date": payments["date"], "category": payments["category"], "receipts": 0.0, "payments": payments["amount"],
+                            "invoice_month": pd.NaT})
     ledger = pd.concat([receipts, outgoing], ignore_index=True).sort_values("base_date").reset_index(drop=True)
     start, end = pd.Timestamp(a["weekly_start"]), pd.Timestamp(a["forecast_end"])
     if ((ledger["date"] < start) & (ledger["date"] >= pd.Timestamp(a["forecast_start"]))).any():
@@ -215,16 +217,19 @@ def export_workbook(path: Path, result: dict) -> None:
     source.append(["Income tax instalment in October", result["assumptions"]["quarterly_tax_instalment"], "Synthetic supplied instalment, not a tax calculation"])
     tax_ref = f"Sources!$B${source.max_row}"
     cash = wb["Cash dates"]
-    cash.append(["Record", "Base date", "Scenario date", "Receipts AUD", "Payments AUD", "Category", "Closing cash on date"])
+    cash.append(["Record", "Base date", "Scenario date", "Receipts AUD", "Payments AUD", "Category", "Closing cash on date", "Invoice month"])
     for i, event in enumerate(result["ledger"].itertuples(), 2):
         date_formula = f'=B{i}+IF(A{i}="OPEN-V",receipt_delay,0)'
         cash.append([event.id, event.base_date.to_pydatetime(), date_formula, event.receipts, event.payments, event.category])
         cash.cell(i, 2).number_format = cash.cell(i, 3).number_format = "dd-mmm-yy"
+        if pd.notna(event.invoice_month):
+            cash.cell(i, 8, event.invoice_month.to_pydatetime()).number_format = "mmm-yy"
     last = cash.max_row
     dates = f"'Cash dates'!$C$2:$C${last}"
     receipts = f"'Cash dates'!$D$2:$D${last}"
     payments = f"'Cash dates'!$E$2:$E${last}"
     categories = f"'Cash dates'!$F$2:$F${last}"
+    invoice_months = f"'Cash dates'!$H$2:$H${last}"
     opening_cash = refs["Business Bank Account"]
     for i in range(2, last + 1):
         cash.cell(i, 7, f'=IF(C{i}>DATE(2026,12,31),"",{opening_cash}+SUMIFS({receipts},{dates},"<="&C{i})-SUMIFS({payments},{dates},"<="&C{i}))')
@@ -232,7 +237,7 @@ def export_workbook(path: Path, result: dict) -> None:
     ws.append(["Lumbridge Services: monthly forecast (AUD)", *[m.start_time.to_pydatetime() for m in MONTHS]])
     rows = {name: i for i, name in enumerate(result["monthly"].columns, 2)}
     # Ties sit below the engine lines; verify_workbook requires each to be zero every month.
-    check_names = ("check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability")
+    check_names = ("check_cash_roll_forward", "check_direct_vs_indirect_cash", "check_gst_liability", "check_receivables_open_invoices")
     check_rows = {name: i for i, name in enumerate(check_names, len(rows) + 2)}
     lines = {**rows, **check_rows}
     for name, row in lines.items():
@@ -261,15 +266,22 @@ def export_workbook(path: Path, result: dict) -> None:
             "Cash from profit bridge": f"={ref('Profit before tax')}+{ref('Depreciation')}+{ref('Leave provision')}-({ref('Receivables')}-{prior('Receivables', refs['Accounts Receivable'])})+({ref('GST payable')}-{prior('GST payable', '-' + refs['GST'])})-{ref('Loan principal paid')}-{ref('Income tax instalment')}",
             "Cash reconciliation difference": f"={ref('Cash from profit bridge')}-{ref('Customer receipts')}+{ref('Cash payments')}",
         })
-        # Each tie compares separately built amounts, so a changed source value can break it.
+        # Terms that appear on both sides of a tie cancel, so each comment names what can still break it.
         quarter = lambda label, col=col: f"SUM($B{rows[label]}:{col}{rows[label]})"
         formulas.update({
-            # Chained monthly windows against every dated movement since the opening balance.
+            # Chained monthly windows against every dated movement since the opening balance,
+            # whatever its category. Both sides read the same records: only a date can break it.
             "check_cash_roll_forward": f'={ref("Closing cash")}-({opening_cash}+SUMIFS({receipts},{dates},"<="&{end_expr})-SUMIFS({payments},{dates},"<="&{end_expr}))',
-            # Profit-to-cash bridge against the dated bank schedule.
+            # Profit-to-cash bridge against the dated bank schedule. Receivables and GST payable
+            # move with the same receipts and settlements, so those and revenue cancel; the
+            # other payments and the costs they settle can break it.
             "check_direct_vs_indirect_cash": f"={ref('Cash reconciliation difference')}",
             # Opening GST is settled in October, so the liability is this quarter's net GST.
+            # The net GST is on both sides: only the settlements and opening balance can break it.
             "check_gst_liability": f"={ref('GST payable')}-({quarter('Revenue')}-{quarter('Materials')}-{quarter('Overhead')})*{gst_ref}",
+            # Receivables rolled forward from the balance sheet, GST-inclusive revenue and receipts
+            # against the invoices raised by month end and received after it, from the dated records.
+            "check_receivables_open_invoices": f'={ref("Receivables")}-SUMIFS({receipts},{invoice_months},"<="&{end_expr},{dates},">"&{end_expr})',
         })
         for label, formula in formulas.items():
             ws.cell(lines[label], i, formula)
@@ -358,7 +370,7 @@ def export_workbook(path: Path, result: dict) -> None:
     control["B2"].number_format = "0"
     source.column_dimensions["A"].width, source.column_dimensions["C"].width = 34, 66
     cash.column_dimensions["F"].width = 23
-    cash.auto_filter.ref = f"A1:G{last}"
+    cash.auto_filter.ref = f"A1:H{last}"
     for row in (17, 18, 19):
         weekly.row_dimensions[row].height = 34
         weekly.cell(row, 1).alignment = Alignment(wrap_text=True)
