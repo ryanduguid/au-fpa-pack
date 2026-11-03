@@ -44,8 +44,9 @@ Source examples also cover [refreshing the cash forecast from actuals](examples/
 [separating restricted cash](examples/restricted-cash/README.md).
 
 Continue with the [3-month close simulation](examples/quarter-close/README.md),
-[supplier payment plans](examples/creditor-cash/README.md) and
-[grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md).
+[supplier payment plans](examples/creditor-cash/README.md),
+[grant-to-cash handoff](examples/restricted-cash/GRANT-HANDOFF.md) and
+[Ridgeline receipt-delay and hiring sensitivities](examples/ridgeline/README.md).
 
 ## Worked example
 

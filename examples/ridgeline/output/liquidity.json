@@ -1,0 +1,265 @@
+{
+  "floor": 0.0,
+  "horizon_weeks": 13,
+  "opening_cash": 150000.0,
+  "liquidity_fields": {
+    "additional_opening_buffer": "max(0, floor minus minimum weekly ending cash), in model currency units",
+    "meets_floor_without_buffer": "all weekly ending cash meets the floor; excludes opening cash and intraweek timing",
+    "buffered": "a full rerun with the additional opening buffer; no receipts or payments changed"
+  },
+  "cells": [
+    {
+      "delay_weeks": 0,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -146000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": 16000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 146000.0,
+      "buffered_opening_cash": 296000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 162000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 0,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -164000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -29000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 164000.0,
+      "buffered_opening_cash": 314000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 135000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 1,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -146000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": 16000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 146000.0,
+      "buffered_opening_cash": 296000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 162000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 1,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -164000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -29000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 164000.0,
+      "buffered_opening_cash": 314000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 135000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 2,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -146000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": 16000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 146000.0,
+      "buffered_opening_cash": 296000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 162000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 2,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -164000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -29000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 164000.0,
+      "buffered_opening_cash": 314000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 135000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 3,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -208000.0,
+        "min_week": 6,
+        "first_negative_week": 3,
+        "ending_cash": 16000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 208000.0,
+      "buffered_opening_cash": 358000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 6,
+        "first_negative_week": null,
+        "ending_cash": 224000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 3,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -217000.0,
+        "min_week": 6,
+        "first_negative_week": 3,
+        "ending_cash": -29000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 217000.0,
+      "buffered_opening_cash": 367000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 6,
+        "first_negative_week": null,
+        "ending_cash": 188000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 4,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -266000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": 16000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 266000.0,
+      "buffered_opening_cash": 416000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 282000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 4,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -284000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -29000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 284000.0,
+      "buffered_opening_cash": 434000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 255000.0
+      },
+      "one_off_receipts_beyond_horizon": []
+    },
+    {
+      "delay_weeks": 5,
+      "hiring_package": false,
+      "unbuffered": {
+        "min_cash": -266000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -104000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 266000.0,
+      "buffered_opening_cash": 416000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 162000.0
+      },
+      "one_off_receipts_beyond_horizon": [
+        {
+          "name": "Wholesale AR collection",
+          "amount": 120000.0,
+          "week": 14
+        }
+      ]
+    },
+    {
+      "delay_weeks": 5,
+      "hiring_package": true,
+      "unbuffered": {
+        "min_cash": -284000.0,
+        "min_week": 7,
+        "first_negative_week": 3,
+        "ending_cash": -149000.0
+      },
+      "meets_floor_without_buffer": false,
+      "additional_opening_buffer": 284000.0,
+      "buffered_opening_cash": 434000.0,
+      "buffered": {
+        "min_cash": 0.0,
+        "min_week": 7,
+        "first_negative_week": null,
+        "ending_cash": 135000.0
+      },
+      "one_off_receipts_beyond_horizon": [
+        {
+          "name": "Wholesale AR collection",
+          "amount": 120000.0,
+          "week": 14
+        }
+      ]
+    }
+  ],
+  "boundary": "The zero floor is a fabricated demonstration, not an approved liquidity policy. An opening buffer is counterfactual cash, not available funding. This finite grid does not establish an optimum, intraweek solvency or financing approval."
+}

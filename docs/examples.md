@@ -27,6 +27,16 @@ python3 examples/ridgeline/run_demo.py
 The example shows an inventory build creating a near-term liquidity gap before
 seasonal collections arrive.
 
+The [decision guide](../examples/ridgeline/README.md) compares delayed wholesale
+receipts, lower D2C sales and additional staff. Its
+[12-cell liquidity grid](../examples/ridgeline/README.md#test-a-weekly-cash-floor)
+tests receipt delays with and without hiring against a configurable weekly
+ending cash floor. Results use model currency units and ordinal weeks; the
+guide explains deferred receipts outside the horizon and the limits of the
+counterfactual opening cash buffer.
+The [committed zero-floor sample](../examples/ridgeline/output/liquidity.md)
+can be inspected without installing the package.
+
 ### Fox Factory
 
 [`examples/foxfactory/`](../examples/foxfactory/) applies the workflow to public,
