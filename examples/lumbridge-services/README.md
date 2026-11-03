@@ -26,11 +26,22 @@ uv run --locked --extra dev python examples/lumbridge-services/models/generated/
 Open `examples/lumbridge-services/output/briefing.md` and `lumbridge.xlsx`.
 The same folder holds monthly, weekly and daily CSVs and a JSON summary.
 The runner verifies all 21 monthly workbook lines against the Python model
-before replacing the workbook. It also requires 3 `check_*` rows below them to be
-zero in every month: closing cash against every dated movement since the opening
-balance, the profit-to-cash bridge against the dated bank schedule and GST payable
-against the quarter's net GST once the opening balance is paid in October.
-`Model!B26` reads 'All checks pass' in Excel or names the first failing check.
+before replacing the workbook. It also requires 4 `check_*` rows below them to be
+zero in every month. `Model!B27` reads 'All checks pass' in Excel or names the
+first failing check. The runner refuses source files that do not reconcile, so
+these rows test changes made in Excel. A term on both sides of a check cancels,
+so each check proves only what can break it:
+
+| Check | Compares | Fails when | Cannot detect |
+| --- | --- | --- | --- |
+| `check_cash_roll_forward` | Closing cash against opening cash plus every dated receipt and payment to month end, whatever its category or statement line | A record is dated before 1 October | A wrong or missing amount: both sides read the same dated records |
+| `check_direct_vs_indirect_cash` | The profit-to-cash bridge against the dated bank schedule | A month's payments, other than GST settlements, differ from its gross materials and overhead, payroll costs, interest, loan principal and tax instalment | A wrong or missing receipt, wrong revenue or a wrong GST settlement: receivables and GST payable move with the same records |
+| `check_gst_liability` | GST payable against the quarter's net GST | GST settlements to month end differ from the $12,600 opening balance | Wrong revenue, purchases or GST rate: the net GST is on both sides |
+| `check_receivables_open_invoices` | Receivables rolled forward from the opening balance, GST-inclusive revenue and receipts against the invoices raised by month end and received after it | Receipts no longer total opening receivables plus GST-inclusive revenue: a missing or changed receipt, changed revenue or GST rate, or cash misclassified as receivables | A receipt date moved within the forecast after its invoice month, or the same error in revenue and its receipt |
+
+No check can prove the opening bank balance or when a customer pays: a forecast
+has no bank statement to compare. The [recurring example](RECURRING.md) checks
+actual bank transactions against a supplied closing balance.
 The briefing, CSVs and JSON summary are committed so the result can be read without running anything; the workbook is rebuilt locally and ignored by Git.
 
 In Excel, change `Assumptions!B2` from 0 to 45. This moves invoice OPEN-V's
@@ -115,9 +126,11 @@ extend the example and its liability reconciliation before trusting the results.
 The profit-to-cash bridge adds back depreciation and non-cash leave, adjusts
 gross receivables and GST liabilities, then deducts loan principal and the tax
 instalment. Supplier and PAYG liabilities are constant in this fixture, so
-their changes are zero. The direct cash schedule independently ties to this
-bridge to the cent. Equity and equipment support the opening balance-sheet
-check; the output is not a complete forecast statutory balance sheet.
+their changes are zero. The direct cash schedule ties to this bridge to the
+cent. Receivables move with the same receipts, so the tie tests payments, not
+receipts; the open-invoice check tests receipts. Equity and equipment support
+the opening balance-sheet check; the output is not a complete forecast
+statutory balance sheet.
 
 ## Official reference checks
 
