@@ -26,7 +26,8 @@ Run lint and type checks in a Python 3.14 environment, as CI does.
 `pytest.ini` deselects the `network` marker by default, so a Reserve Bank outage or a
 published layout change cannot fail a branch that did not cause it. Run `pytest -m
 network` when you touch `pyfpa/au/drivers.py` or refresh the RBA fixtures under
-`tests/fixtures/`.
+`tests/fixtures/`. CI also runs them weekly and on demand in the `live-network`
+job, which does not gate merges.
 
 The distribution is `au-fpa-pack`; the importable package is `pyfpa` (`import pyfpa`).
 

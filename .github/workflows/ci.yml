@@ -309,6 +309,40 @@ jobs:
           python -m fuzz.xero_import fuzz/corpus
           -max_total_time=60 -max_len=4096 -timeout=2 -rss_limit_mb=1024
 
+  live-network:
+    name: run the live network tests
+    # These tests fetch from a third-party endpoint, so an outage or layout
+    # change cannot fail an unrelated pull request: they run weekly and on
+    # demand, outside ci-gates.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.5"
+          enable-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          prune-cache: true
+
+      - name: Install locked environment
+        run: uv sync --locked --extra dev  # NOSONAR: unprivileged job; uv installs the hash-locked set
+
+      - name: Run the network tests
+        run: uv run --locked --extra dev pytest -m network  # NOSONAR: unprivileged job; uv installs the hash-locked set
+
   ci-gates:
     # The one context branch protection requires from this workflow. It fails
     # unless every job it needs succeeded, when a job in this file is missing
@@ -333,4 +367,4 @@ jobs:
       - name: Require every job to be listed, kept and successful
         env:
           RESULTS: ${{ toJSON(needs) }}
-        run: python3 .github/ci/check_gates.py .github/workflows/ci.yml ci-gates --exempt codecov --exempt fuzzing
+        run: python3 .github/ci/check_gates.py .github/workflows/ci.yml ci-gates --exempt codecov --exempt fuzzing --exempt live-network
