@@ -1,0 +1,13 @@
+# Checksum-valid values the fixture screen accepts, one per line:
+#   path kind digits reason
+# The path is from the repository root and the kind is tfn, abn, acn or
+# medicare. An entry covers its value in that file only; list each file
+# separately. An entry that matches no finding fails the screen.
+# tests/fixture_screen.rs reads this file. List only:
+# - a documented test vector;
+# - a digit run that is not an identifier, such as an amount or a user name;
+# - a public organisation's ABN or ACN, or an unissued number, with the date
+#   it was checked on ABN Lookup.
+# Never list a value taken from client or personal data.
+tests/test_portfolio_approval.py abn 51824753556 the ATO's own ABN, a public register number, as a sensitive field the approval gate must catch; checked on ABN Lookup on 4 November 2026
+tools/fixture-screen/tests/fixture_screen.rs tfn 123456782 the screen's own planted test value
