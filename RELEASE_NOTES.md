@@ -7,6 +7,7 @@ Added:
 
 Changed:
 
+- `.claude-plugin/plugin.json` now carries the package's version, 0.4.0, instead of 0.1.0, and a test keeps the 2 equal.
 - A `proposed` or `promoted` `ResearchEpoch` now needs a holdout period that does not overlap its training periods. Saved epochs that lack one no longer load until their periods are recorded or their status changes.
 
 # v0.4.0
