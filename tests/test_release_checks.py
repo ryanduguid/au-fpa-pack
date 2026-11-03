@@ -1,5 +1,6 @@
 """Require the reviewed component checks before a release can publish."""
 
+import json
 import re
 import tomllib
 import unittest
@@ -106,6 +107,13 @@ class ReleaseChecksTests(unittest.TestCase):
         self.assertTrue(requires)
         for requirement in requires:
             self.assertIn(requirement, project["project"]["optional-dependencies"]["dev"])
+
+    def test_plugin_version_matches_the_package(self) -> None:
+        # Claude Code pins installed plugins to the manifest's version until it
+        # changes, so the manifest moves with each release of the package.
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        plugin = json.loads((ROOT / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(plugin["version"], project["project"]["version"])
 
 
 if __name__ == "__main__":

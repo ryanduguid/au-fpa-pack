@@ -114,7 +114,7 @@ is the worked example of a company-specific skill the workflow writes, not a
 skill the pack ships for every company.
 
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) declares the
-repository as the `openfpa` plugin, version 0.1.0, licensed `FSL-1.1-ALv2 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
+repository as the `openfpa` plugin, at the package's version, licensed `FSL-1.1-ALv2 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
 <details>
