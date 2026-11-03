@@ -28,6 +28,12 @@ continues to demonstrate the monthly model and verified workbook.
 
 ## Test a weekly cash floor
 
+Inspect the [committed sample at a zero weekly ending cash floor](output/liquidity.md)
+and its [unrounded results and metric dictionary](output/liquidity.json) without
+running the model. Both use the fabricated inputs in this directory and the
+command below. To refresh them, generate into a new directory, compare the
+results and copy these 2 files; the command refuses an existing output directory.
+
 Run the fixed grid of receipt delays from zero to 5 weeks, each with and
 without the existing hiring package:
 
