@@ -89,6 +89,8 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 
 **Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.4.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
 
+On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install the PyPI distribution named `pyfpa`: it is an unrelated project that also installs a top-level `pyfpa` package.
+
 ## Reproduce and inspect
 
 - [Setup](docs/installation.md)
@@ -135,13 +137,24 @@ client consented. Running locally means nothing goes out over the network; it do
 itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 [`fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md) guardrails first.
 
-## Reference and contribution
+## Guides
+
+**How-to**
+
+- [Verify a downloaded release](https://github.com/ryanduguid/release-policy/blob/main/docs/verify-a-release.md): checksum and SLSA provenance
+- [Supplier information for a firm's AI register](docs/ai-register-entry.md)
+
+**Reference**
+
+- [Agent CLI reference](docs/cli-reference.md)
+
+**Background**
 
 - [Upstream workbench and company workspace](docs/upstream-workbench.md)
-- [Agent CLI reference](docs/cli-reference.md)
-- [Verify a downloaded release](https://github.com/ryanduguid/release-policy/blob/main/docs/verify-a-release.md): checksum and SLSA provenance
 - [Python kernel](docs/python-kernel.md)
-- [Supplier information for a firm's AI register](docs/ai-register-entry.md)
+
+**Contribute**
+
 - [Contributing](CONTRIBUTING.md) and [security reporting](SECURITY.md)
 
 </details>
