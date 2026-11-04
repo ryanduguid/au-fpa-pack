@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from datetime import timedelta
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
@@ -16,7 +17,9 @@ class FlowChange(BaseModel):
     """Change every base flow of one name: scale its amount, push it later, or both.
 
     A flow pushed past the horizon leaves the forecast, which is what a slipped
-    receipt does to a 13-week view."""
+    receipt does to a 13-week view. A delay moves a monthly or quarterly flow's
+    anchor_date by the same number of weeks, so it recurs on the later date's
+    day of month."""
 
     model_config = _STRICT
 
@@ -58,6 +61,8 @@ def _changed(flows: list[WeeklyFlow], changes: list[FlowChange], side: str) -> l
             "amount": amount,
             "start_week": flow.start_week + change.delay_weeks,
             "end_week": None if flow.end_week is None else flow.end_week + change.delay_weeks,
+            "anchor_date": (None if flow.anchor_date is None
+                            else flow.anchor_date + timedelta(weeks=change.delay_weeks)),
         }))
     return result
 

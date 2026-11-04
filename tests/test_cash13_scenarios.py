@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -117,3 +118,20 @@ def test_a_delay_moves_the_end_week_with_the_start() -> None:
     changed = pyfpa.apply_scenario(base, Scenario(
         name="later", disbursements=[FlowChange(name="Lease", delay_weeks=2)]))
     assert pyfpa.cash13_forecast(changed)["disbursements"].tolist() == [0.0, 0.0, 10.0, 10.0, 10.0, 0.0]
+
+
+def test_a_delay_moves_a_monthly_flows_anchor_date() -> None:
+    base = Cash13Config(opening_cash=0.0, window_start=date(2026, 11, 2), disbursements=[
+        WeeklyFlow(name="Rent", amount=10.0, start_week=1, recurrence="monthly",
+                   anchor_date=date(2026, 11, 3))])
+    changed = pyfpa.apply_scenario(base, Scenario(
+        name="later", disbursements=[FlowChange(name="Rent", delay_weeks=2)]))
+    assert changed.disbursements[0].anchor_date == date(2026, 11, 17)
+
+    def weeks_paid(config: Cash13Config) -> list[int]:
+        paid = pyfpa.cash13_forecast(config)["disbursements"]
+        return [int(week) for week, amount in paid.items() if amount]
+
+    # The 3rd of each month is weeks 1, 5 and 9; the 17th is weeks 3, 7 and 11.
+    assert weeks_paid(base) == [1, 5, 9]
+    assert weeks_paid(changed) == [3, 7, 11]
