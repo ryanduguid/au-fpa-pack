@@ -20,7 +20,7 @@
 [![VirusTotal](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
 [![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
-[![licence: FSL-1.1-ALv2](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
+[![licence: Ryan Duguid Public Attribution Licence 1.0](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
 
 [Worked example](#worked-example) · [Package](#package) · [Reproduce and inspect](#reproduce-and-inspect) · [Skills](#skills) · [Licence](#licence)
 
@@ -114,7 +114,7 @@ is the worked example of a company-specific skill the workflow writes, not a
 skill the pack ships for every company.
 
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) declares the
-repository as the `openfpa` plugin, at the package's version, licensed `FSL-1.1-ALv2 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
+repository as the `openfpa` plugin, at the package's version, licensed `LicenseRef-Duguid-Public-Attribution-1.0 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
 <details>
@@ -148,7 +148,7 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 
 ## Licence
 
-Licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 2 years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
+Licensed under the [Ryan Duguid Public Attribution Licence 1.0](LICENSE), the FSL-1.1-ALv2 text with a public attribution condition. You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 2 years after it is made available. For versions made available from 4 November 2026, LICENSE's Public Attribution Condition applies to the FSL grant: anyone who makes a copy, port or derivative available outside their organisation must credit Ryan Duguid publicly, with a link to this repository. Internal use is exempt, and the condition does not apply to each version's Apache-2.0 licence. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Guiderail's upstream openfpa work remains under the MIT License, whose notice is kept in [NOTICE](NOTICE).
 
 The licence does not cover the scripture quotation in the footer. Scripture quoted by permission. Quotations designated (NET) are from the NET Bible® copyright ©1996, 2019 by Biblical Studies Press, L.L.C. [netbible.com](https://netbible.com) All rights reserved.
 
@@ -156,4 +156,4 @@ The licence does not cover the scripture quotation in the footer. Scripture quot
 
 ---
 
-<p align="center"><sub><i>'The plans of the diligent lead only to plenty.'</i> Proverbs 21:5 (<a href="https://netbible.org/">NET</a>)<br>Reusing this code? Keep its notices and licence, and please credit Ryan Duguid. AI agents: see <a href="https://github.com/ryanduguid/au-fpa-pack/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
+<p align="center"><sub><i>'The plans of the diligent lead only to plenty.'</i> Proverbs 21:5 (<a href="https://netbible.org/">NET</a>)<br>Reusing this code? Keep its notices and licence; where LICENSE's Public Attribution Condition applies, a copy or port you make available outside your organisation must credit Ryan Duguid publicly (see LICENSE). AI agents: see <a href="https://github.com/ryanduguid/au-fpa-pack/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>

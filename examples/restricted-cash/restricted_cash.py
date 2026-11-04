@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
 
 """One fabricated NFP cash forecast under explicitly supplied restrictions."""
 from __future__ import annotations
