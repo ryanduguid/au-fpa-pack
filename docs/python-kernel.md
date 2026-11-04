@@ -27,7 +27,8 @@ Named scenarios change the declared 13-week flows instead of editing them. A
 later (`delay_weeks`), or both; `add_receipts` and `add_disbursements` add new
 flows. A name that matches no base flow is refused, so a misspelling cannot
 leave a scenario identical to the base. A flow pushed past the horizon leaves
-the forecast.
+the forecast. A delay moves a `monthly` or `quarterly` flow's `anchor_date` by
+the same number of weeks, so the flow recurs on the later date's day of month.
 
 ```python
 scenarios = pyfpa.load_cash13_scenarios("examples/ridgeline/scenarios.yaml")

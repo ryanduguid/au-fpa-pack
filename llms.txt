@@ -34,6 +34,10 @@
 - [Ridgeline Chair Co.](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/ridgeline): synthetic product company where an inventory build creates a near-term liquidity gap.
 - [ARB Corporation](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/arb) (ASX: ARB) and [Fox Factory](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/foxfactory): public-company examples source-traced to published filings. Reproducing reported mechanics shows arithmetic, not forecast skill.
 
+## Reuse
+
+- [Reusing this code](https://github.com/ryanduguid/au-fpa-pack/blob/main/AGENTS.md#reusing-this-code): Ryan Duguid's work under FSL-1.1-ALv2; keep its notices and licence; public credit is requested.
+
 ## Optional
 
 - [Upstream workbench notes](https://github.com/ryanduguid/au-fpa-pack/blob/main/docs/upstream-workbench.md)

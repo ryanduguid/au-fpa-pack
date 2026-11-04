@@ -22,7 +22,7 @@ Build the 13-week direct-method cash forecast - the operator's near-term liquidi
 1. **Discover the company command.** Run
    `openfpa entrypoint-list <company-root> --kind cash`. Use the registered cash
    workflow when one exists.
-2. **Build the schedule** as a `Cash13Config`: `opening_cash`, `weeks` (default 13), and `receipts`/`disbursements` lists of `WeeklyFlow(name, amount, start_week, recurrence)`. Recurrence is `once`, `weekly`, or `biweekly`. Model what you actually know: AR collections on their expected weeks, payroll on its cadence, inventory POs on their due dates, quarterly tax.
+2. **Build the schedule** as a `Cash13Config`: `opening_cash`, `weeks` (default 13), and `receipts`/`disbursements` lists of `WeeklyFlow(name, amount, start_week, recurrence)`. Recurrence is `once`, `weekly`, `biweekly`, `monthly` or `quarterly`. A `monthly` or `quarterly` flow also takes an `anchor_date` and needs the config's `window_start`, the first day of week 1: it recurs every 1 or 3 months from `anchor_date` on that day of month, or on the month's last day when that is earlier (the 31st falls on 28 or 29 February), and each date lands in the week that contains it. Dates before week 1, outside `start_week` to `end_week` or past the horizon are dropped. Take BAS settlements from `gst_weekly_flows` (**fpa-au-gst-bas**) rather than a `quarterly` flow, so they keep their BAS due dates. Model what you actually know: AR collections on their expected weeks, payroll on its cadence, inventory POs on their due dates, quarterly tax.
 3. **Forecast**:
    ```python
    import pyfpa

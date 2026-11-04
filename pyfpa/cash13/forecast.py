@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 
 
-def _sum_flows(flows: list[WeeklyFlow], weeks: int) -> list[float]:
+def _sum_flows(flows: list[WeeklyFlow], weeks: int, window_start: date | None) -> list[float]:
     """Sum each flow's weekly amounts into a single length-`weeks` list."""
     totals = [0.0] * weeks
     for flow in flows:
-        for i, amount in enumerate(expand_flow(flow, weeks)):
+        for i, amount in enumerate(expand_flow(flow, weeks, window_start)):
             totals[i] += amount
     return totals
 
@@ -20,8 +22,8 @@ def cash13_forecast(cfg: Cash13Config) -> pd.DataFrame:
     cumulative ending cash, plus headroom (ending cash plus the limit) when the
     config states a facility limit. Raw cash position - no auto-draws."""
     weeks = cfg.weeks
-    receipts = _sum_flows(cfg.receipts, weeks)
-    disbursements = _sum_flows(cfg.disbursements, weeks)
+    receipts = _sum_flows(cfg.receipts, weeks, cfg.window_start)
+    disbursements = _sum_flows(cfg.disbursements, weeks, cfg.window_start)
     net_cash = [r - d for r, d in zip(receipts, disbursements)]
 
     ending_cash = []
