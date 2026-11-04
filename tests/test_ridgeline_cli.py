@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """CLI destinations are caller-selected; existing destinations must be refused.
 
 B101 dispositions below apply only to pytest outcome assertions.

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Super guarantee due dates for the payroll settlement model.
 
 The date is when the employee's fund must receive the contribution, from the

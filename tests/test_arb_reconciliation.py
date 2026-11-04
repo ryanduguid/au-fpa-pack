@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Regression guards for the ARB Corporation public-company example.
 
 Seams: source totals versus SOURCES.md, Phase A reproduction tolerance,

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Tie every figure in the Lumbridge briefing to the schedule or input it reports.
 
 The generator computes the briefing's two tables, but several sentences carry

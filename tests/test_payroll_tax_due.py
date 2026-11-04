@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Payroll tax due dates for monthly lodgers, from each revenue office's published rules.
 
 Sources, checked 29 September 2026: Revenue NSW key dates (last updated 10

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Payroll liabilities and their settlement: when each payroll cost is owed and paid.
 
 `payroll_forecast` gives monthly costs, and its cash view treats them as paid in

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Income tax in the monthly forecast: the default approximation and the income-year provision.
 
 By default `_tax_series` taxes every profitable month and lets only the opening

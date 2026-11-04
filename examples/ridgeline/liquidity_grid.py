@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Compare 12 fabricated weekly cash constraints using the existing engine."""
 from __future__ import annotations
 

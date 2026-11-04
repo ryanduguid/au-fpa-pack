@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Effective-dated statutory rate tables for the Australian pack.
 
 Rates and thresholds live in YAML data files under ``pyfpa/au/data/``,

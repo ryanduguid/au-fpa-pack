@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Refusal and error paths of the top-level `openfpa` commands in pyfpa/cli.py.
 
 The happy paths live in tests/test_cli.py. These tests drive the same commands

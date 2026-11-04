@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """The opt-in accounting-depreciation scenario.
 
 Every test runs with sockets blocked. The module reads a file that something
