@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """PAYG instalments for quarterly payers.
 
 Taxation Administration Act 1953, Schedule 1 (checked 29 September 2026 on the

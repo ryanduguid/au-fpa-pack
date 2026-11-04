@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Inventory by replenishment: purchases top stock up to the days target, never below nil.
 
 The default days basis sets closing inventory to cost of sales times

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Xero Australia report parsing.
 
 Reads Xero report exports (P&L, balance sheet) into normalised

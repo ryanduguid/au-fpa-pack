@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Payroll tax due dates for monthly lodgers, for the payroll settlement model.
 
 `payroll_tax.yaml` holds each jurisdiction's rule, checked 29 September 2026 at

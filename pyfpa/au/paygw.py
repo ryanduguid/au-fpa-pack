@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """PAYG withholding due dates for the payroll settlement model.
 
 Taxation Administration Act 1953, Schedule 1, section 16-75 (checked 29

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Default-deny approval boundary for cross-client promotion and reuse.
 
 Mining a pattern out of one client's workspace and writing it into a shared

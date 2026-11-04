@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Consume the WIP example's files in the existing weekly cash kernel."""
 from __future__ import annotations
 

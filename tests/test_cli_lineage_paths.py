@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Error and path-resolution branches of the source, mapping, reconcile and
 connector commands in pyfpa/cli_commands/lineage.py.
 

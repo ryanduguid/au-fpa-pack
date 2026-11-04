@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Regression guards for the Harbour Light synthetic Australian example.
 
 Seams: Xero fixture mapping, quarterly BAS cash dates, and live-formula

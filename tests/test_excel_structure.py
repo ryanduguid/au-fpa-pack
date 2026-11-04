@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Structure checks for model workbooks: layout contract, no recalculation.
 
 verify_workbook proves the numbers. These checks prove the build standard:

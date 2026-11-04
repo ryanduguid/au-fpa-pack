@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Accounting depreciation for a forecast, from evidence held on disk.
 
 Three things stay apart here, because a model that mixes them produces a

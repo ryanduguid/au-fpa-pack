@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Receivables collected by a stated profile instead of a days-based balance.
 
 A collection profile gives the share of each month's revenue received in that

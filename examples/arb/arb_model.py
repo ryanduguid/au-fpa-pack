@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Assemble ARB Corporation models from the committed Appendix 4E extracts.
 
 Importable by both ``run_arb.py`` and the reconciliation tests so the pipeline

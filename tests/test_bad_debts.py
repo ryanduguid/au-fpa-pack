@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Bad debts and write-offs under a collection profile.
 
 With `bad_debt_share` set, that share of each month's revenue is never

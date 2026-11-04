@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Quarter controls are independent of source arithmetic and snapshots are immutable."""
 import copy
 import csv
