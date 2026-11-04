@@ -7,10 +7,13 @@ from datetime import date
 from pyfpa.cash13.schemas import WeeklyFlow
 
 
-def _months_later(anchor: date, months: int) -> date:
-    """The anchor's day of month `months` later, or that month's last day if earlier."""
+def _months_later(anchor: date, months: int) -> date | None:
+    """The anchor's day of month `months` later, or that month's last day if
+    earlier; None when that month is past the last one `date` can hold."""
     index = anchor.month - 1 + months
     year, month = anchor.year + index // 12, index % 12 + 1
+    if year > date.max.year:
+        return None
     return date(year, month, min(anchor.day, calendar.monthrange(year, month)[1]))
 
 
@@ -25,7 +28,10 @@ def _monthly_weeks(flow: WeeklyFlow, window_start: date | None, last_week: int) 
     months_before = (window_start.year - anchor.year) * 12 + window_start.month - anchor.month
     count = max(0, months_before // step)
     hit_weeks = []
-    while (week := (_months_later(anchor, count * step) - window_start).days // 7 + 1) <= last_week:
+    while (occurrence := _months_later(anchor, count * step)) is not None:
+        week = (occurrence - window_start).days // 7 + 1
+        if week > last_week:
+            break
         if week >= flow.start_week:
             hit_weeks.append(week)
         count += 1

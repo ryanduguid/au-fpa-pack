@@ -120,6 +120,14 @@ def test_start_and_end_week_bound_a_monthly_flow():
     assert _hits(expand_flow(flow, 13, date(2026, 11, 2))) == {5: 2.0}
 
 
+@pytest.mark.parametrize("recurrence", ["monthly", "quarterly"])
+def test_a_flow_anchored_in_the_last_month_date_can_hold_lands_once(recurrence):
+    # The next date would be in the year 10000, which date cannot hold.
+    flow = WeeklyFlow(name="x", amount=4.0, start_week=1, recurrence=recurrence,
+                      anchor_date=date(9999, 12, 1))
+    assert expand_flow(flow, 1, date(9999, 12, 1)) == [4.0]
+
+
 def test_anchor_date_comes_with_monthly_and_quarterly_only():
     with pytest.raises(ValidationError, match="anchor_date"):
         WeeklyFlow(name="x", amount=1.0, start_week=1, recurrence="monthly")
