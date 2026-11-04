@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Australian localisation pack for pyfpa.
 
 Adds Australian fiscal-calendar helpers, effective-dated statutory rate

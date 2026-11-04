@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Catch omitted liabilities, lost receipts and cash timing errors in the NSW case."""
 import runpy
 from pathlib import Path

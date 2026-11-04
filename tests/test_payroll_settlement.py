@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Payroll costs turned into dated settlement events, monthly cash and liabilities.
 
 The payroll frame is written by hand for June to August 2026 so every expected

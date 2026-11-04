@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Australian day-first text used to be read month first by pandas."""
 from __future__ import annotations
 

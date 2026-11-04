@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Static structure checks for model workbooks.
 
 ``verify_workbook`` proves the numbers agree with the engine.

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Score a hand-built model workbook against the Keldagrim Forge engine.
 
 Build the workbook from `examples/keldagrim-forge/config.yaml` as the README

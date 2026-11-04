@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Compare supplied account identities and mappings without changing company memory."""
 from __future__ import annotations
 

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Structural review controls for a monthly forecast frame.
 
 Each mutation below changes one field that takes part in exactly one control,

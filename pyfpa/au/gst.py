@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """GST and BAS cash timing.
 
 Turns a monthly P&L view (GST-exclusive revenue and purchases) into net

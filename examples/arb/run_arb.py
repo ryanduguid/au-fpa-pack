@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """ARB Corporation worked example - full pipeline.
 
 Phase A reproduces FY2025 operating mechanics from actual drivers.

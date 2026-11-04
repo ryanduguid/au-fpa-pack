@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Structural review controls for a monthly forecast frame.
 
 The frame is the shape cashflow_from_config returns. Each control either passes

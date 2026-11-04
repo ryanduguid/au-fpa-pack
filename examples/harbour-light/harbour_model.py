@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Assemble the Harbour Light Pty Ltd synthetic Australian example.
 
 Xero GST-exclusive fixtures (one month, tracking by region) are annualised

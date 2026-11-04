@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Super guarantee due dates: Payday Super from 1 July 2026, quarterly dates before it.
 
 Sources, checked 29 September 2026: the ATO's "Payment deadlines for Payday

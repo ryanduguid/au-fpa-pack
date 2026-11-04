@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """PAYG withholding due dates under Taxation Administration Act 1953, Schedule 1, section 16-75.
 
 Sources, checked 29 September 2026: section 16-75 on the ATO legal database;

@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """Fuzz the Xero and P&L CSV importers with fabricated exports."""
 
 from __future__ import annotations

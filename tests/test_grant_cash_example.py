@@ -1,3 +1,6 @@
+# Copyright 2026 Ryan Duguid
+# SPDX-License-Identifier: FSL-1.1-ALv2
+
 """A hash-bound grant handoff cannot clear source findings or spend twice."""
 import copy
 import hashlib
