@@ -1,0 +1,98 @@
+# Public holidays that stop a day being a business day for ATO due dates.
+#
+# Taxation Administration Act 1953 s 8AAZMB moves a tax debt due on a day that
+# is not a business day to the first business day after it. Schedule 1 s 388-52
+# does the same for an approved form, and Income Tax Assessment Act 1997 s 995-1
+# defines business day for that section. A public holiday for the whole of any
+# State, the ACT or the NT is not a business day, so a holiday in one State
+# moves the date in every State. s 8AAZMB and s 388-52 were read on the Federal
+# Register on 2026-11-05 (C2026C00468, compilation 227).
+#
+# 2026-07-01 to 2027-06-30 copies Tables 1 and 2 of the ATO page below (last
+# updated 2026-07-01, read 2026-11-05), which list weekdays only. Weekends are
+# not business days anyway.
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/lodgment-and-payment-dates-on-weekends-or-public-holidays
+#
+# Those tables also list 4 days left out here, because the statute needs a day
+# that is a public holiday for the whole of a State and none of them is:
+# - King's Birthday (WA), 28 September 2026. The City of Karratha and Town of Port
+#   Hedland held it on 3 August 2026, and the WA page below says the date for the
+#   rest of WA 'is not a public holiday in these regions'.
+# - Melbourne Cup, 3 November 2026. Public Holidays Act 1993 (Vic) s 8A lets a
+#   non-metropolitan council substitute another day, and Business Victoria lists
+#   2026 replacements:
+#   https://business.vic.gov.au/business-information/public-holidays/victorian-non-metropolitan-public-holidays-2026
+# - Christmas Eve and New Year's Eve, here 24 and 31 December 2026, and the same
+#   in every later year. Only part of each day is a holiday, and the test is 'a day
+#   which is a public holiday' (s 8AAZMB(2)(b), and s 995-1, read on AustLII on
+#   2026-11-06); 'for the whole of' goes to place, not to the hours.
+#   - Holidays Act 1983 (Qld) s 2(3) covers 24 December from 6pm, and s 2(4) applies
+#     that only to entitlements under the listed industrial laws (reprint current
+#     from 2022-09-15).
+#   - Public Holidays Act 2023 (SA) s 3 fixes days, s 4 makes 'the part of the day
+#     from 7pm' on both dates a holiday, and s 8(3) keeps a part-day public holiday
+#     out of that Act's own rule moving payments (version 10.9.2026).
+#   - Public Holidays Act 1981 (NT) s 5 and Schedule 2 observe 'days or parts of
+#     days', here from 7.00 pm on both dates. Nothing limits them, so this is the
+#     one arguable case, but it too separates a part from a day.
+#   - Fair Work Act 2009 (Cth) s 115(1)(b) says 'day, or part-day' where a
+#     Commonwealth Act means both; these provisions do not.
+#   No court decision was found. All read 2026-11-06.
+#   The ATO's table gives 29 December 2026 and 4 January 2027 for these days. Its
+#   page restates the statute's test and gives no basis for a part day, so that is
+#   published guidance, not the statute, and these dates stand.
+# So 25 September 2026 gives the ATO's 28 September, and each of the 4 days stands
+# as a due date, before the ATO's date. A due date may fall before the ATO's
+# published date, never after the law's.
+#
+# 2026-01-01 to 2026-06-30 has no ATO table. It holds the days on the official
+# pages of all 8 jurisdictions, the ones payday-super-checker cites (read
+# 2026-11-05). Few of those pages reach before 2026, which is why the list starts
+# there. Easter Tuesday (TAS) is generally for the public service only, so it is
+# left out.
+#
+# The ATO has no table past June 2027. 2027-07-01 to 2027-08-31 holds one day,
+# NT Picnic Day, from https://nt.gov.au/nt-public-holidays (read 2026-11-05).
+# That no other jurisdiction has a whole-of-state holiday in those 2 months
+# rests on payday-super-checker's primary source review; regional show days
+# are not holidays for the whole of a State or Territory.
+#
+# Holidays move: WA Labour Day leaves the first Monday in March from 2028
+# (https://www.wa.gov.au/service/employment/workplace-arrangements/public-holidays-western-australia),
+# so this is a dated list and not a rule. A date outside reviewed_from to
+# reviewed_until raises until the sources are re-checked and the list extended.
+#
+# The list goes stale inside that span too: the ATO warns that 'Public holiday
+# dates may change during the year'. A holiday added after this review errs early,
+# which is safe. A holiday removed after it errs late, because a due date still
+# rolls past a day that has become a business day.
+reviewed_from: 2026-01-01
+reviewed_until: 2027-08-31
+holidays:
+  2026-01-01: New Year's Day
+  2026-01-26: Australia Day
+  2026-03-02: Labour Day (WA)
+  2026-03-09: Eight Hours Day (TAS); Labour Day (VIC); Adelaide Cup Day (SA); Canberra Day (ACT)
+  2026-04-03: Good Friday
+  2026-04-06: Easter Monday
+  2026-04-27: Additional public holiday for ANZAC Day (ACT, NSW, WA)
+  2026-05-04: May Day (NT); Labour Day (QLD)
+  2026-06-01: Reconciliation Day (ACT); Western Australia Day
+  2026-06-08: King's Birthday (excluding WA and QLD)
+  2026-08-03: Picnic Day (NT)
+  2026-09-25: Friday before AFL Grand Final (VIC)
+  2026-10-05: Labour Day (ACT, NSW, SA); King's Birthday (QLD)
+  2026-12-25: Christmas Day
+  2026-12-28: Additional public holiday for Boxing Day; Proclamation Day (SA)
+  2027-01-01: New Year's Day
+  2027-01-26: Australia Day
+  2027-03-01: Labour Day (WA)
+  2027-03-08: Eight Hours Day (TAS); Labour Day (VIC); Adelaide Cup Day (SA); Canberra Day (ACT)
+  2027-03-26: Good Friday
+  2027-03-29: Easter Monday
+  2027-04-26: Additional public holiday for ANZAC Day (ACT, NSW, NT, QLD, WA)
+  2027-05-03: May Day (NT); Labour Day (QLD)
+  2027-05-31: Reconciliation Day (ACT)
+  2027-06-07: Western Australia Day
+  2027-06-14: King's Birthday (excluding WA and QLD)
+  2027-08-02: Picnic Day (NT)

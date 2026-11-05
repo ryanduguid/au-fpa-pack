@@ -56,11 +56,17 @@ def test_quarterly_bas_schedule_dates(net_gst):
     assert len(schedule) == 4
     assert schedule["due_date"].tolist() == [
         date(2026, 10, 28),  # Sep quarter
-        date(2027, 3, 1),    # Dec quarter; 28 February 2027 is a Sunday
+        date(2027, 3, 2),    # Dec quarter; 28 February 2027 is a Sunday, 1 March WA Labour Day
         date(2027, 4, 28),   # Mar quarter
         date(2027, 7, 28),   # Jun quarter
     ]
     assert schedule["amount"].tolist() == pytest.approx([18000.0] * 4)
+
+
+def test_a_schedule_keeps_the_nominal_date_apart_from_the_effective_date(net_gst):
+    schedule = bas_schedule(net_gst["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
+    assert schedule["nominal_due_date"].tolist()[1] == date(2027, 2, 28)
+    assert schedule["due_date"].tolist()[1] == date(2027, 3, 2)
 
 
 def test_partial_quarter_excluded(months):

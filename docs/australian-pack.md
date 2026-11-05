@@ -122,17 +122,26 @@ never received. Source: ATO, [Choosing an accounting method for GST](https://www
 
 `monthly_gst` applies supplied proportions; it does not classify transactions or
 attribute invoices and payments to tax periods. Reconcile cash-basis inputs before
-using them. The schedule uses original BAS due dates, moved from a weekend to the
-Monday but not past a public holiday or for agent extensions. Under Taxation
-Administration Act 1953 s 8AAZMB a public holiday for the whole of any State,
-the Australian Capital Territory or the Northern Territory is not a business day
-either: 28 February 2027 falls on a Sunday and Monday 1 March is Labour Day
-throughout Western Australia, so that payment is due on Tuesday 2 March, a day
-after the date the schedule gives. A refund on the due date is a forecast
-assumption, not a receipt promise. A period ending after
-`reviewed_until` in `gst_bas.yaml` (30 June 2027) raises until the dates are
-re-checked. Explicit rate overrides must be finite and non-negative. Zero remains
-available for scenario modelling; it does not establish a GST exemption.
+using them. The schedule uses original BAS due dates, not agent extensions. Its
+`nominal_due_date` is the date the rule names and `due_date` the effective date,
+moved to the next business day: under Taxation Administration Act 1953 s 8AAZMB
+for payment and Schedule 1 s 388-52 for lodgment, a weekend or a public holiday
+for the whole of any State, the Australian Capital Territory or the Northern
+Territory is not a business day, in any State. 28 February 2027 falls on a Sunday
+and Monday 1 March is Labour Day throughout Western Australia, so that payment is
+due on Tuesday 2 March. The holidays are the dated list in `public_holidays.yaml`,
+taken from the ATO's tables without 4 days, so a date on one of them stands, before
+the ATO's date. Regional areas replace the WA King's Birthday and Melbourne Cup.
+Christmas Eve and New Year's Eve are holidays for only part of the day, so neither
+is 'a day which is a public holiday' under s 8AAZMB(2)(b). The ATO's table gives
+29 December 2026 and 4 January 2027 for those 2 days; that is published guidance
+with no stated basis for a part day, so ask a registered tax agent before relying
+on it. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
+schedule for a date before 2026 no longer computes. A refund on the due date is a forecast assumption, not a receipt
+promise. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
+raises until the dates are re-checked. Explicit rate overrides must be finite and
+non-negative. Zero remains available for scenario modelling; it does not establish
+a GST exemption.
 
 ### Comparing external calculators and policy models
 

@@ -8,6 +8,7 @@ Added:
 
 Changed:
 
+- Australian BAS, PAYG withholding and PAYG instalment due dates now move past a public holiday for the whole of any State, the ACT or the NT, as Taxation Administration Act 1953 s 8AAZMB and Schedule 1 s 388-52 require, and not only past a weekend. The December 2026 quarter is due on Tuesday 2 March 2027, not Monday 1 March, which is WA Labour Day. Holidays come from the dated `public_holidays.yaml`, and a date before 1 January 2026 or after 31 August 2027 is refused. The list leaves out WA King's Birthday, Melbourne Cup, Christmas Eve and New Year's Eve, which the ATO's table lists, because none is a day that is a public holiday for the whole of a State, so a date on one falls before the ATO's. `bas_schedule` gains a `nominal_due_date` column beside the effective `due_date`.
 - `.claude-plugin/plugin.json` now carries the package's version, 0.4.0, instead of 0.1.0, and a test keeps the 2 equal.
 - A `proposed` or `promoted` `ResearchEpoch` now needs a holdout period that does not overlap its training periods. Saved epochs that lack one no longer load until their periods are recorded or their status changes.
 

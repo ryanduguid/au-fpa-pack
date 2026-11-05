@@ -10,8 +10,8 @@ section 45-110 (on the instalment income basis, the instalment is the
 applicable instalment rate times the quarter's instalment income) and section
 45-112 (otherwise the Commissioner notifies the amount for each quarter, and a
 notice given after the quarter ends makes it due by the 21st day after the
-notice, s 45-112(3)). A weekend moves the date to the Monday, as the pack's BAS
-dates do; public holidays are not modelled.
+notice, s 45-112(3)). A date that is not a business day moves to the next
+business day, as the pack's BAS dates do.
 """
 
 from datetime import date
@@ -38,9 +38,8 @@ def _notice(amount: float, on: date = date(2026, 9, 1)) -> NotifiedAmount:
     [
         (False, [date(2026, 10, 21), date(2027, 1, 21)]),
         # 28 February 2027 is a Sunday. Monday 1 March is Labour Day throughout
-        # Western Australia, so s 8AAZMB gives 2 March; public holidays are not
-        # modelled, which the guide states.
-        (True, [date(2026, 10, 28), date(2027, 3, 1)]),
+        # Western Australia, so s 8AAZMB gives 2 March.
+        (True, [date(2026, 10, 28), date(2027, 3, 2)]),
     ],
 )
 def test_the_rate_method_takes_the_rate_of_each_quarters_income(deferred, dates):
@@ -54,7 +53,7 @@ def test_the_amount_method_pays_each_quarters_own_notified_amount():
     schedule = payg_instalment_schedule(INCOME, deferred_bas_payer=True,
                                         notified_amounts={"2026-09": _notice(400.0), "2026-12": _notice(420.0)})
     assert schedule["amount"].tolist() == [400.0, 420.0]
-    assert schedule["due_date"].tolist() == [date(2026, 10, 28), date(2027, 3, 1)]
+    assert schedule["due_date"].tolist() == [date(2026, 10, 28), date(2027, 3, 2)]
 
 
 def test_a_notice_given_after_the_quarter_is_due_21_days_after_it():
@@ -72,6 +71,22 @@ def test_a_late_notice_date_that_lands_on_a_weekend_moves_to_the_monday():
     notices = {"2026-09": _notice(400.0, date(2026, 10, 3)), "2026-12": _notice(420.0)}
     schedule = payg_instalment_schedule(INCOME, deferred_bas_payer=True, notified_amounts=notices)
     assert schedule["due_date"].tolist()[0] == date(2026, 10, 26)
+
+
+@pytest.mark.parametrize(
+    ("quarter_end", "notified_on", "due"),
+    [
+        ("2026-06", date(2026, 9, 7), date(2026, 9, 28)),  # King's Birthday, not for the whole of WA.
+        ("2026-09", date(2026, 10, 13), date(2026, 11, 3)),  # Melbourne Cup, not for the whole of Victoria.
+        ("2026-09", date(2026, 12, 3), date(2026, 12, 24)),  # Christmas Eve, a part day.
+        ("2026-09", date(2026, 12, 10), date(2026, 12, 31)),  # New Year's Eve, a part day.
+    ],
+)
+def test_a_late_notice_date_on_a_day_the_statute_does_not_exclude_stands(quarter_end, notified_on, due):
+    income = pd.Series(1000.0, index=pd.period_range("2026-04", "2026-09", freq="M"))
+    notices = {"2026-06": _notice(400.0), "2026-09": _notice(400.0)} | {quarter_end: _notice(400.0, notified_on)}
+    schedule = payg_instalment_schedule(income, deferred_bas_payer=False, notified_amounts=notices)
+    assert due in schedule["due_date"].tolist()
 
 
 def test_a_notified_amount_needs_its_notice_date():

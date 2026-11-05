@@ -151,6 +151,22 @@ def load_gst_bas_data() -> dict[str, Any]:
     return _load_yaml("gst_bas.yaml")
 
 
+def load_public_holidays() -> dict[str, Any]:
+    """Whole-of-state public holidays by date, and the span they were verified for."""
+    return _load_yaml("public_holidays.yaml")
+
+
+def require_holidays_reviewed(day: date) -> None:
+    """Raise when `day` falls outside the span public_holidays.yaml was verified for."""
+    raw = load_public_holidays()
+    if day < raw["reviewed_from"]:
+        raise ValueError(
+            f"public holidays start on {raw['reviewed_from'].isoformat()}, so "
+            f"{day.isoformat()} cannot be shown to be a business day"
+        )
+    _require_reviewed(_reviewed_until(raw, "public_holidays.yaml"), day)
+
+
 def rate_at(entries: list[RateEntry], when: date | str | pd.Period) -> float:
     """Rate applying on `when` from an effective-dated schedule.
 
