@@ -38,9 +38,11 @@ from pyfpa.au.drivers import (
     load_snapshot,
     save_snapshot,
 )
+from pyfpa.au.fbt import fbt_due_date, fbt_schedule, fbt_weekly_flows
 from pyfpa.au.gst import (
     BasCycle,
     GstAssumptions,
+    LodgmentChannel,
     bas_schedule,
     gst_weekly_flows,
     monthly_gst,
@@ -59,12 +61,16 @@ __all__ = [
     "DepreciationEvidenceError",
     "DriverSeries",
     "GstAssumptions",
+    "LodgmentChannel",
     "MovementCheck",
     "PayrollAssumptions",
     "Role",
     "asset_movement",
     "bas_schedule",
     "cash_and_expense",
+    "fbt_due_date",
+    "fbt_schedule",
+    "fbt_weekly_flows",
     "fetch_abs_series",
     "fetch_rba_series",
     "format_au_date",

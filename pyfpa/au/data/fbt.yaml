@@ -1,0 +1,15 @@
+# FBT return and payment dates, for the FBT year ending 31 March.
+# Fringe Benefits Tax Assessment Act 1986 s 68 (return) and s 90 (payment), read
+# on the Federal Register on 2026-11-05 (C2026C00332, compilation 97).
+# https://www.ato.gov.au/businesses-and-organisations/hiring-and-paying-your-workers/fringe-benefits-tax/fbt-registration-lodgment-payment-and-reporting/lodging-your-fbt-return-and-paying
+# (last updated 2026-09-10, read 2026-11-05)
+# agent_due: registered agent lodgment program, FBT return, for the 2027 return.
+# The ATO says 'generally' 25 June; the agent must lodge electronically and have
+# the employer on its FBT client list by 21 May.
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/due-dates-by-obligation-type/fbt-return
+# (last updated 2026-07-01, read 2026-11-05)
+# A due-date lookup for an FBT year ending after reviewed_until raises until the
+# sources are re-checked and the date is moved.
+reviewed_until: 2027-03-31
+return_due: { month: 5, day: 21 }
+agent_due: { month: 6, day: 25 }

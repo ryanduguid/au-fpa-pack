@@ -26,8 +26,31 @@ quarterly_due:
 # Monthly BAS: due the 21st of the following month.
 monthly_due_day: 21
 
-# Tax/BAS agent lodgment program extensions exist for quarterly cycles
-# (typically +4 weeks; the December quarter gets none because its 28 Feb
-# due date already includes the summer extension). Not modelled: forecast
-# conservatively on original dates, or override due dates in a generated
-# company skill.
+# Extra time by lodgment channel, all read on 2026-11-05. A channel is the
+# caller's statement that the statement qualifies; the default stays on the
+# original dates above, which is conservative for payments.
+#
+# Online: 2 weeks after the original date for quarters 1, 3 and 4, when the
+# statement is received and lodged online. Quarter 2 already has its extra month.
+# https://www.ato.gov.au/online-services/businesses-and-organisations-online-services/lodgments-in-online-services-for-business/two-week-lodgment-concession-terms-and-conditions
+# (last updated 2025-08-18)
+online_concession_days: 14
+online_concession_quarters: ["09", "03", "06"]
+
+# Registered tax or BAS agent lodging electronically, keyed by quarter end. The
+# ATO's tables give no later date for quarter 2, so it keeps its original date.
+# Quarter 4 of 2026-27 is left out: the ATO marks 25 August 2027 'to be confirmed
+# when the Lodgment program 2027-28 is developed', so that quarter is refused.
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/due-dates-by-obligation-type/activity-statements
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/bas-agent-lodgment-program-2026-27
+# (both last updated 2026-07-01)
+agent_quarterly_due:
+  "2026-06": 2026-08-25
+  "2026-09": 2026-11-25
+  "2026-12": 2027-02-28
+  "2027-03": 2027-05-26
+
+# The December monthly BAS of a business with up to $10 million turnover that
+# reports GST monthly, is not registered for deferred GST and lodges
+# electronically through a registered agent (same 2 pages).
+december_agent_due: { month: 2, day: 21 }

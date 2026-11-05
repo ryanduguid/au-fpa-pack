@@ -39,7 +39,11 @@ from datetime import date
 
 import pandas as pd
 
-from pyfpa.au.gst import monthly_activity_statement_due_date, quarterly_bas_due_date
+from pyfpa.au.gst import (
+    LodgmentChannel,
+    monthly_activity_statement_due_date,
+    quarterly_bas_due_date,
+)
 from pyfpa.au.payroll_settlement import DueRule
 
 
@@ -62,20 +66,28 @@ def _small(payday: date) -> date:
     return monthly_activity_statement_due_date(_quarter_end(payday))
 
 
-def _small_deferred(payday: date) -> date:
-    return quarterly_bas_due_date(_quarter_end(payday))
-
-
-def paygw_due_rule(withholder: str, *, deferred_bas_payer: bool) -> DueRule:
+def paygw_due_rule(
+    withholder: str,
+    *,
+    deferred_bas_payer: bool,
+    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+) -> DueRule:
     """Due-date rule for PAYG withheld on a payday, for `due_rules["payg_withholding"]`.
 
     `withholder` is the entity's category, "small" or "medium"; see the module
-    docstring for what makes it a deferred BAS payer.
+    docstring for what makes it a deferred BAS payer. A `channel` other than
+    ORIGINAL moves a small deferred withholder's quarterly statement; a medium
+    withholder's statements carry a monthly obligation and keep their dates.
     """
     if withholder == "large":
         raise ValueError("large withholders pay within days of each payday; that timing is not modelled")
-    if withholder == "medium":
-        return _medium_deferred if deferred_bas_payer else _medium
+    if withholder not in ("small", "medium"):
+        raise ValueError(f"unknown withholder category {withholder!r}; use 'small' or 'medium'")
+    small_deferred = withholder == "small" and deferred_bas_payer
+    if channel is not LodgmentChannel.ORIGINAL and not small_deferred:
+        raise ValueError("a lodgment channel applies only to a small withholder that is a deferred BAS payer")
+    if small_deferred:
+        return lambda payday: quarterly_bas_due_date(_quarter_end(payday), channel)
     if withholder == "small":
-        return _small_deferred if deferred_bas_payer else _small
-    raise ValueError(f"unknown withholder category {withholder!r}; use 'small' or 'medium'")
+        return _small
+    return _medium_deferred if deferred_bas_payer else _medium
