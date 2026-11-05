@@ -93,6 +93,55 @@ def _instalment_dates(first: date, frequency: PlanFrequency) -> Iterator[date]:
         number += 1
 
 
+def _plan_rows(
+    owed: Decimal,
+    start: date,
+    first: tuple[date, Decimal],
+    instalment: Decimal,
+    dates: Iterator[date],
+) -> tuple[list[dict[str, object]], Decimal, Decimal]:
+    """The schedule's rows, the GIC and the total paid, to the payment that clears the debt."""
+    table = load_gic_table()
+    label, (pay_on, amount) = "upfront", first
+    number = 0
+    balance = owed
+    gic = Decimal(0)
+    paid = Decimal(0)
+    gic_shown = Decimal(0)
+    rows: list[dict[str, object]] = []
+    day = start
+    while True:
+        pay_day = day == pay_on
+        cleared = False
+        if pay_day:
+            payment = min(amount, _cents(balance))
+            balance -= payment
+            paid += payment
+            cleared = _cents(balance) == 0
+        if not cleared:
+            accrued = balance * _daily_rate(table, day)
+            balance += accrued
+            gic += accrued
+        if pay_day:
+            # Rounding the running total keeps the column adding to the total.
+            gic_so_far = _cents(gic)
+            rows.append(
+                {
+                    "period_label": label,
+                    "due_date": day,
+                    "amount": float(payment),
+                    "gic_accrued": float(gic_so_far - gic_shown),
+                    "closing_balance": float(owed + gic_so_far - paid),
+                }
+            )
+            gic_shown = gic_so_far
+            if cleared:
+                return rows, gic_shown, paid
+            number += 1
+            label, pay_on, amount = f"instalment {number}", next(dates), instalment
+        day += timedelta(days=1)
+
+
 def payment_plan_estimate(
     amount_owed: float,
     due_date: date,
@@ -125,47 +174,10 @@ def payment_plan_estimate(
     if first_instalment_on <= upfront_on:
         raise ValueError("first_instalment_on must be after upfront_on")
 
-    table = load_gic_table()
-    dates = _instalment_dates(first_instalment_on, frequency)
-    label, pay_on, amount = "upfront", upfront_on, first_payment
-    number = 0
-    balance = owed
-    gic = Decimal(0)
-    paid = Decimal(0)
-    gic_shown = Decimal(0)
-    rows = []
-    day = due_date
-    while True:
-        pay_day = day == pay_on
-        cleared = False
-        if pay_day:
-            payment = min(amount, _cents(balance))
-            balance -= payment
-            paid += payment
-            cleared = _cents(balance) == 0
-        if not cleared:
-            accrued = balance * _daily_rate(table, day)
-            balance += accrued
-            gic += accrued
-        if pay_day:
-            # Rounding the running total keeps the column adding to the total.
-            gic_so_far = _cents(gic)
-            rows.append(
-                {
-                    "period_label": label,
-                    "due_date": day,
-                    "amount": float(payment),
-                    "gic_accrued": float(gic_so_far - gic_shown),
-                    "closing_balance": float(owed + gic_so_far - paid),
-                }
-            )
-            gic_shown = gic_so_far
-            if cleared:
-                break
-            number += 1
-            label, pay_on, amount = f"instalment {number}", next(dates), regular
-        day += timedelta(days=1)
-    return PaymentPlanEstimate(pd.DataFrame(rows), float(gic_shown), float(paid), ESTIMATE_NOTE)
+    rows, gic, paid = _plan_rows(
+        owed, due_date, (upfront_on, first_payment), regular, _instalment_dates(first_instalment_on, frequency)
+    )
+    return PaymentPlanEstimate(pd.DataFrame(rows), float(gic), float(paid), ESTIMATE_NOTE)
 
 
 def payment_plan_weekly_flows(
