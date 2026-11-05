@@ -7,7 +7,7 @@
 - Upstream: [openfpa](https://github.com/JeffBrines/openfpa) by Jeff Brines and Guiderail. MIT licensed; its notice is kept in NOTICE. au-fpa-pack itself is licensed under the Ryan Duguid Public Attribution Licence 1.0, the FSL-1.1-ALv2 text with a public attribution condition; each version becomes available under Apache-2.0 2 years after it is made available.
 - A competent human approves the assumptions and any funding decision. Rates and dates in docs/australian-pack.md are recorded modelling assumptions with sources, not a tax engine.
 
-**What is here.**
+## What is here
 
 - Kernel (`pyfpa/`): forecast schemas and accounting mechanics (`models/`, `cash13/`, `analysis/`, `config/`, `io/`), verified Excel export (`excel/`), Australian rules (`au/`), forecast scoring and holdouts (`backtest/`), company memory (`memory/`), the champion and challenger loop (`research/`) and cross-client learning (`portfolio/`).
 - CLI (`openfpa`): JSON-emitting workspace commands for intake, source registration, mappings, reconciliation, connector scaffolding, corrections, scorecards, context packs and Excel export.
