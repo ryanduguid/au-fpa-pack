@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: Duguid
     given-names: Ryan
+    website: "https://duguid.com.au/"
 abstract: "Australian FP&A tools for openfpa (Jeff Brines / Guiderail), with 30 June years, Xero AU and GST/BAS."
 repository-code: "https://github.com/ryanduguid/au-fpa-pack"
 url: "https://duguid.com.au/evaluate/"
@@ -16,6 +17,7 @@ keywords:
   - cash-flow
   - claude-code
   - excel
+  - financial-modeling
   - financial-modelling
   - forecasting
   - fpa
