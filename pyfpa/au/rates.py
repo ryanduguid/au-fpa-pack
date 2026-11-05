@@ -88,14 +88,20 @@ def _reviewed_until(raw: dict[str, Any], name: str) -> date:
     return value
 
 
+def _rate_schedule(name: str) -> Schedule[RateEntry]:
+    raw = _load_yaml(name)
+    entries = [RateEntry.model_validate(item) for item in raw["schedule"]]
+    return Schedule(sorted(entries, key=lambda e: e.effective_from), _reviewed_until(raw, name))
+
+
 def load_super_guarantee_table() -> Schedule[RateEntry]:
     """Super guarantee rate schedule, oldest first."""
-    raw = _load_yaml("super_guarantee.yaml")
-    entries = [RateEntry.model_validate(item) for item in raw["schedule"]]
-    return Schedule(
-        sorted(entries, key=lambda e: e.effective_from),
-        _reviewed_until(raw, "super_guarantee.yaml"),
-    )
+    return _rate_schedule("super_guarantee.yaml")
+
+
+def load_gic_table() -> Schedule[RateEntry]:
+    """General interest charge annual rates by quarter, oldest first."""
+    return _rate_schedule("gic.yaml")
 
 
 def load_payroll_tax_table() -> Schedule[PayrollTaxEntry]:

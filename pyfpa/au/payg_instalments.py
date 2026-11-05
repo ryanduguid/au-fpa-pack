@@ -56,7 +56,7 @@ def payg_instalment_schedule(
     deferred_bas_payer: bool,
     rate: float | None = None,
     notified_amounts: Mapping[str, NotifiedAmount] | None = None,
-    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+    channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
 ) -> pd.DataFrame:
     """Instalments by quarter: columns quarter, due_date, amount.
 
@@ -74,6 +74,7 @@ def payg_instalment_schedule(
     """
     if (rate is None) == (notified_amounts is None):
         raise ValueError("give either rate or notified_amounts")
+    channel = LodgmentChannel(channel)
     if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer:
         raise ValueError("a lodgment channel applies only to a deferred BAS payer")
     if rate is not None and not 0 <= rate <= 1:

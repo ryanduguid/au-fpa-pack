@@ -152,9 +152,10 @@ def _next_business_day(due: date) -> date:
 
 def quarterly_bas_nominal_due_date(
     quarter_end: pd.Period,
-    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+    channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
 ) -> date:
     """The date the rule names for the quarter ending with month `quarter_end`, before any roll."""
+    channel = LodgmentChannel(channel)
     require_bas_dates_reviewed(quarter_end.end_time.date())
     data = load_gst_bas_data()
     if channel is LodgmentChannel.AGENT:
@@ -176,7 +177,7 @@ def quarterly_bas_nominal_due_date(
 
 def quarterly_bas_due_date(
     quarter_end: pd.Period,
-    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+    channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
 ) -> date:
     """Effective due date for the quarterly BAS whose quarter ends with month `quarter_end`."""
     return _next_business_day(quarterly_bas_nominal_due_date(quarter_end, channel))

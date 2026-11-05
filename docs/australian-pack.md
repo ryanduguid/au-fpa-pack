@@ -158,6 +158,20 @@ its FBT client list by 21 May (`LodgmentChannel.AGENT`), moved to the next busin
 day. A year after `reviewed_until` in `fbt.yaml` (31 March 2027) raises. FBT
 instalments sit on activity statements, so they take the BAS dates.
 
+`payment_plan_estimate` shows what paying an ATO debt by instalments would cost, and
+`payment_plan_weekly_flows` puts those payments in a 13-week scenario in place of
+the tax's own flow. The base case keeps the statutory dates, because a plan the ATO
+hasn't accepted must not be assumed. It is an estimate, not an ATO figure, and it
+implies no ATO approval: the Commissioner decides whether to permit instalments, and an arrangement
+does not change the due date (Taxation Administration Act 1953 Schedule 1 s 255-15).
+GIC runs from the effective due date, on each day's closing balance, at the rates in
+`gic.yaml`, each divided by the days in the calendar year. Each schedule row stands
+at the end of its day, with that day's GIC included. A due date before that
+table starts (1 January 2026) or a date past its `reviewed_until` (31 December 2026,
+the end of the last quarter the ATO has published) raises, so a plan that runs longer
+waits for the next rate: say the cost can't be estimated yet, and why. It does not cover super
+guarantee charge debts or the remission on an interest-free plan.
+
 ### Comparing external calculators and policy models
 
 Record the comparator URL or source revision, retrieval date, selected period,

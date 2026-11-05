@@ -1,0 +1,24 @@
+# General interest charge annual rates, Taxation Administration Act 1953 s 8AAD:
+# 7 percentage points plus the base interest rate for the quarter. Read at the
+# ATO on 2026-11-05 (page last updated 2026-09-04). The rate for a day is the
+# annual rate divided by the days in the calendar year.
+# https://www.ato.gov.au/tax-rates-and-codes/general-interest-charge-rates
+# The ATO generally announces a quarter's rate 2 weeks before it starts, so
+# reviewed_until is the end of the last published quarter. An estimate that
+# needs a day after it raises until the next rate is added and the date moved.
+# The table starts on 2026-01-01 because public_holidays.yaml does: a due date
+# before then cannot be shown to be a business day.
+reviewed_until: 2026-12-31
+schedule:
+  - from: 2026-01-01
+    rate: 0.1065
+    source_url: https://www.ato.gov.au/tax-rates-and-codes/general-interest-charge-rates
+  - from: 2026-04-01
+    rate: 0.1096
+    source_url: https://www.ato.gov.au/tax-rates-and-codes/general-interest-charge-rates
+  - from: 2026-07-01
+    rate: 0.1143
+    source_url: https://www.ato.gov.au/tax-rates-and-codes/general-interest-charge-rates
+  - from: 2026-10-01
+    rate: 0.1151
+    source_url: https://www.ato.gov.au/tax-rates-and-codes/general-interest-charge-rates

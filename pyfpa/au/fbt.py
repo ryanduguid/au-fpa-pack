@@ -29,15 +29,16 @@ from pyfpa.au.rates import load_fbt_data, require_fbt_dates_reviewed
 from pyfpa.cash13.schemas import WeeklyFlow
 
 
-def fbt_nominal_due_date(fbt_year: int, channel: LodgmentChannel = LodgmentChannel.ORIGINAL) -> date:
+def fbt_nominal_due_date(fbt_year: int, channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL) -> date:
     """The date the rule names for the FBT year ending 31 March `fbt_year`, before any roll."""
+    channel = LodgmentChannel(channel)
     require_fbt_dates_reviewed(date(fbt_year, 3, 31))
     data = load_fbt_data()
     rule = data["agent_due" if channel is LodgmentChannel.AGENT else "return_due"]
     return date(fbt_year, rule["month"], rule["day"])
 
 
-def fbt_due_date(fbt_year: int, channel: LodgmentChannel = LodgmentChannel.ORIGINAL) -> date:
+def fbt_due_date(fbt_year: int, channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL) -> date:
     """Effective date to lodge the return and pay for the FBT year ending 31 March `fbt_year`."""
     return _next_business_day(fbt_nominal_due_date(fbt_year, channel))
 
@@ -45,7 +46,7 @@ def fbt_due_date(fbt_year: int, channel: LodgmentChannel = LodgmentChannel.ORIGI
 def fbt_schedule(
     fbt_year: int,
     amount: float,
-    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+    channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
 ) -> pd.DataFrame:
     """The return's settlement: columns period_label, nominal_due_date, due_date, amount."""
     if not math.isfinite(amount):
