@@ -122,8 +122,14 @@ never received. Source: ATO, [Choosing an accounting method for GST](https://www
 
 `monthly_gst` applies supplied proportions; it does not classify transactions or
 attribute invoices and payments to tax periods. Reconcile cash-basis inputs before
-using them. The schedule uses original BAS due dates, not agent extensions. Its
-`nominal_due_date` is the date the rule names and `due_date` the effective date,
+using them. The schedule uses original BAS due dates unless
+`GstAssumptions.lodgment_channel` says otherwise: `ONLINE` takes the 2-week
+concession for quarters 1, 3 and 4 and `AGENT` the registered agent program date,
+and `december_agent_date` takes 21 February for an eligible December monthly BAS.
+A channel is your statement that the statement qualifies, so the default stays on
+the original dates. Quarter 2 has no later date, and an agent date the ATO has not
+confirmed (25 August 2027) raises. The schedule's `nominal_due_date` is the date
+the rule names and `due_date` the effective date,
 moved to the next business day: under Taxation Administration Act 1953 s 8AAZMB
 for payment and Schedule 1 s 388-52 for lodgment, a weekend or a public holiday
 for the whole of any State, the Australian Capital Territory or the Northern
@@ -142,6 +148,15 @@ promise. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
 raises until the dates are re-checked. Explicit rate overrides must be finite and
 non-negative. Zero remains available for scenario modelling; it does not establish
 a GST exemption.
+
+`fbt_schedule` and `fbt_weekly_flows` put the FBT left to pay with the return into
+the 13-week forecast. A negative amount, a refund, stays in the schedule but reaches
+the forecast only on an `expected_receipt_on` date from the caller, because a refund
+depends on lodgment, ATO processing and offsets. The tax falls due on 21 May after the year ending 31 March, or
+generally 25 June when a tax agent lodges electronically and has the employer on
+its FBT client list by 21 May (`LodgmentChannel.AGENT`), moved to the next business
+day. A year after `reviewed_until` in `fbt.yaml` (31 March 2027) raises. FBT
+instalments sit on activity statements, so they take the BAS dates.
 
 ### Comparing external calculators and policy models
 

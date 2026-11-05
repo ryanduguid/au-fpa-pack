@@ -35,6 +35,7 @@ from typing import NamedTuple
 import pandas as pd
 
 from pyfpa.au.gst import (
+    LodgmentChannel,
     _next_business_day,
     _validate_monthly_series,
     monthly_activity_statement_due_date,
@@ -55,6 +56,7 @@ def payg_instalment_schedule(
     deferred_bas_payer: bool,
     rate: float | None = None,
     notified_amounts: Mapping[str, NotifiedAmount] | None = None,
+    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
 ) -> pd.DataFrame:
     """Instalments by quarter: columns quarter, due_date, amount.
 
@@ -65,10 +67,15 @@ def payg_instalment_schedule(
     month once without gaps from the start of an income-year quarter, and holds
     finite amounts of 0 or more; a last quarter it does not finish is left out,
     because its instalment is not yet known. Each notified amount must be finite
-    and 0 or more, and must belong to a quarter the schedule includes.
+    and 0 or more, and must belong to a quarter the schedule includes. A
+    `channel` other than ORIGINAL moves a deferred BAS payer's instalments to
+    the date of the quarterly statement they sit on; instalment notices (forms
+    R, S and T) do not qualify.
     """
     if (rate is None) == (notified_amounts is None):
         raise ValueError("give either rate or notified_amounts")
+    if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer:
+        raise ValueError("a lodgment channel applies only to a deferred BAS payer")
     if rate is not None and not 0 <= rate <= 1:
         raise ValueError("rate must be between 0 and 1")
     _validate_monthly_series(instalment_income)
@@ -88,7 +95,7 @@ def payg_instalment_schedule(
         quarter_end = quarter.asfreq("M", how="end")
         if quarter_end > index.max():
             continue
-        due = quarterly_bas_due_date(quarter_end) if deferred_bas_payer else (
+        due = quarterly_bas_due_date(quarter_end, channel) if deferred_bas_payer else (
             monthly_activity_statement_due_date(quarter_end))
         if rate is not None:
             amount = rate * float(income.sum())

@@ -55,9 +55,17 @@ with no stated basis for a part day, so cite the later date only as the ATO's an
 not as the statutory one. `schedule` shows the date the rule names as `nominal_due_date` and the
 effective date as `due_date`; forecast cash on `due_date`. Holidays come from the
 dated list in `public_holidays.yaml`, and a date outside its span raises.
-Agent lodgment program extensions are NOT modelled; forecasting on the
-standard dates is conservative for payments. If the company relies on agent
-extensions for cash, override due dates in a generated company skill.
+
+Forecasting on the original dates is conservative for payments, so that is the
+default. When the company qualifies, set `GstAssumptions.lodgment_channel` to
+`LodgmentChannel.ONLINE` (2 weeks later for quarters 1, 3 and 4) or
+`LodgmentChannel.AGENT` (the registered agent program date), and pass the same
+channel to `payg_instalment_schedule` and `paygw_due_rule` for amounts on that
+statement. Quarter 2 has no later date. A quarter with no confirmed agent date
+raises: use the original date. FBT left to pay with the return comes from
+`fbt_schedule` and `fbt_weekly_flows`. An FBT refund stays in the schedule but
+enters the forecast only with `expected_receipt_on`, because 21 May is a payment
+deadline and not a refund date.
 
 ## Pitfalls
 

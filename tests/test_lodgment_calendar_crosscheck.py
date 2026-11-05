@@ -12,10 +12,12 @@ rows compare the nominal date only.
 from datetime import date
 
 import pandas as pd
+import pytest
 from lodgmentcalendar import Facts, due_dates
 from lodgmentcalendar.holidays import COVERS_FROM, COVERS_TO, HOLIDAYS
 
 from pyfpa.au.gst import (
+    LodgmentChannel,
     monthly_activity_statement_due_date,
     monthly_activity_statement_nominal_due_date,
     quarterly_bas_due_date,
@@ -59,4 +61,61 @@ def test_monthly_dates_match():
     for row, month in zip(rows, MONTHS, strict=True):
         _assert_matches(
             row, monthly_activity_statement_nominal_due_date(month), monthly_activity_statement_due_date(month)
+        )
+
+
+AGENT_FACTS = Facts(
+    consolidated_head_company=False,
+    lodges_electronically=True,
+    previous_statement_lodged_electronically=True,
+    includes_monthly_payg_obligation=False,
+)
+
+
+@pytest.mark.parametrize("obligation", ["bas", "ias"])
+@pytest.mark.parametrize("entity", ["company", "trust", "partnership", "individual", "smsf"])
+def test_online_quarterly_dates_match(obligation, entity):
+    facts = Facts(consolidated_head_company=False, lodges_electronically=True)
+    rows = due_dates(obligation, entity, "2026-27", "self", reporting_cycle="quarterly", facts=facts)["obligations"]
+    for row, quarter_end in zip(rows, QUARTER_ENDS, strict=True):
+        _assert_matches(
+            row,
+            quarterly_bas_nominal_due_date(quarter_end, LodgmentChannel.ONLINE),
+            quarterly_bas_due_date(quarter_end, LodgmentChannel.ONLINE),
+        )
+
+
+@pytest.mark.parametrize("channel", ["tax_agent", "bas_agent"])
+@pytest.mark.parametrize("obligation", ["bas", "ias"])
+def test_agent_quarterly_dates_match(channel, obligation):
+    rows = due_dates(
+        obligation, "company", "2026-27", channel, reporting_cycle="quarterly", facts=AGENT_FACTS
+    )["obligations"]
+    for row, quarter_end in zip(rows[:3], QUARTER_ENDS, strict=False):
+        _assert_matches(
+            row,
+            quarterly_bas_nominal_due_date(quarter_end, LodgmentChannel.AGENT),
+            quarterly_bas_due_date(quarter_end, LodgmentChannel.AGENT),
+        )
+    # Quarter 4 is UNKNOWN there and refused here, because the ATO has not confirmed it.
+    assert rows[3]["status"] == "UNKNOWN"
+    with pytest.raises(ValueError, match="no agent program date"):
+        quarterly_bas_due_date(QUARTER_ENDS[3], LodgmentChannel.AGENT)
+
+
+@pytest.mark.parametrize("channel", ["tax_agent", "bas_agent"])
+def test_the_december_agent_date_matches(channel):
+    facts = Facts(
+        annual_turnover_up_to_10m=True,
+        deferred_gst_registered=False,
+        lodges_electronically=True,
+        previous_statement_lodged_electronically=True,
+    )
+    rows = _rows("monthly", channel, facts)
+    assert len(rows) == 12
+    for row, month in zip(rows, MONTHS, strict=True):
+        _assert_matches(
+            row,
+            monthly_activity_statement_nominal_due_date(month, december_agent_date=True),
+            monthly_activity_statement_due_date(month, december_agent_date=True),
         )

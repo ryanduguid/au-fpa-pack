@@ -151,6 +151,16 @@ def load_gst_bas_data() -> dict[str, Any]:
     return _load_yaml("gst_bas.yaml")
 
 
+def load_fbt_data() -> dict[str, Any]:
+    """FBT return and payment dates."""
+    return _load_yaml("fbt.yaml")
+
+
+def require_fbt_dates_reviewed(year_end: date) -> None:
+    """Raise when an FBT date is sought for a year ending after fbt.yaml's reviewed_until."""
+    _require_reviewed(_reviewed_until(load_fbt_data(), "fbt.yaml"), year_end)
+
+
 def load_public_holidays() -> dict[str, Any]:
     """Whole-of-state public holidays by date, and the span they were verified for."""
     return _load_yaml("public_holidays.yaml")

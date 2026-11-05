@@ -31,7 +31,7 @@ from enum import Enum
 from typing import Any
 
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from pyfpa.au.calendar import require_iso
 from pyfpa.au.rates import (
@@ -48,10 +48,29 @@ class BasCycle(str, Enum):
     QUARTERLY = "quarterly"
 
 
+class LodgmentChannel(str, Enum):
+    """Which dates a statement falls on. The caller states that it qualifies.
+
+    ORIGINAL is the standard date. ONLINE is the 2-week concession for a
+    quarterly statement received and lodged online. AGENT is the lodgment
+    program date when a registered agent lodges electronically, which also needs
+    the previous statement lodged electronically. Neither covers a head company's
+    instalment statement or instalment notices; the pages `gst_bas.yaml` cites
+    set the full conditions.
+    """
+
+    ORIGINAL = "original"
+    ONLINE = "online"
+    AGENT = "agent"
+
+
 class GstAssumptions(BaseModel):
     """Entity-level GST assumptions for cash forecasting."""
 
     bas_cycle: BasCycle = BasCycle.QUARTERLY
+    lodgment_channel: LodgmentChannel = LodgmentChannel.ORIGINAL
+    # True takes the 21 February date for an eligible December monthly BAS.
+    december_agent_date: bool = False
     taxable_sales_pct: float = Field(default=1.0, ge=0, le=1)
     creditable_purchases_pct: float = Field(default=1.0, ge=0, le=1)
     # None uses the bundled rate; explicit rates are forecast scenarios.
@@ -61,6 +80,15 @@ class GstAssumptions(BaseModel):
         if self.gst_rate is not None:
             return self.gst_rate
         return float(load_gst_bas_data()["gst_rate"])
+
+    @model_validator(mode="after")
+    def _channel_fits_the_cycle(self) -> GstAssumptions:
+        monthly = self.bas_cycle is BasCycle.MONTHLY
+        if self.december_agent_date and not (monthly and self.lodgment_channel is LodgmentChannel.AGENT):
+            raise ValueError("december_agent_date applies only to a monthly cycle lodged by an agent")
+        if monthly and self.lodgment_channel is not LodgmentChannel.ORIGINAL and not self.december_agent_date:
+            raise ValueError("a monthly cycle takes a lodgment channel only with december_agent_date")
+        return self
 
 
 def _validate_monthly_series(series: pd.Series) -> None:
@@ -122,37 +150,58 @@ def _next_business_day(due: date) -> date:
     return day
 
 
-def quarterly_bas_nominal_due_date(quarter_end: pd.Period) -> date:
+def quarterly_bas_nominal_due_date(
+    quarter_end: pd.Period,
+    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+) -> date:
     """The date the rule names for the quarter ending with month `quarter_end`, before any roll."""
     require_bas_dates_reviewed(quarter_end.end_time.date())
-    rules = load_gst_bas_data()["quarterly_due"]
+    data = load_gst_bas_data()
+    if channel is LodgmentChannel.AGENT:
+        program_date: date | None = data["agent_quarterly_due"].get(str(quarter_end))
+        if program_date is None:
+            raise ValueError(
+                f"no agent program date is recorded for the quarter ending {quarter_end}; "
+                "the ATO has not confirmed one, or gst_bas.yaml does not reach it"
+            )
+        return program_date
     key = f"{quarter_end.month:02d}"
-    rule = rules[key]  # {'month': int, 'day': int} relative to quarter end
+    rule = data["quarterly_due"][key]  # {'month': int, 'day': int} relative to quarter end
     due_year = quarter_end.year + (1 if rule["month"] < quarter_end.month else 0)
-    return date(due_year, rule["month"], rule["day"])
+    original = date(due_year, rule["month"], rule["day"])
+    if channel is LodgmentChannel.ONLINE and key in data["online_concession_quarters"]:
+        return original + timedelta(days=int(data["online_concession_days"]))
+    return original
 
 
-def quarterly_bas_due_date(quarter_end: pd.Period) -> date:
+def quarterly_bas_due_date(
+    quarter_end: pd.Period,
+    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+) -> date:
     """Effective due date for the quarterly BAS whose quarter ends with month `quarter_end`."""
-    return _next_business_day(quarterly_bas_nominal_due_date(quarter_end))
+    return _next_business_day(quarterly_bas_nominal_due_date(quarter_end, channel))
 
 
-def monthly_activity_statement_nominal_due_date(month: pd.Period) -> date:
+def monthly_activity_statement_nominal_due_date(month: pd.Period, *, december_agent_date: bool = False) -> date:
     """The 21st of the month after `month`, before any roll.
 
-    The ATO's 21 February date for an eligible business's December statement
-    (monthly GST, turnover up to $10 million, lodged electronically) is not
-    modelled, so December gives 21 January.
+    `december_agent_date` states that an eligible business's December statement
+    takes the ATO's 21 February date (see `gst_bas.yaml`); other months ignore it.
     """
     require_bas_dates_reviewed(month.end_time.date())
-    day = int(load_gst_bas_data()["monthly_due_day"])
+    data = load_gst_bas_data()
+    if december_agent_date and month.month == 12:
+        rule = data["december_agent_due"]
+        return date(month.year + 1, rule["month"], rule["day"])
     following = month + 1
-    return date(following.year, following.month, day)
+    return date(following.year, following.month, int(data["monthly_due_day"]))
 
 
-def monthly_activity_statement_due_date(month: pd.Period) -> date:
+def monthly_activity_statement_due_date(month: pd.Period, *, december_agent_date: bool = False) -> date:
     """Effective due date for the monthly activity statement for `month`."""
-    return _next_business_day(monthly_activity_statement_nominal_due_date(month))
+    return _next_business_day(
+        monthly_activity_statement_nominal_due_date(month, december_agent_date=december_agent_date)
+    )
 
 
 def bas_schedule(
@@ -179,8 +228,12 @@ def bas_schedule(
             rows.append(
                 {
                     "period_label": str(period),
-                    "nominal_due_date": monthly_activity_statement_nominal_due_date(period),
-                    "due_date": monthly_activity_statement_due_date(period),
+                    "nominal_due_date": monthly_activity_statement_nominal_due_date(
+                        period, december_agent_date=assumptions.december_agent_date
+                    ),
+                    "due_date": monthly_activity_statement_due_date(
+                        period, december_agent_date=assumptions.december_agent_date
+                    ),
                     "amount": float(amount),
                 }
             )
@@ -194,8 +247,8 @@ def bas_schedule(
             rows.append(
                 {
                     "period_label": str(quarter),
-                    "nominal_due_date": quarterly_bas_nominal_due_date(quarter_end),
-                    "due_date": quarterly_bas_due_date(quarter_end),
+                    "nominal_due_date": quarterly_bas_nominal_due_date(quarter_end, assumptions.lodgment_channel),
+                    "due_date": quarterly_bas_due_date(quarter_end, assumptions.lodgment_channel),
                     "amount": float(amounts.sum()),
                 }
             )
@@ -213,6 +266,16 @@ def gst_weekly_flows(
     due inside the window. Payments become disbursements; refunds
     become receipts. Settlements outside the window are dropped.
     """
+    return dated_weekly_flows(schedule, window_start, weeks, "BAS")
+
+
+def dated_weekly_flows(
+    schedule: pd.DataFrame,
+    window_start: date | str,
+    weeks: int,
+    name: str,
+) -> tuple[list[WeeklyFlow], list[WeeklyFlow]]:
+    """Map rows of period_label, due_date and amount into flows named `name` and the label."""
     if isinstance(window_start, str):
         window_start = require_iso(window_start, "window_start")
     start = pd.Timestamp(window_start).date()
@@ -225,13 +288,13 @@ def gst_weekly_flows(
         week = offset_days // 7 + 1
         if week > weeks:
             continue
-        name = f"BAS {row.period_label}"
+        flow_name = f"{name} {row.period_label}"
         if row.amount >= 0:
             disbursements.append(
-                WeeklyFlow(name=name, amount=row.amount, start_week=week, recurrence="once")
+                WeeklyFlow(name=flow_name, amount=row.amount, start_week=week, recurrence="once")
             )
         else:
             receipts.append(
-                WeeklyFlow(name=name, amount=-row.amount, start_week=week, recurrence="once")
+                WeeklyFlow(name=flow_name, amount=-row.amount, start_week=week, recurrence="once")
             )
     return receipts, disbursements
