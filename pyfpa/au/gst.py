@@ -14,12 +14,13 @@ health) and input-taxed (financial supplies, residential rent) revenue
 by exclusion; likewise `creditable_purchases_pct` for acquisitions
 without input tax credits.
 
-A due date on a weekend moves to the following Monday. Taxation Administration
-Act 1953 s 8AAZMB also moves a date that falls on a public holiday for the
-whole of any State, the Australian Capital Territory or the Northern Territory,
-but this module carries no holiday calendar, so such a date is left as is. For example, 28 February 2027 is a Sunday; the
-Monday it moves to, 1 March, is Labour Day throughout Western Australia, so the
-statutory date is Tuesday 2 March 2027, one day later than this module gives.
+A due date that is not a business day moves to the first business day after
+it: Taxation Administration Act 1953 s 8AAZMB for payment and Schedule 1
+s 388-52 for lodgment. A public holiday for the whole of any State, the
+Australian Capital Territory or the Northern Territory is not a business day,
+in any State. For example, 28 February 2027 is a Sunday and Monday 1 March is
+Labour Day throughout Western Australia, so the effective date is Tuesday
+2 March 2027. Schedules keep that apart from the nominal date the rule names.
 """
 
 from __future__ import annotations
@@ -33,7 +34,12 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from pyfpa.au.calendar import require_iso
-from pyfpa.au.rates import load_gst_bas_data, require_bas_dates_reviewed
+from pyfpa.au.rates import (
+    load_gst_bas_data,
+    load_public_holidays,
+    require_bas_dates_reviewed,
+    require_holidays_reviewed,
+)
 from pyfpa.cash13.schemas import WeeklyFlow
 
 
@@ -102,30 +108,37 @@ def monthly_gst(
 
 
 def _next_business_day(due: date) -> date:
-    """Move a weekend due date to the following Monday.
+    """`due` when it is a business day, otherwise the first business day after it.
 
-    Taxation Administration Act 1953 s 8AAZMB makes a tax debt due on the next
-    business day when its day is a weekend or a public holiday for the whole of
-    any State, the Australian Capital Territory or the Northern Territory, and
-    these dates drive cash timing. Public holidays are not modelled: this
-    module carries no holiday calendar, so a due date on one is left as is.
+    A weekend or a day in public_holidays.yaml is not a business day. The day
+    the roll lands on must fall inside the span that list was verified for, or
+    a holiday nobody has listed could be taken for a business day.
     """
-    shift = {5: 2, 6: 1}.get(due.weekday(), 0)
-    return due + timedelta(days=shift)
+    holidays = load_public_holidays()["holidays"]
+    day = due
+    while day.weekday() >= 5 or day in holidays:
+        day += timedelta(days=1)
+    require_holidays_reviewed(day)
+    return day
 
 
-def quarterly_bas_due_date(quarter_end: pd.Period) -> date:
-    """Due date for the quarterly BAS whose quarter ends with month `quarter_end`."""
+def quarterly_bas_nominal_due_date(quarter_end: pd.Period) -> date:
+    """The date the rule names for the quarter ending with month `quarter_end`, before any roll."""
     require_bas_dates_reviewed(quarter_end.end_time.date())
     rules = load_gst_bas_data()["quarterly_due"]
     key = f"{quarter_end.month:02d}"
     rule = rules[key]  # {'month': int, 'day': int} relative to quarter end
     due_year = quarter_end.year + (1 if rule["month"] < quarter_end.month else 0)
-    return _next_business_day(date(due_year, rule["month"], rule["day"]))
+    return date(due_year, rule["month"], rule["day"])
 
 
-def monthly_activity_statement_due_date(month: pd.Period) -> date:
-    """Standard due date for the monthly activity statement for `month`: the 21st following.
+def quarterly_bas_due_date(quarter_end: pd.Period) -> date:
+    """Effective due date for the quarterly BAS whose quarter ends with month `quarter_end`."""
+    return _next_business_day(quarterly_bas_nominal_due_date(quarter_end))
+
+
+def monthly_activity_statement_nominal_due_date(month: pd.Period) -> date:
+    """The 21st of the month after `month`, before any roll.
 
     The ATO's 21 February date for an eligible business's December statement
     (monthly GST, turnover up to $10 million, lodged electronically) is not
@@ -134,7 +147,12 @@ def monthly_activity_statement_due_date(month: pd.Period) -> date:
     require_bas_dates_reviewed(month.end_time.date())
     day = int(load_gst_bas_data()["monthly_due_day"])
     following = month + 1
-    return _next_business_day(date(following.year, following.month, day))
+    return date(following.year, following.month, day)
+
+
+def monthly_activity_statement_due_date(month: pd.Period) -> date:
+    """Effective due date for the monthly activity statement for `month`."""
+    return _next_business_day(monthly_activity_statement_nominal_due_date(month))
 
 
 def bas_schedule(
@@ -143,7 +161,9 @@ def bas_schedule(
 ) -> pd.DataFrame:
     """BAS settlement events from a monthly net_gst series.
 
-    Returns a frame with columns period_label, due_date, amount.
+    Returns a frame with columns period_label, nominal_due_date, due_date,
+    amount: `nominal_due_date` is the date the rule names and `due_date` the
+    effective date after the next-business-day roll.
     Quarterly cycles sum months into Sep/Dec/Mar/Jun quarters; a trailing
     quarter that ends after the series is excluded, because its BAS falls
     beyond the series. A leading partial quarter settles the months the
@@ -159,6 +179,7 @@ def bas_schedule(
             rows.append(
                 {
                     "period_label": str(period),
+                    "nominal_due_date": monthly_activity_statement_nominal_due_date(period),
                     "due_date": monthly_activity_statement_due_date(period),
                     "amount": float(amount),
                 }
@@ -173,11 +194,12 @@ def bas_schedule(
             rows.append(
                 {
                     "period_label": str(quarter),
+                    "nominal_due_date": quarterly_bas_nominal_due_date(quarter_end),
                     "due_date": quarterly_bas_due_date(quarter_end),
                     "amount": float(amounts.sum()),
                 }
             )
-    return pd.DataFrame(rows, columns=["period_label", "due_date", "amount"])
+    return pd.DataFrame(rows, columns=["period_label", "nominal_due_date", "due_date", "amount"])
 
 
 def gst_weekly_flows(

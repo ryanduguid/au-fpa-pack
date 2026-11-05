@@ -26,7 +26,7 @@ due on the 21st for the first two months and a quarterly statement due on the
 program, last updated 1 July 2026).
 
 The dates come from the activity statement rules in `gst_bas.yaml`, with their
-weekend adjustment and reviewed_until horizon, so PAYG withholding and GST
+next-business-day move and reviewed_until horizon, so PAYG withholding and GST
 share one source. Large withholders, who pay within days of each payday, are
 refused. The category and deferred status are the ones that apply to the
 entity; a forecast whose withholding grows past a threshold does not change

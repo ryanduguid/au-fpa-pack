@@ -10,7 +10,7 @@ program (last updated 1 July 2026: a medium withholder with a quarterly
 obligation gets monthly statements due on the 21st for the first two months of
 a quarter and a quarterly statement due on the 28th for the third); and "Due
 dates for lodging and paying your BAS" (a weekend or public holiday moves the
-date to the next business day, and this pack models weekends only).
+date to the next business day).
 """
 
 from datetime import date
@@ -35,15 +35,16 @@ from pyfpa.au.payroll_settlement import monthly_settlement, settlement_events
         # two stay on the 21st.
         ("medium", True, date(2026, 8, 14), date(2026, 9, 21)),
         ("medium", True, date(2026, 9, 25), date(2026, 10, 28)),
-        # December's withholding is due 28 February, a Sunday in 2027.
-        ("medium", True, date(2026, 12, 18), date(2027, 3, 1)),
+        # December's withholding is due 28 February, a Sunday in 2027, and Monday
+        # 1 March is Labour Day in Western Australia.
+        ("medium", True, date(2026, 12, 18), date(2027, 3, 2)),
         # (3): the 21st of the month after the quarter.
         ("small", False, date(2026, 8, 14), date(2026, 10, 21)),
         ("small", False, date(2026, 11, 13), date(2027, 1, 21)),
         # (4): 28 October, 28 February, 28 April or 28 July.
         ("small", True, date(2026, 8, 14), date(2026, 10, 28)),
         ("small", True, date(2026, 9, 30), date(2026, 10, 28)),
-        ("small", True, date(2026, 11, 13), date(2027, 3, 1)),
+        ("small", True, date(2026, 11, 13), date(2027, 3, 2)),
         ("small", True, date(2027, 2, 12), date(2027, 4, 28)),
         ("small", True, date(2027, 6, 25), date(2027, 7, 28)),
     ],

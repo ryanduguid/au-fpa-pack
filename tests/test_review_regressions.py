@@ -157,12 +157,16 @@ def test_a_trailing_open_quarter_is_still_excluded():
     assert len(schedule) == 2
 
 
-def test_a_weekend_bas_due_date_moves_to_the_monday():
+def test_a_weekend_bas_due_date_moves_to_the_next_business_day():
     # The ATO allows lodgment and payment on the next business day, and these dates
     # drive cash timing, so a Sunday settlement landed in the wrong forecast week.
-    assert _next_business_day(date(2027, 2, 27)) == date(2027, 3, 1)  # Saturday
-    assert _next_business_day(date(2027, 2, 28)) == date(2027, 3, 1)  # Sunday
-    assert _next_business_day(date(2027, 3, 1)) == date(2027, 3, 1)  # Monday
+    assert _next_business_day(date(2027, 2, 6)) == date(2027, 2, 8)  # Saturday
+    assert _next_business_day(date(2027, 2, 7)) == date(2027, 2, 8)  # Sunday
+    assert _next_business_day(date(2027, 2, 8)) == date(2027, 2, 8)  # Monday
+    # 1 March 2027 is WA Labour Day, so that weekend's Monday is not a business day.
+    assert _next_business_day(date(2027, 2, 27)) == date(2027, 3, 2)  # Saturday
+    assert _next_business_day(date(2027, 2, 28)) == date(2027, 3, 2)  # Sunday
+    assert _next_business_day(date(2027, 3, 1)) == date(2027, 3, 2)  # Labour Day
 
 
 def test_fy_summary_rows_follow_the_calendar_from_an_unsorted_index():

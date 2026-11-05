@@ -45,10 +45,17 @@ naive P&L-to-cash bridge misses entirely.
 ## Due dates
 
 The quarterly cycle is 28 Oct / 28 Feb / 28 Apr / 28 Jul, and monthly is the
-21st of the following month. A due date on a weekend moves to the following
-Monday, which is the ATO's next-business-day concession. Public holidays are
-NOT modelled: they differ by state and the pack carries no holiday calendar.
-Agent lodgment program extensions are NOT modelled either; forecasting on the
+21st of the following month. A due date that is not a business day moves to the
+next business day. A weekend is not a business day, and nor is a public holiday
+for the whole of any state or territory: it moves the date in every state, so
+the December 2026 quarter is due on 2 March 2027 because 1 March is Labour Day in
+WA. Christmas Eve and New Year's Eve are part-day holidays and do not move a date.
+The ATO's table publishes 29 December 2026 and 4 January 2027 for them, as guidance
+with no stated basis for a part day, so cite the later date only as the ATO's and
+not as the statutory one. `schedule` shows the date the rule names as `nominal_due_date` and the
+effective date as `due_date`; forecast cash on `due_date`. Holidays come from the
+dated list in `public_holidays.yaml`, and a date outside its span raises.
+Agent lodgment program extensions are NOT modelled; forecasting on the
 standard dates is conservative for payments. If the company relies on agent
 extensions for cash, override due dates in a generated company skill.
 

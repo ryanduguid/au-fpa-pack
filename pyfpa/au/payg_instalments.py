@@ -9,13 +9,13 @@ ATO legal database):
 - s 45-61: a quarter's instalment is due by the 21st of the month after the
   quarter, or for a deferred BAS payer by the 28th (the December quarter's by
   28 February). The dates come from the activity statement rules in
-  `gst_bas.yaml`, with their weekend move and reviewed_until horizon.
+  `gst_bas.yaml`, with their next-business-day move and reviewed_until horizon.
 - s 45-110: on the instalment income basis, the instalment is the applicable
   instalment rate times the quarter's instalment income.
 - s 45-112: otherwise the Commissioner works out and notifies the amount for
   each quarter (the GDP-adjusted notional tax basis); a notice given after
   the quarter ends makes the instalment due by the 21st day after the notice
-  (s 45-112(3)), moved past a weekend like the other dates.
+  (s 45-112(3)), moved to the next business day like the other dates.
 
 Instalment income is gross business and investment income excluding GST, so no
 month is negative. GST-exclusive sales revenue will do only when it is all of
