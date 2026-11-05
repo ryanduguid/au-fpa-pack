@@ -16,7 +16,7 @@
 [![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
 [![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/ryanduguid/au-fpa-pack.svg)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
-[![SLSA 3](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
+[![SLSA provenance](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
 [![VirusTotal](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
 [![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
 [![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
