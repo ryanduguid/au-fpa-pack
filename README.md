@@ -129,17 +129,18 @@ tools cover nearby ground:
 
 - [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
 - [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins): official plugins with a
-  variance-analysis skill; no 13-week cash forecast appeared in its listing.
+  variance-analysis skill and a 30/60/90-day cash flow forecast skill at commit d900840; no 13-week
+  cash forecast appeared in its listing.
 - [adoptai/cpa-skills](https://github.com/adoptai/cpa-skills): budget-versus-actual, flux-narrative and board-package
   skills with scripts, framed for US practice.
-- Agicap, Float, Calxa and Tidely: proprietary cash forecasting products.
+- Agicap, Float, Calxa and Tidely: commercial cash flow forecasting products.
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>
 
 ## Kernel packages and how each is reached
 
-Three au-fpa-pack kernel packages sit behind the CLI and the skills:
+The CLI and the skills reach 3 au-fpa-pack kernel packages:
 
 | Package | What it is for | How it is reached |
 | --- | --- | --- |

@@ -35,7 +35,7 @@
 - [WIP to project cash](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/job-to-cash)
 - [Ridgeline Chair Co.](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/ridgeline): synthetic product company where an inventory build creates a near-term liquidity gap.
 - [ARB Corporation](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/arb): ASX: ARB. A public-company example source-traced to published filings. Reproducing reported mechanics shows arithmetic, not forecast skill.
-- [Fox Factory](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/foxfactory): a public-company example source-traced to published filings, with the same limit.
+- [Fox Factory](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/foxfactory): a public-company example source-traced to published filings. Reproducing reported mechanics shows arithmetic, not forecast skill.
 
 ## Reuse
 
