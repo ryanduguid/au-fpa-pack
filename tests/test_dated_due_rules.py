@@ -177,6 +177,56 @@ def test_the_fbt_schedule_keeps_both_dates_and_reaches_the_forecast():
     assert [(flow.name, flow.amount, flow.start_week) for flow in disbursements] == [("FBT 2027", 4200.0, 1)]
 
 
+@pytest.mark.parametrize("channel", [ONLINE, AGENT])
+def test_a_channel_passed_as_text_gives_the_same_bas_date(channel):
+    quarter = _quarter("2026-09")
+    assert quarterly_bas_nominal_due_date(quarter, channel.value) == quarterly_bas_nominal_due_date(quarter, channel)
+    assert quarterly_bas_due_date(quarter, channel.value) == quarterly_bas_due_date(quarter, channel)
+
+
+def test_a_channel_passed_as_text_gives_the_same_fbt_date():
+    assert fbt_due_date(2027, "agent") == fbt_due_date(2027, AGENT) == date(2027, 6, 25)
+    assert fbt_schedule(2027, 100.0, "agent")["due_date"].tolist() == [date(2027, 6, 25)]
+
+
+def test_a_channel_passed_as_text_gives_the_same_withholding_date():
+    payday = date(2026, 8, 14)
+    assert paygw_due_rule("small", deferred_bas_payer=True, channel="agent")(payday) == paygw_due_rule(
+        "small", deferred_bas_payer=True, channel=AGENT
+    )(payday)
+    assert paygw_due_rule("medium", deferred_bas_payer=False, channel="original")(payday) == date(2026, 9, 21)
+
+
+def test_a_channel_passed_as_text_gives_the_same_instalment_date():
+    income = pd.Series(1000.0, index=pd.period_range("2026-07", periods=3, freq="M"))
+    as_text = payg_instalment_schedule(income, rate=0.05, deferred_bas_payer=True, channel="agent")
+    as_member = payg_instalment_schedule(income, rate=0.05, deferred_bas_payer=True, channel=AGENT)
+    assert as_text["due_date"].tolist() == as_member["due_date"].tolist()
+    assert payg_instalment_schedule(income, rate=0.05, deferred_bas_payer=False, channel="original").shape[0] == 1
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda: quarterly_bas_nominal_due_date(_quarter("2026-09"), "tax_agent"),
+        lambda: quarterly_bas_due_date(_quarter("2026-09"), "tax_agent"),
+        lambda: fbt_nominal_due_date(2027, "tax_agent"),
+        lambda: fbt_due_date(2027, "tax_agent"),
+        lambda: fbt_schedule(2027, 100.0, "tax_agent"),
+        lambda: paygw_due_rule("small", deferred_bas_payer=True, channel="tax_agent"),
+        lambda: payg_instalment_schedule(
+            pd.Series(1000.0, index=pd.period_range("2026-07", periods=3, freq="M")),
+            rate=0.05,
+            deferred_bas_payer=True,
+            channel="tax_agent",
+        ),
+    ],
+)
+def test_an_unknown_channel_is_refused(call):
+    with pytest.raises(ValueError, match="not a valid LodgmentChannel"):
+        call()
+
+
 def test_an_fbt_refund_stays_in_the_schedule_but_not_the_forecast_without_a_date():
     schedule = fbt_schedule(2027, -300.0)
     assert schedule["amount"].tolist() == [-300.0]

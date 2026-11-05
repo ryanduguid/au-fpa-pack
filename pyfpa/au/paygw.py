@@ -70,7 +70,7 @@ def paygw_due_rule(
     withholder: str,
     *,
     deferred_bas_payer: bool,
-    channel: LodgmentChannel = LodgmentChannel.ORIGINAL,
+    channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
 ) -> DueRule:
     """Due-date rule for PAYG withheld on a payday, for `due_rules["payg_withholding"]`.
 
@@ -79,6 +79,7 @@ def paygw_due_rule(
     ORIGINAL moves a small deferred withholder's quarterly statement; a medium
     withholder's statements carry a monthly obligation and keep their dates.
     """
+    channel = LodgmentChannel(channel)
     if withholder == "large":
         raise ValueError("large withholders pay within days of each payday; that timing is not modelled")
     if withholder not in ("small", "medium"):

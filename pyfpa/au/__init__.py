@@ -47,6 +47,12 @@ from pyfpa.au.gst import (
     gst_weekly_flows,
     monthly_gst,
 )
+from pyfpa.au.payment_plan import (
+    PaymentPlanEstimate,
+    PlanFrequency,
+    payment_plan_estimate,
+    payment_plan_weekly_flows,
+)
 from pyfpa.au.payroll import PayrollAssumptions, Role, payroll_forecast
 from pyfpa.au.rates import (
     load_gst_bas_data,
@@ -63,7 +69,9 @@ __all__ = [
     "GstAssumptions",
     "LodgmentChannel",
     "MovementCheck",
+    "PaymentPlanEstimate",
     "PayrollAssumptions",
+    "PlanFrequency",
     "Role",
     "asset_movement",
     "bas_schedule",
@@ -87,6 +95,8 @@ __all__ = [
     "load_snapshot",
     "load_super_guarantee_table",
     "monthly_gst",
+    "payment_plan_estimate",
+    "payment_plan_weekly_flows",
     "payroll_forecast",
     "rate_at",
     "save_snapshot",
