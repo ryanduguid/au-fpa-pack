@@ -7,7 +7,7 @@
 - Upstream: [openfpa](https://github.com/JeffBrines/openfpa) by Jeff Brines and Guiderail. MIT licensed; its notice is kept in NOTICE. au-fpa-pack itself is licensed under the Ryan Duguid Public Attribution Licence 1.0, the FSL-1.1-ALv2 text with a public attribution condition; each version becomes available under Apache-2.0 2 years after it is made available.
 - A competent human approves the assumptions and any funding decision. Rates and dates in docs/australian-pack.md are recorded modelling assumptions with sources, not a tax engine.
 
-## What is here
+**What is here.**
 
 - Kernel (`pyfpa/`): forecast schemas and accounting mechanics (`models/`, `cash13/`, `analysis/`, `config/`, `io/`), verified Excel export (`excel/`), Australian rules (`au/`), forecast scoring and holdouts (`backtest/`), company memory (`memory/`), the champion and challenger loop (`research/`) and cross-client learning (`portfolio/`).
 - CLI (`openfpa`): JSON-emitting workspace commands for intake, source registration, mappings, reconciliation, connector scaffolding, corrections, scorecards, context packs and Excel export.
@@ -30,9 +30,12 @@
 - [Harbour Light](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/harbour-light): synthetic Victorian lighting wholesaler for FY2027, with Xero, payroll and GST fixtures.
 - [Keldagrim Forge](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/keldagrim-forge): fictional Hunter Valley metal fabricator used as a timed model drill.
 - [Quarter close](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/quarter-close): a fabricated three-month close and cash simulation from 30 September 2026.
-- [Supplier invoices to planned cash](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/creditor-cash), [restricted cash planning](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/restricted-cash) and [WIP to project cash](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/job-to-cash).
+- [Supplier invoices to planned cash](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/creditor-cash)
+- [Restricted cash planning](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/restricted-cash)
+- [WIP to project cash](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/job-to-cash)
 - [Ridgeline Chair Co.](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/ridgeline): synthetic product company where an inventory build creates a near-term liquidity gap.
-- [ARB Corporation](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/arb) (ASX: ARB) and [Fox Factory](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/foxfactory): public-company examples source-traced to published filings. Reproducing reported mechanics shows arithmetic, not forecast skill.
+- [ARB Corporation](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/arb): ASX: ARB. A public-company example source-traced to published filings. Reproducing reported mechanics shows arithmetic, not forecast skill.
+- [Fox Factory](https://github.com/ryanduguid/au-fpa-pack/tree/main/examples/foxfactory): a public-company example source-traced to published filings, with the same limit.
 
 ## Reuse
 

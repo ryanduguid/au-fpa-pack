@@ -26,12 +26,13 @@
 
 </div>
 
-An Australian extension of [openfpa](https://github.com/JeffBrines/openfpa), by
-Guiderail: 30 June financial years, Xero AU account mapping, GST and BAS cash timing
-and payroll on-costs. It builds monthly, weekly and daily cash forecasts and a
-management briefing from a company's own records, for an accountant or analyst doing
-forecasting and month-end work. Every assumption is declared in a file you can read,
-and the funding decision stays with a person.
+au-fpa-pack is an Australian extension of [openfpa](https://github.com/JeffBrines/openfpa),
+by Guiderail, for accountants and analysts doing forecasting and month-end work: 30 June
+financial years, Xero AU account mapping, GST and BAS cash timing and payroll on-costs.
+
+au-fpa-pack builds monthly, weekly and daily cash forecasts and a management briefing
+from a company's own records. Every assumption is declared in a file you can read, and
+the funding decision stays with a person.
 
 **Start here:** [the worked Lumbridge case](examples/lumbridge-services/README.md) ·
 [setup](docs/installation.md) ·
@@ -50,7 +51,7 @@ Continue with the [3-month close simulation](examples/quarter-close/README.md),
 
 ## Worked example
 
-Synthetic example. A human approves the assumptions and funding decision.
+The Lumbridge worked example is synthetic, and a human approves the assumptions and funding decision.
 
 **Input:** [Lumbridge Services' fabricated records](examples/lumbridge-services/data/), NSW payroll assumptions and dated customer receipts and payments for October to December 2026.
 
@@ -93,6 +94,8 @@ On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install 
 
 ## Reproduce and inspect
 
+Reproducing an au-fpa-pack example starts from the setup guide and that example's stated inputs, method and limits:
+
 - [Setup](docs/installation.md)
 - [Lumbridge inputs, method and limits](examples/lumbridge-services/README.md)
 - [Harbour Light inputs, method and limits](examples/harbour-light/README.md)
@@ -103,7 +106,7 @@ The command above creates files; it does not establish native Excel recalculatio
 
 ## Skills
 
-[`skills/`](skills/) holds 17 skills. Sixteen are the pack's own, grouped by what
+The au-fpa-pack [`skills/`](skills/) folder holds 17 skills. Sixteen are the pack's own, grouped by what
 they are for:
 
 - **Australian rules:** `fpa-au-drivers`, `fpa-au-gst-bas`, `fpa-au-payroll`, `fpa-au-xero`
@@ -119,10 +122,24 @@ skill the pack ships for every company.
 repository as the `openfpa` plugin, at the package's version, licensed `LicenseRef-Duguid-Public-Attribution-1.0 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
 Claude Code marketplace entry pointing at this repository installs.
 
+## Alternatives
+
+au-fpa-pack is built for Australian cash, GST and BAS timing. As read on 5 November 2026, these
+tools cover nearby ground:
+
+- [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
+- [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins): official plugins with a
+  variance-analysis skill; no 13-week cash forecast appeared in its listing.
+- [adoptai/cpa-skills](https://github.com/adoptai/cpa-skills): budget-versus-actual, flux-narrative and board-package
+  skills with scripts, framed for US practice.
+- Agicap, Float, Calxa and Tidely: proprietary cash forecasting products.
+
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>
 
 ## Kernel packages and how each is reached
+
+Three au-fpa-pack kernel packages sit behind the CLI and the skills:
 
 | Package | What it is for | How it is reached |
 | --- | --- | --- |
@@ -138,6 +155,8 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 [`fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md) guardrails first.
 
 ## Guides
+
+The au-fpa-pack guides are grouped as how-to and reference pages.
 
 **How-to**
 
