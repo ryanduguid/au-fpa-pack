@@ -42,7 +42,7 @@ dev = [
     "coverage==7.17.0",
     "diff-cover==11.0.0",
     "ruff==0.17.3",
-    "mypy==2.4.0",
+    "mypy==2.4.1",
     "types-PyYAML==6.0.12.20260906",
 ]
 
