@@ -430,13 +430,20 @@ def test_permission_probe_keeps_the_primary_error(tmp_path, monkeypatch, fail_st
     profile, _ = write_onboarding_outputs(_ready_intake(), tmp_path, _proposal())
     before = profile.read_bytes()
     original_close = os.close
+    original_fstat = os.fstat
+    profile_stat = profile.stat()
 
     def close_then_fail(descriptor):
         original_close(descriptor)
         raise OSError("injected close error")
 
     def fail_fstat(descriptor):
-        raise OSError("injected stat error")
+        # pytest 9.2 fd capture stats its own temporary file with os.fstat
+        # after the test returns, while this patch is still installed.
+        info = original_fstat(descriptor)
+        if os.path.samestat(info, profile_stat):
+            raise OSError("injected stat error")
+        return info
 
     monkeypatch.setattr(os, "close", close_then_fail)
     if fail_stat:
