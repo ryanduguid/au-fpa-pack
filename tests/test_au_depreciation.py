@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import socket
 from dataclasses import replace
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from pathlib import Path
 
 import pandas as pd
@@ -227,6 +227,48 @@ def _resealed(tmp_path, name, mutate):
     path = tmp_path / name
     path.write_text(json.dumps(record), encoding="utf-8")
     return path
+
+
+@pytest.mark.parametrize("additions, usable", [("2000.00", True), ("2000.01", False)])
+@pytest.mark.parametrize("legacy_producer", [True, False])
+def test_reported_cost_additions_must_reconcile_exactly(tmp_path, additions, usable, legacy_producer):
+    def set_range(record):
+        values = record["calculation"]["normalised"]["values"]
+        values.update(
+            opening_wdv="8000.25",
+            closing_wdv="9000.25",
+            range_dep="1000.00",
+            cost_additions=additions,
+        )
+        record["calculation"]["upstream"]["response"].update(values)
+        if legacy_producer:
+            del values["cost_additions"]
+
+    path = _resealed(tmp_path, "fabricated-with-additions.json", set_range)
+    evidence = dep.load_evidence(path)
+    assert evidence.additions == Decimal(additions)
+    assert evidence.usable is usable
+    with localcontext() as context:
+        context.prec = 3
+        assert evidence.usable is usable
+    if usable:
+        assert dep.straight_line_schedule(evidence, months()).sum() == 1000.00
+    else:
+        with pytest.raises(dep.DepreciationEvidenceError, match="movement does not close"):
+            dep.straight_line_schedule(evidence, months())
+
+
+@pytest.mark.parametrize("field", ["opening_wdv", "cost_additions", "range_dep", "closing_wdv"])
+def test_conflicting_raw_and_normalised_movements_are_refused(tmp_path, field):
+    def conflict(record):
+        calculation = record["calculation"]
+        calculation["normalised"]["values"]["cost_additions"] = "10.00"
+        calculation["upstream"]["response"]["cost_additions"] = "10.00"
+        calculation["upstream"]["response"][field] = "10.01"
+
+    path = _resealed(tmp_path, "fabricated-conflicting-additions.json", conflict)
+    with pytest.raises(dep.DepreciationEvidenceError, match=f"{field} figures do not agree"):
+        dep.load_evidence(path)
 
 
 @pytest.mark.parametrize("value", [None, "false", 0, 1, 0.0, [], [False], {}, {"value": False}])

@@ -56,6 +56,14 @@ beside a validation block that rejected the response, and the rejection is the
 one that decides. A finding the producer prefixed with `note:` is an
 observation it did not block on, and it does not block here either.
 
+If the result reports `cost_additions`, the reader also requires the opening
+balance, additions, depreciation and closing balance to reconcile exactly.
+An incomplete movement or a difference of one cent appears in
+`refusal_reasons` and blocks the charge from being spread. The check also
+applies when an older producer retained the additions only in the raw response.
+If the raw response reports additions, its movement figures must also agree
+with the normalised evidence.
+
 When present, `calculation.synthetic_input` must be a JSON boolean.
 `load_evidence` rejects other values, including `null`. If the field is absent,
 the reader retains `False` for compatibility. A returned `False` therefore does

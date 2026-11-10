@@ -30,7 +30,14 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import (
+    Context,
+    Decimal,
+    DecimalException,
+    Inexact,
+    InvalidOperation,
+    localcontext,
+)
 from pathlib import Path
 
 import pandas as pd
@@ -83,7 +90,27 @@ class DepreciationEvidence:
             and self.charge is not None
             and self.accepted
             and not self.blocking_findings
+            and self.movement_finding is None
         )
+
+    @property
+    def movement_finding(self) -> str | None:
+        """Check the complete range identity when the provider supplied additions."""
+        if self.additions is None:
+            return None
+        if self.opening is None or self.closing is None or self.charge is None:
+            return "provider additions need opening, closing and depreciation figures"
+        if self.additions < 0 or self.charge < 0:
+            return "provider additions and depreciation must be non-negative"
+        try:
+            with localcontext(Context(prec=28)) as context:
+                context.traps[Inexact] = True
+                movement = asset_movement(
+                    self.opening, self.additions, self.charge, self.closing, tolerance=Decimal(0),
+                )
+        except DecimalException:
+            return "provider movement exceeds the supported decimal range"
+        return None if movement.closes else movement.reasons[0]
 
     @property
     def refusal_reasons(self) -> tuple[str, ...]:
@@ -98,6 +125,8 @@ class DepreciationEvidence:
         if not self.accepted:
             reasons.append("the producer's own validation block did not accept the response")
         reasons.extend(f"producer finding: {item}" for item in self.blocking_findings)
+        if (movement := self.movement_finding) is not None:
+            reasons.append(movement)
         return tuple(reasons)
 
 
@@ -246,15 +275,30 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
             f"{source}: calculation.synthetic_input is "
             f"{type(synthetic_input).__name__}, not a boolean."
         )
+    movement = {
+        field: _money(values.get(field), field)
+        for field in ("opening_wdv", "cost_additions", "range_dep", "closing_wdv")
+    }
+    raw_response = upstream.get("response")
+    if call.get("status") == "COMPUTED" and isinstance(raw_response, dict) and "cost_additions" in raw_response:
+        for field, recorded_value in movement.items():
+            reported = _money(raw_response.get(field), f"upstream {field}")
+            legacy_additions = field == "cost_additions" and recorded_value is None
+            if reported is None or (reported != recorded_value and not legacy_additions):
+                raise DepreciationEvidenceError(
+                    f"the upstream and normalised {field} figures do not agree"
+                )
+            if legacy_additions:
+                movement[field] = reported
     return DepreciationEvidence(
         label=str(calculation.get("label") or source.stem),
         calculator=str(call.get("calculator") or ""),
         period=str(call.get("period") or ""),
         status=str(call.get("status") or "UNKNOWN"),
-        opening=_money(values.get("opening_wdv"), "opening_wdv"),
-        closing=_money(values.get("closing_wdv"), "closing_wdv"),
-        charge=_money(values.get("range_dep"), "range_dep"),
-        additions=_money(values.get("cost_additions"), "cost_additions"),
+        opening=movement["opening_wdv"],
+        closing=movement["closing_wdv"],
+        charge=movement["range_dep"],
+        additions=movement["cost_additions"],
         advisory_notes=notes,
         source_path=source,
         calculation_sha256=actual,
