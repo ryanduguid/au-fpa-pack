@@ -49,14 +49,14 @@ producer's validation block present, loads fine and reports `usable` as
 false. Asking to spread it raises rather than returning
 nil, because a refusal is not a nil amount, and `refusal_reasons` says why.
 
-`usable` reads four things, not one. The call has to be COMPUTED, the charge
+`usable` reads five things, not one. The call has to be COMPUTED, the charge
 has to be there, the producer's own `validation.accepted` has to be true, and
 no finding it recorded may be a blocking one. A file can carry a COMPUTED call
 beside a validation block that rejected the response, and the rejection is the
 one that decides. A finding the producer prefixed with `note:` is an
 observation it did not block on, and it does not block here either.
 
-If the result reports `cost_additions`, the reader also requires the opening
+Fifth, if the result reports `cost_additions`, the reader requires the opening
 balance, additions, depreciation and closing balance to reconcile exactly.
 An incomplete movement or a difference of one cent appears in
 `refusal_reasons` and blocks the charge from being spread. The check also

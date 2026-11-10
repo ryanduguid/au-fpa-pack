@@ -283,13 +283,13 @@ def load_evidence(path: str | Path) -> DepreciationEvidence:
     if call.get("status") == "COMPUTED" and isinstance(raw_response, dict) and "cost_additions" in raw_response:
         for field, recorded_value in movement.items():
             reported = _money(raw_response.get(field), f"upstream {field}")
-            legacy_additions = field == "cost_additions" and recorded_value is None
-            if reported is None or (reported != recorded_value and not legacy_additions):
-                raise DepreciationEvidenceError(
-                    f"the upstream and normalised {field} figures do not agree"
-                )
-            if legacy_additions:
+            if field == "cost_additions" and recorded_value is None:
+                # An older producer kept the additions only in the raw response.
                 movement[field] = reported
+            elif reported != recorded_value:
+                raise DepreciationEvidenceError(
+                    f"{source}: the upstream and normalised {field} figures do not agree"
+                )
     return DepreciationEvidence(
         label=str(calculation.get("label") or source.stem),
         calculator=str(call.get("calculator") or ""),

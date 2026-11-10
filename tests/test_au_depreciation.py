@@ -290,6 +290,21 @@ def test_conflicting_raw_and_normalised_movements_are_refused(tmp_path, field):
         dep.load_evidence(path)
 
 
+@pytest.mark.parametrize("field", ["opening_wdv", "range_dep", "closing_wdv"])
+def test_an_incomplete_reported_movement_is_a_refusal_reason(tmp_path, field):
+    def incomplete(record):
+        calculation = record["calculation"]
+        for values in (calculation["normalised"]["values"], calculation["upstream"]["response"]):
+            values["cost_additions"] = "0.00"
+            del values[field]
+
+    evidence = dep.load_evidence(_resealed(tmp_path, "fabricated-incomplete-movement.json", incomplete))
+    assert not evidence.usable
+    assert "provider additions need opening, closing and depreciation figures" in (
+        evidence.refusal_reasons
+    )
+
+
 @pytest.mark.parametrize("value", [None, "false", 0, 1, 0.0, [], [False], {}, {"value": False}])
 def test_a_non_boolean_synthetic_flag_is_refused(tmp_path, value):
     path = _resealed(
