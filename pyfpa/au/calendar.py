@@ -8,8 +8,9 @@ ending year: FY2027 covers July 2026 to June 2027. Quarters follow the
 fiscal year (Q1 FY2027 = Jul-Sep 2026); halves are 1H (Jul-Dec) and
 2H (Jan-Jun). Dates render dd/mm/yyyy.
 
-All helpers accept a ``pandas.Period`` (freq M) or a ``YYYY-MM`` string,
-matching the kernel's monthly convention in ``pyfpa.models.periods``.
+All helpers accept a ``pandas.Period`` (freq M) or a ``YYYY-MM`` or
+``YYYY-MM-DD`` string, matching the kernel's monthly convention in
+``pyfpa.models.periods``.
 """
 
 from __future__ import annotations
