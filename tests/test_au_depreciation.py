@@ -305,6 +305,43 @@ def test_an_incomplete_reported_movement_is_a_refusal_reason(tmp_path, field):
     )
 
 
+def _reported_movement(record, movement):
+    calculation = record["calculation"]
+    for values in (calculation["normalised"]["values"], calculation["upstream"]["response"]):
+        values.update(movement)
+
+
+@pytest.mark.parametrize(
+    "movement",
+    [
+        {"opening_wdv": "9000.25", "cost_additions": "-1000.00", "range_dep": "1000.00", "closing_wdv": "7000.25"},
+        {"opening_wdv": "8000.25", "cost_additions": "0.00", "range_dep": "-1000.00", "closing_wdv": "9000.25"},
+    ],
+)
+def test_a_negative_reported_addition_or_charge_is_a_refusal_reason(tmp_path, movement):
+    """Each movement closes; only the sign is wrong."""
+    path = _resealed(tmp_path, "fabricated-negative-movement.json",
+                     lambda record: _reported_movement(record, movement))
+    evidence = dep.load_evidence(path)
+    assert not evidence.usable
+    assert "provider additions and depreciation must be non-negative" in evidence.refusal_reasons
+
+
+def test_a_reported_movement_beyond_28_digits_is_refused_not_rounded_closed(tmp_path):
+    """Rounded to 28 digits, this one-cent gap would vanish and the movement would close."""
+    movement = {
+        "opening_wdv": "10000000000000000000000000000.01",
+        "cost_additions": "0.00",
+        "range_dep": "0.00",
+        "closing_wdv": "10000000000000000000000000000.00",
+    }
+    path = _resealed(tmp_path, "fabricated-wide-movement.json",
+                     lambda record: _reported_movement(record, movement))
+    evidence = dep.load_evidence(path)
+    assert not evidence.usable
+    assert "provider movement exceeds the supported decimal range" in evidence.refusal_reasons
+
+
 @pytest.mark.parametrize("value", [None, "false", 0, 1, 0.0, [], [False], {}, {"value": False}])
 def test_a_non_boolean_synthetic_flag_is_refused(tmp_path, value):
     path = _resealed(
