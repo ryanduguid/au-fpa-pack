@@ -58,7 +58,8 @@ observation it did not block on, and it does not block here either.
 
 Fifth, if the result reports `cost_additions`, the reader requires the opening
 balance, additions, depreciation and closing balance to reconcile exactly.
-An incomplete movement or a difference of one cent appears in
+Additions and depreciation must also be non-negative there. An incomplete
+movement, a negative figure or a difference of one cent appears in
 `refusal_reasons` and blocks the charge from being spread. The check also
 applies when an older producer retained the additions only in the raw response.
 If the raw response reports additions, its movement figures must also agree
