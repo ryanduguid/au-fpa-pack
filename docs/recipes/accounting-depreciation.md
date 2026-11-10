@@ -49,12 +49,21 @@ producer's validation block present, loads fine and reports `usable` as
 false. Asking to spread it raises rather than returning
 nil, because a refusal is not a nil amount, and `refusal_reasons` says why.
 
-`usable` reads four things, not one. The call has to be COMPUTED, the charge
+`usable` reads five things, not one. The call has to be COMPUTED, the charge
 has to be there, the producer's own `validation.accepted` has to be true, and
 no finding it recorded may be a blocking one. A file can carry a COMPUTED call
 beside a validation block that rejected the response, and the rejection is the
 one that decides. A finding the producer prefixed with `note:` is an
 observation it did not block on, and it does not block here either.
+
+Fifth, if the result reports `cost_additions`, the reader requires the opening
+balance, additions, depreciation and closing balance to reconcile exactly.
+Additions and depreciation must also be non-negative there. An incomplete
+movement, a negative figure or a difference of one cent appears in
+`refusal_reasons` and blocks the charge from being spread. The check also
+applies when an older producer retained the additions only in the raw response.
+If the raw response reports additions, its movement figures must also agree
+with the normalised evidence.
 
 When present, `calculation.synthetic_input` must be a JSON boolean.
 `load_evidence` rejects other values, including `null`. If the field is absent,
@@ -94,6 +103,8 @@ frame["profit_effect"]   # the charge, spread
 given. That is a deliberate simplification and the only spreading this module
 does: it is wrong for a diminishing-value asset inside the window, and where
 that matters the fix is evidence per month, not more arithmetic here.
+The schedule refuses a monthly charge if the float series would change its
+whole-cent value.
 
 ## The fabricated example
 
