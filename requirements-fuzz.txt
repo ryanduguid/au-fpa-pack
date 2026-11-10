@@ -298,9 +298,9 @@ pydantic-core==2.50.2 \
     --hash=sha256:f81df206b937d0dca5efb38c25fc99037d82dbcd3740e34c3f81997d2322ac1c \
     --hash=sha256:fd9aa71a800c87c0f7ab53fa38009169a23a82c685989626ca74a4bd483e1b67
     # via pydantic
-python-dateutil==3.0.0 \
-    --hash=sha256:3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd \
-    --hash=sha256:7ebcb3c29a92f3ceafe79a7a48a5c45677e9e004bbeec5742ac0bbb00560b7a2
+python-dateutil==4.0.0 \
+    --hash=sha256:a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c \
+    --hash=sha256:d7295ff14fdc0f92f662100bfb6c551d160ca090f2939f1ec5b9794265c03f06
     # via
     #   -r requirements-fuzz.in
     #   pandas
@@ -382,9 +382,7 @@ pyyaml==6.0.3 \
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
-    # via
-    #   -r requirements-fuzz.in
-    #   python-dateutil
+    # via -r requirements-fuzz.in
 typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
