@@ -102,6 +102,8 @@ frame["profit_effect"]   # the charge, spread
 given. That is a deliberate simplification and the only spreading this module
 does: it is wrong for a diminishing-value asset inside the window, and where
 that matters the fix is evidence per month, not more arithmetic here.
+The schedule refuses a monthly charge if the float series would change its
+whole-cent value.
 
 ## The fabricated example
 

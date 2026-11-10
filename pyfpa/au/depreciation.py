@@ -395,7 +395,20 @@ def straight_line_schedule(
     # also fall on the earliest months rather than the latest.
     sign = -1 if charge < 0 else 1
     cents, extra = divmod(abs(int(charge * 100)), len(months))
-    values = [sign * (cents + (1 if index < extra else 0)) / 100 for index in range(len(months))]
+
+    def forecast_value(monthly_cents: int) -> float:
+        value = monthly_cents / 100
+        exact = Decimal(f"{monthly_cents}e-2")
+        if Decimal(str(value)) != exact or Decimal(f"{value:.2f}") != exact:
+            raise DepreciationEvidenceError(
+                f"{evidence.label}: the forecast series cannot preserve whole cents "
+                f"for a monthly charge of {exact:f}."
+            )
+        return value
+
+    regular = forecast_value(sign * cents)
+    leading = forecast_value(sign * (cents + 1)) if extra else regular
+    values = [leading if index < extra else regular for index in range(len(months))]
     return pd.Series(values, index=months, name="depreciation_expense")
 
 

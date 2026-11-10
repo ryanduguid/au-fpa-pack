@@ -175,6 +175,25 @@ def test_a_charge_too_wide_for_cents_is_refused_with_the_reason():
         dep.straight_line_schedule(huge, months())
 
 
+@pytest.mark.parametrize("charge", ["100000000000000.01", "1000000000000000.10"])
+def test_a_monthly_value_that_loses_cents_on_float_conversion_is_refused(charge):
+    evidence = dep.load_evidence(GOOD)
+    wide = dep.DepreciationEvidence(**{
+        **evidence.__dict__, "charge": Decimal(charge),
+    })
+    with pytest.raises(dep.DepreciationEvidenceError, match="cannot preserve.*whole cents"):
+        dep.straight_line_schedule(wide, months()[:1])
+
+
+def test_a_large_charge_can_be_split_into_representable_monthly_values():
+    evidence = dep.load_evidence(GOOD)
+    wide = dep.DepreciationEvidence(**{
+        **evidence.__dict__, "charge": Decimal("100000000000000.01"),
+    })
+    split = dep.straight_line_schedule(wide, months()[:2])
+    assert sum(Decimal(str(value)) for value in split) == wide.charge
+
+
 def test_expense_and_purchases_stay_apart():
     schedule = dep.straight_line_schedule(dep.load_evidence(GOOD), months())
     purchases = pd.Series([120000.0, 0.0, 0.0], index=months())
