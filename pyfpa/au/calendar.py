@@ -36,6 +36,8 @@ def _as_period(period: str | pd.Period) -> pd.Period:
         if period.freq != pd.tseries.offsets.MonthEnd():
             return period.asfreq("M")
         return period
+    if isinstance(period, str):
+        period = require_iso(period, "period")
     return pd.Period(period, freq="M")
 
 

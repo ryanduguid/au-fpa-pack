@@ -73,6 +73,20 @@ def test_fy_summary_rejects_unknown_grouping():
         fy_summary(frame, by="week")
 
 
+@pytest.mark.parametrize("helper", [fy_year, fy_label, fy_quarter_label, fy_half_label])
+@pytest.mark.parametrize("text", ["1/10/2026", "2026"])
+def test_fy_helpers_refuse_text_that_is_not_iso(helper, text):
+    # pandas reads "1/10/2026" as 10 January, in FY2026, and "2026" as January 2026.
+    with pytest.raises(ValueError, match="ISO date"):
+        helper(text)
+
+
+def test_fy_helpers_read_an_iso_date_as_its_month():
+    assert fy_year("2026-10-01") == 2027
+    assert fy_quarter_label("2026-10-01") == "Q2 FY2027"
+    assert fy_half_label(pd.Timestamp(2026, 10, 1)) == "1H FY2027"
+
+
 def test_a_daily_period_is_read_as_its_month():
     assert fy_label(pd.Period("2026-07-15", freq="D")) == "FY2027"  # nosec B101: pytest outcome assertion
     assert fy_quarter_label(pd.Period("2026-06-30", freq="D")) == "Q4 FY2026"  # nosec B101: pytest outcome assertion
