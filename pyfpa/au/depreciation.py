@@ -399,7 +399,7 @@ def straight_line_schedule(
     def forecast_value(monthly_cents: int) -> float:
         value = monthly_cents / 100
         exact = Decimal(f"{monthly_cents}e-2")
-        if Decimal(str(value)) != exact or Decimal(f"{value:.2f}") != exact:
+        if Decimal(str(value)) != exact or Decimal(f"{value:.2f}") != exact:  # NOSONAR: S2583 false positive, tests reach both outcomes
             raise DepreciationEvidenceError(
                 f"{evidence.label}: the forecast series cannot preserve whole cents "
                 f"for a monthly charge of {exact:f}."
