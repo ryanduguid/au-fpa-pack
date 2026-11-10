@@ -15,6 +15,10 @@ Changed:
 - `.claude-plugin/plugin.json` now carries the package's version, 0.4.0, instead of 0.1.0, and a test keeps the 2 equal.
 - A `proposed` or `promoted` `ResearchEpoch` now needs a holdout period that does not overlap its training periods. Saved epochs that lack one no longer load until their periods are recorded or their status changes.
 
+Fixed:
+
+- `fy_year`, `fy_label`, `fy_quarter_label` and `fy_half_label` accept text only as `YYYY-MM` or `YYYY-MM-DD`, as `format_au_date` already did, because pandas read '1/10/2026' and '2026' as January 2026. Other text they used to parse, such as the date-times '2026-10-01T00:00:00' and '2026-10-01 00:00:00', the quarter '2026Q4' and 'Oct 2026', is now an error; pass a `Timestamp` or `Period` instead.
+
 # v0.4.0
 
 Breaking for code and configurations written against 0.3.0:

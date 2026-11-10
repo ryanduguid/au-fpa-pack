@@ -8,8 +8,9 @@ ending year: FY2027 covers July 2026 to June 2027. Quarters follow the
 fiscal year (Q1 FY2027 = Jul-Sep 2026); halves are 1H (Jul-Dec) and
 2H (Jan-Jun). Dates render dd/mm/yyyy.
 
-All helpers accept a ``pandas.Period`` (freq M) or a ``YYYY-MM`` string,
-matching the kernel's monthly convention in ``pyfpa.models.periods``.
+All helpers accept a ``pandas.Period`` (freq M) or a ``YYYY-MM`` or
+``YYYY-MM-DD`` string, matching the kernel's monthly convention in
+``pyfpa.models.periods``.
 """
 
 from __future__ import annotations
@@ -36,6 +37,8 @@ def _as_period(period: str | pd.Period) -> pd.Period:
         if period.freq != pd.tseries.offsets.MonthEnd():
             return period.asfreq("M")
         return period
+    if isinstance(period, str):
+        period = require_iso(period, "period")
     return pd.Period(period, freq="M")
 
 
