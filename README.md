@@ -119,8 +119,13 @@ is the worked example of a company-specific skill the workflow writes, not a
 skill the pack ships for every company.
 
 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) declares the
-repository as the `openfpa` plugin, at the package's version, licensed `LicenseRef-Duguid-Public-Attribution-1.0 AND MIT` (the MIT part is Guiderail's upstream work). That manifest is what a
-Claude Code marketplace entry pointing at this repository installs.
+repository as the `au-fpa-pack` plugin, at the package's version, licensed `LicenseRef-Duguid-Public-Attribution-1.0 AND MIT` (the MIT part is Guiderail's upstream work). The repository is
+also its own marketplace, so Claude Code installs the skills with:
+
+```text
+/plugin marketplace add ryanduguid/au-fpa-pack
+/plugin install au-fpa-pack@au-fpa-pack
+```
 
 ## Alternatives
 
@@ -146,6 +151,16 @@ Read on 12 November 2026:
   post does not mention GST, BAS or tax due dates. This pack adds the Australian cash timing a budget leaves out: BAS,
   PAYG and FBT due dates moved past whole-of-state public holidays, lodgment-channel dates and the GIC cost of paying an
   ATO debt by instalments.
+
+Read on 13 November 2026:
+
+- [XBert 13-Week Cashflow](https://github.com/XBertIntelligence/XBert-Plugins/tree/main/plugins/xbert-cashflow-13week)
+  (MIT, at commit e8f489f5): a Claude plugin for accountants that pulls the bank balance,
+  receivables, payables, payroll and tax obligations from a client's live Xero, MYOB or QuickBooks Online ledger and
+  bank feed through XBert's service, and names each week that falls below a chosen cash threshold. It does what this
+  pack does not: it predicts when each receipt will land from that debtor's past payment delays, and it ranks 3
+  actions for each risk week. It needs an XBert account and at least 90 days of bank feed history. This pack needs no
+  account and works from the records the firm supplies.
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>

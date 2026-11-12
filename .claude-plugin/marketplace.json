@@ -1,0 +1,13 @@
+{
+  "name": "au-fpa-pack",
+  "owner": {
+    "name": "Ryan Duguid"
+  },
+  "plugins": [
+    {
+      "name": "au-fpa-pack",
+      "source": "./",
+      "description": "Australian FP&A skills: 30 June years, Xero AU, GST and BAS cash timing."
+    }
+  ]
+}

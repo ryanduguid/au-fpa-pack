@@ -118,6 +118,17 @@ class ReleaseChecksTests(unittest.TestCase):
         plugin = json.loads((ROOT / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
         self.assertEqual(plugin["version"], project["project"]["version"])
 
+    def test_marketplace_installs_this_repository_as_the_named_plugin(self) -> None:
+        # Claude Code requires the entry to name the plugin as plugin.json does,
+        # and "./" installs this repository. A user cannot add 2 marketplaces with
+        # one name, so this one is not "ryanduguid", which another repository uses.
+        plugin = json.loads((ROOT / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+        marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+        self.assertEqual(plugin["name"], "au-fpa-pack")
+        self.assertEqual(marketplace["name"], "au-fpa-pack")
+        self.assertEqual([(entry["name"], entry["source"]) for entry in marketplace["plugins"]],
+                         [(plugin["name"], "./")])
+
 
 if __name__ == "__main__":
     unittest.main()
