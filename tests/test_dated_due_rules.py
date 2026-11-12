@@ -141,6 +141,60 @@ def test_a_channel_is_refused_for_instalments_due_on_the_21st():
         payg_instalment_schedule(income, deferred_bas_payer=False, rate=0.05, channel=ONLINE)
 
 
+# ATO, 'Activity statements', registered agent lodgment program (last updated
+# 1 July 2026, read 13 November 2026): 'the December business activity statement
+# is not due for lodgment and payment until 21 February for business clients who:
+# have up to $10 million annual turnover, report GST monthly, lodge electronically.
+# Businesses that are registered for deferred GST are not eligible for the 21
+# February due date.' The date belongs to the whole statement, so the withholding
+# and instalments on it move with its GST.
+@pytest.mark.parametrize(
+    ("withholder", "december_payday", "other_payday", "other_due"),
+    [
+        ("medium", date(2026, 12, 18), date(2026, 11, 13), date(2026, 12, 21)),
+        # A small withholder's October to December quarter sits on the December statement.
+        ("small", date(2026, 11, 13), date(2026, 8, 14), date(2026, 10, 21)),
+    ],
+)
+def test_withholding_on_an_eligible_december_statement_shares_its_gst_date(
+    withholder, december_payday, other_payday, other_due
+):
+    rule = paygw_due_rule(withholder, deferred_bas_payer=False, channel=AGENT, december_agent_date=True)
+    gst_due = monthly_activity_statement_due_date(_quarter("2026-12"), december_agent_date=True)
+    # 21 February 2027 is a Sunday.
+    assert rule(december_payday) == gst_due == date(2027, 2, 22)
+    assert rule(other_payday) == other_due
+
+
+def test_instalments_on_an_eligible_december_statement_share_its_gst_date():
+    income = pd.Series(1000.0, index=pd.period_range("2026-07", periods=6, freq="M"))
+    schedule = payg_instalment_schedule(
+        income, deferred_bas_payer=False, rate=0.05, channel=AGENT, december_agent_date=True
+    )
+    assert schedule["due_date"].tolist() == [date(2026, 10, 21), date(2027, 2, 22)]
+
+
+@pytest.mark.parametrize(
+    ("deferred", "channel"),
+    [(True, AGENT), (False, ONLINE), (False, LodgmentChannel.ORIGINAL)],
+)
+def test_the_december_agent_date_is_refused_for_withholding_where_it_cannot_apply(deferred, channel):
+    with pytest.raises(ValueError, match="december_agent_date applies only"):
+        paygw_due_rule("medium", deferred_bas_payer=deferred, channel=channel, december_agent_date=True)
+
+
+@pytest.mark.parametrize(
+    ("deferred", "channel"),
+    [(True, AGENT), (False, ONLINE), (False, LodgmentChannel.ORIGINAL)],
+)
+def test_the_december_agent_date_is_refused_for_instalments_where_it_cannot_apply(deferred, channel):
+    income = pd.Series(1000.0, index=pd.period_range("2026-07", periods=6, freq="M"))
+    with pytest.raises(ValueError, match="december_agent_date applies only"):
+        payg_instalment_schedule(
+            income, deferred_bas_payer=deferred, rate=0.05, channel=channel, december_agent_date=True
+        )
+
+
 @pytest.mark.parametrize(
     ("channel", "nominal"),
     [

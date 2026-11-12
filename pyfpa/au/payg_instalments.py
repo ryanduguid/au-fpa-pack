@@ -57,6 +57,7 @@ def payg_instalment_schedule(
     rate: float | None = None,
     notified_amounts: Mapping[str, NotifiedAmount] | None = None,
     channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
+    december_agent_date: bool = False,
 ) -> pd.DataFrame:
     """Instalments by quarter: columns quarter, due_date, amount.
 
@@ -70,13 +71,20 @@ def payg_instalment_schedule(
     and 0 or more, and must belong to a quarter the schedule includes. A
     `channel` other than ORIGINAL moves a deferred BAS payer's instalments to
     the date of the quarterly statement they sit on; instalment notices (forms
-    R, S and T) do not qualify.
+    R, S and T) do not qualify. `december_agent_date`, with the AGENT channel,
+    states that the entity is eligible for the 21 February date of a December
+    monthly BAS (see `gst_bas.yaml`), as `GstAssumptions.december_agent_date`
+    does; the December quarter's instalment on that statement takes its date.
     """
     if (rate is None) == (notified_amounts is None):
         raise ValueError("give either rate or notified_amounts")
     channel = LodgmentChannel(channel)
-    if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer:
-        raise ValueError("a lodgment channel applies only to a deferred BAS payer")
+    if december_agent_date and (deferred_bas_payer or channel is not LodgmentChannel.AGENT):
+        raise ValueError(
+            "december_agent_date applies only to a monthly GST statement lodged by an agent, "
+            "so not to a deferred BAS payer")
+    if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer and not december_agent_date:
+        raise ValueError("a lodgment channel applies only to a deferred BAS payer, or with december_agent_date")
     if rate is not None and not 0 <= rate <= 1:
         raise ValueError("rate must be between 0 and 1")
     _validate_monthly_series(instalment_income)
@@ -97,7 +105,7 @@ def payg_instalment_schedule(
         if quarter_end > index.max():
             continue
         due = quarterly_bas_due_date(quarter_end, channel) if deferred_bas_payer else (
-            monthly_activity_statement_due_date(quarter_end))
+            monthly_activity_statement_due_date(quarter_end, december_agent_date=december_agent_date))
         if rate is not None:
             amount = rate * float(income.sum())
         else:

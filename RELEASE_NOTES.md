@@ -1,3 +1,9 @@
+# Unreleased
+
+Fixed:
+
+- An eligible business's December monthly BAS is due 21 February, and that date now reaches the PAYG withholding and instalments on it, not only the GST. `paygw_due_rule` and `payg_instalment_schedule` take `december_agent_date=True` with the `AGENT` channel, as `GstAssumptions` does; before, withholding and instalments on that statement stayed on 21 January. Source: ATO, 'Activity statements', registered agent lodgment program (last updated 1 July 2026, read 13 November 2026): the December business activity statement is not due for lodgment and payment until 21 February for business clients with up to $10 million annual turnover who report GST monthly and lodge electronically; businesses registered for deferred GST are not eligible. A deferred BAS payer, or a channel other than `AGENT`, is refused.
+
 # v0.5.0
 
 Breaking for code and workbooks written against 0.4.0:

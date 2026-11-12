@@ -126,6 +126,8 @@ using them. The schedule uses original BAS due dates unless
 `GstAssumptions.lodgment_channel` says otherwise: `ONLINE` takes the 2-week
 concession for quarters 1, 3 and 4 and `AGENT` the registered agent program date,
 and `december_agent_date` takes 21 February for an eligible December monthly BAS.
+`paygw_due_rule` and `payg_instalment_schedule` take the same flag with the `AGENT`
+channel, so the withholding and instalments on that statement share its date.
 A channel is your statement that the statement qualifies, so the default stays on
 the original dates. Quarter 2 has no later date, and an agent date the ATO has not
 confirmed (25 August 2027) raises. The schedule's `nominal_due_date` is the date
