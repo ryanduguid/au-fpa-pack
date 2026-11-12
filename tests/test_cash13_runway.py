@@ -84,7 +84,29 @@ def test_a_zero_limit_still_reports_headroom_equal_to_cash():
 def test_without_a_limit_the_forecast_and_summary_are_unchanged():
     weekly = cash13_forecast(_lumpy_config())
     assert "headroom" not in weekly.columns
-    assert set(runway_summary(weekly)) == {"min_cash", "min_week", "first_negative_week"}
+    assert set(runway_summary(weekly)) == {"min_cash", "min_week", "first_negative_week", "negative_weeks"}
+
+
+def test_runway_names_every_week_below_zero():
+    # ending cash: 110, 120, -70, -60
+    assert runway_summary(cash13_forecast(_lumpy_config()))["negative_weeks"] == [3, 4]
+
+
+def test_a_recovered_week_is_not_named():
+    cfg = _lumpy_config().model_copy(update={"weeks": 5, "receipts": [
+        WeeklyFlow(name="Sales", amount=50.0, start_week=1, recurrence="weekly"),
+        WeeklyFlow(name="Refund", amount=300.0, start_week=4, recurrence="once"),
+    ]})
+    # ending cash: 110, 120, -70, 240, 250
+    assert runway_summary(cash13_forecast(cfg))["negative_weeks"] == [3]
+
+
+def test_runway_names_every_week_headroom_is_below_the_buffer():
+    weekly = cash13_forecast(_lumpy_config(facility_limit=100.0))
+    # headroom: 210, 220, 30, 40
+    summary = runway_summary(weekly, headroom_buffer=35.0)
+    assert summary["headroom_breach_weeks"] == [3]
+    assert runway_summary(weekly, headroom_buffer=50.0)["headroom_breach_weeks"] == [3, 4]
 
 
 @pytest.mark.parametrize("bad", [-1.0, float("nan"), float("inf")])

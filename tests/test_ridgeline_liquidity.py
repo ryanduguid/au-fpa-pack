@@ -26,7 +26,8 @@ def test_grid_has_independent_cells_and_preserves_horizon_receipts():
     assert all(cell["buffered"]["min_cash"] == 0 and cell["buffered"]["first_negative_week"] is None for cell in pack["cells"])  # nosec B101
     base = pack["cells"][0]
     assert base["unbuffered"] == {"min_cash": -146000.0, "min_week": 7,  # nosec B101
-                                 "first_negative_week": 3, "ending_cash": 16000.0}
+                                 "first_negative_week": 3, "negative_weeks": [3, 6, 7, 8, 11],
+                                 "ending_cash": 16000.0}
     assert base["buffered_opening_cash"] == 296000  # nosec B101
     assert base["buffered"]["ending_cash"] == 162000  # nosec B101
     assert pack["cells"][-1]["one_off_receipts_beyond_horizon"] == [  # nosec B101

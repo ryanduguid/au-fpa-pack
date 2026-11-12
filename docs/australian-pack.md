@@ -144,7 +144,7 @@ is 'a day which is a public holiday' under s 8AAZMB(2)(b). The ATO's table gives
 with no stated basis for a part day, so ask a registered tax agent before relying
 on it. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
 schedule for a date before 2026 no longer computes. A refund on the due date is a forecast assumption, not a receipt
-promise. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
+promise; `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks it on the date you expect instead. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
 raises until the dates are re-checked. Explicit rate overrides must be finite and
 non-negative. Zero remains available for scenario modelling; it does not establish
 a GST exemption.

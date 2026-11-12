@@ -75,8 +75,10 @@ deadline and not a refund date.
   `monthly_gst` purchases.
 - A quarter is only scheduled when all 3 months exist in the series;
   partial trailing quarters are dropped, not prorated.
-- Refund positions (heavy capex) return as receipts; check the refund
-  is plausible before banking it in week 4.
+- Refund positions (heavy capex) return as receipts on the statement's due
+  date; check the refund is plausible before banking it in week 4, and pass
+  `expected_receipt_on={"2027Q1": date(...)}` to `gst_weekly_flows` when the
+  company expects the money on another day.
 
 ## Calculator comparison
 

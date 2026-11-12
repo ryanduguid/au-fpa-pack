@@ -35,6 +35,15 @@ def test_briefing_includes_runway_when_provided():
     assert "$-85,000" not in md
 
 
+def test_briefing_names_the_weeks_below_zero():
+    runway = {"min_cash": -85000.0, "min_week": 6, "first_negative_week": 3, "negative_weeks": [3, 4, 6]}
+    assert "- **Weeks below zero:** 3 (weeks 3, 4 and 6)" in to_briefing_md(_monthly(), runway=runway)
+    runway["negative_weeks"] = [3]
+    assert "- **Weeks below zero:** 1 (week 3)" in to_briefing_md(_monthly(), runway=runway)
+    runway["negative_weeks"] = []
+    assert "- **Weeks below zero:** none" in to_briefing_md(_monthly(), runway=runway)
+
+
 def test_briefing_omits_runway_when_absent():
     md = to_briefing_md(_monthly())
     assert "13-Week Cash Runway" not in md

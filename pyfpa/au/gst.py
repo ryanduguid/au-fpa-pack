@@ -26,6 +26,7 @@ Labour Day throughout Western Australia, so the effective date is Tuesday
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from datetime import date, timedelta
 from enum import Enum
 from typing import Any
@@ -260,13 +261,29 @@ def gst_weekly_flows(
     schedule: pd.DataFrame,
     window_start: date | str,
     weeks: int = 13,
+    *,
+    expected_receipt_on: Mapping[str, date] | None = None,
 ) -> tuple[list[WeeklyFlow], list[WeeklyFlow]]:
     """Map BAS settlements into 13-week-forecast flows.
 
     Returns (receipts, disbursements) of `WeeklyFlow` for settlements
     due inside the window. Payments become disbursements; refunds
     become receipts. Settlements outside the window are dropped.
+    A refund has no due date of its own: it depends on lodgment, ATO processing
+    and offsets. By default it is banked on the statement's due date, a forecast
+    assumption. `expected_receipt_on` maps a refund's `period_label` to the date
+    the caller expects the money instead, as `fbt_weekly_flows` takes one; a
+    label with no refund in the schedule is refused.
     """
+    if expected_receipt_on:
+        refunds = set(schedule.loc[schedule["amount"] < 0, "period_label"])
+        unknown = sorted(set(expected_receipt_on) - refunds)
+        if unknown:
+            raise ValueError(
+                "expected_receipt_on names periods with no refund in the schedule: " + ", ".join(unknown))
+        labels_and_dates = zip(schedule["period_label"], schedule["due_date"], strict=True)
+        schedule = schedule.assign(
+            due_date=[expected_receipt_on.get(label, due) for label, due in labels_and_dates])
     return dated_weekly_flows(schedule, window_start, weeks, "BAS")
 
 
