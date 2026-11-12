@@ -88,7 +88,7 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 
 ## Package
 
-**Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.4.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
+**Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.5.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
 
 On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install the PyPI distribution named `pyfpa`: it is an unrelated project that also installs a top-level `pyfpa` package.
 
@@ -134,6 +134,18 @@ tools cover nearby ground:
 - [adoptai/cpa-skills](https://github.com/adoptai/cpa-skills): budget-versus-actual, flux-narrative and board-package
   skills with scripts, framed for US practice.
 - Agicap, Float, Calxa and Tidely: commercial cash flow forecasting products.
+
+Read on 12 November 2026:
+
+- [CFI's free Claude skills](https://corporatefinanceinstitute.com/resources/financial-modeling/free-claude-skills-financial-modeling/)
+  (11 November): one builds a three-statement, DCF, LBO, budget or forecast model to CFI's guidelines and one reviews a
+  model against them, in the Claude app and Claude in Excel, after a name and email form. The page states no Australian
+  rules.
+- [Xero New Budgets](https://blog.xero.com/product-updates/new-budgets/) (11 November): scenario budgets inside Xero,
+  from zeros or last month's or the last 12 months' actuals, per tracking category, with an adjustment history. The
+  post does not mention GST, BAS or tax due dates. This pack adds the Australian cash timing a budget leaves out: BAS,
+  PAYG and FBT due dates moved past whole-of-state public holidays, lodgment-channel dates and the GIC cost of paying an
+  ATO debt by instalments.
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>

@@ -1,6 +1,13 @@
-# Unreleased
+# v0.5.0
+
+Breaking for code and workbooks written against 0.4.0:
+
+- Versions made available from 4 November 2026 are licensed under the Ryan Duguid Public Attribution Licence 1.0: the FSL-1.1-ALv2 text unchanged, plus a condition that anyone making a copy, port or derivative available outside their organisation credits Ryan Duguid publicly with a link to this repository (#278). Internal use is exempt, and 0.4.0 keeps its FSL-1.1-ALv2 terms.
+- The Lumbridge workbook's status cell moves from `Model!B26` to `Model!B27`, below a fourth check, `check_receivables_open_invoices`, which compares Receivables with the receipts for invoices raised by month end and received after it (#269).
 
 Added:
+
+- An optional `Cash13Config.facility_limit` adds a weekly `headroom` column to the 13-week cash forecast, and `runway_summary(..., headroom_buffer)` reports the first week headroom falls below the buffer (#251).
 
 - `openfpa model-assumptions <workspace> --config <config.yaml> [--previous-config <previous.yaml>]` reports each effective model input as JSON with whether it was supplied or defaulted, the receipts, inventory and income tax methods, and, against a previous configuration, changed, added and removed inputs with entity, horizon, start-month and method differences. Objects, line lists and tax payment maps have their own rows; named channel, expense and debt lines stay aligned when reordered, payment months are compared individually, and SHA-256 digests identify the exact bytes parsed. It runs no forecast.
 - `pyfpa.config.loader.config_from_bytes` validates an `EntityConfig` from the exact bytes of a YAML file; `load_config` now uses it, with the same UTF-8 and newline handling.
@@ -18,6 +25,7 @@ Changed:
 Fixed:
 
 - `fy_year`, `fy_label`, `fy_quarter_label` and `fy_half_label` accept text only as `YYYY-MM` or `YYYY-MM-DD`, as `format_au_date` already did, because pandas read '1/10/2026' and '2026' as January 2026. Other text they used to parse, such as the date-times '2026-10-01T00:00:00' and '2026-10-01 00:00:00', the quarter '2026Q4' and 'Oct 2026', is now an error; pass a `Timestamp` or `Period` instead.
+- Depreciation evidence must reconcile before its charge is spread into a forecast (#293). `load_evidence` refuses raw and normalised movement figures that disagree; evidence that reports additions without opening, closing or charge, has a negative addition or charge, or whose opening plus additions less charge misses closing by any amount is refused; and `straight_line_schedule` refuses a monthly charge it cannot hold as whole cents. Evidence 0.4.0 accepted can now be refused.
 
 # v0.4.0
 
