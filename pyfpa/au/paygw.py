@@ -79,21 +79,25 @@ def paygw_due_rule(
     docstring for what makes it a deferred BAS payer. A `channel` other than
     ORIGINAL moves a small deferred withholder's quarterly statement; a medium
     withholder's statements carry a monthly obligation and keep their dates.
-    `december_agent_date`, with the AGENT channel, states that the entity is
-    eligible for the 21 February date of a December monthly BAS (see
-    `gst_bas.yaml`), as `GstAssumptions.december_agent_date` does; the
-    withholding on that statement takes its date. A deferred BAS payer lodges no
-    monthly GST, so it cannot take that date.
+    `december_agent_date=True`, like `GstAssumptions.december_agent_date`, is
+    the caller's statement that the December monthly BAS takes the ATO's
+    21 February date (see `gst_bas.yaml`): the entity has up to $10 million
+    turnover, reports GST monthly, lodges electronically through a registered
+    agent and is not registered for deferred GST (the importer scheme, which
+    this code cannot see), and the statement is not one with only a monthly
+    PAYG withholding cycle. The code refuses the flag only for a deferred BAS
+    payer, which lodges no monthly GST, and with a channel other than AGENT.
+    The withholding on that statement takes its date.
     """
     channel = LodgmentChannel(channel)
     if withholder == "large":
         raise ValueError("large withholders pay within days of each payday; that timing is not modelled")
     if withholder not in ("small", "medium"):
         raise ValueError(f"unknown withholder category {withholder!r}; use 'small' or 'medium'")
-    if december_agent_date and (deferred_bas_payer or channel is not LodgmentChannel.AGENT):
-        raise ValueError(
-            "december_agent_date applies only to a monthly GST statement lodged by an agent, "
-            "so not to a deferred BAS payer")
+    if december_agent_date and deferred_bas_payer:
+        raise ValueError("december_agent_date cannot apply to a deferred BAS payer, which lodges no monthly GST")
+    if december_agent_date and channel is not LodgmentChannel.AGENT:
+        raise ValueError("december_agent_date applies only with the AGENT channel")
     small_deferred = withholder == "small" and deferred_bas_payer
     if channel is not LodgmentChannel.ORIGINAL and not small_deferred and not december_agent_date:
         raise ValueError(
