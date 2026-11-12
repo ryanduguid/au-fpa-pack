@@ -114,10 +114,13 @@ def _plan_rows(
         pay_day = day == pay_on
         cleared = False
         if pay_day:
-            payment = min(amount, _cents(balance))
-            balance -= payment
+            # Paying the balance rounded to the cent clears it, even when that
+            # rounds up a half cent.
+            due = _cents(balance)
+            payment = min(amount, due)
             paid += payment
-            cleared = _cents(balance) == 0
+            cleared = payment == due
+            balance = Decimal(0) if cleared else balance - payment
         if not cleared:
             accrued = balance * _daily_rate(table, day)
             balance += accrued
