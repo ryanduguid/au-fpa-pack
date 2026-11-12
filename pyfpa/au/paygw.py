@@ -25,6 +25,18 @@ due on the 21st for the first two months and a quarterly statement due on the
 28th for the third (ATO, "Activity statements", registered agent lodgment
 program, last updated 1 July 2026).
 
+That page (read again on 13 November 2026) gives the third month's quarterly
+statement the agent program date when an agent lodges it electronically. A
+quarterly statement is eligible unless it includes a PAYG instalment monthly
+obligation, is a consolidated head company's PAYG instalment statement, belongs
+to an entity with a GST monthly cycle, or is an instalment notice; monthly
+withholding is not among them. "Activity statements with only a monthly PAYG IT
+withholding cycle are not eligible", so the first two months stay on the 21st.
+This rule cannot see a monthly PAYG instalment obligation: use ORIGINAL for an
+entity that has one. The 2-week online concession is not applied to a medium
+withholder, because the ATO's BAS due dates page states no eligibility for a
+statement carrying monthly withholding.
+
 The dates come from the activity statement rules in `gst_bas.yaml`, with their
 next-business-day move and reviewed_until horizon, so PAYG withholding and GST
 share one source. Large withholders, who pay within days of each payday, are
@@ -55,10 +67,10 @@ def _medium(payday: date) -> date:
     return monthly_activity_statement_due_date(pd.Period(payday, freq="M"))
 
 
-def _medium_deferred(payday: date) -> date:
+def _medium_deferred(payday: date, channel: LodgmentChannel = LodgmentChannel.ORIGINAL) -> date:
     month = pd.Period(payday, freq="M")
     if month == _quarter_end(payday):
-        return quarterly_bas_due_date(month)
+        return quarterly_bas_due_date(month, channel)
     return monthly_activity_statement_due_date(month)
 
 
@@ -76,8 +88,9 @@ def paygw_due_rule(
 
     `withholder` is the entity's category, "small" or "medium"; see the module
     docstring for what makes it a deferred BAS payer. A `channel` other than
-    ORIGINAL moves a small deferred withholder's quarterly statement; a medium
-    withholder's statements carry a monthly obligation and keep their dates.
+    ORIGINAL moves a small deferred withholder's quarterly statement. AGENT also
+    moves the quarterly statement a medium deferred withholder lodges for the
+    third month of each quarter; its monthly statements keep the 21st.
     """
     channel = LodgmentChannel(channel)
     if withholder == "large":
@@ -85,10 +98,14 @@ def paygw_due_rule(
     if withholder not in ("small", "medium"):
         raise ValueError(f"unknown withholder category {withholder!r}; use 'small' or 'medium'")
     small_deferred = withholder == "small" and deferred_bas_payer
-    if channel is not LodgmentChannel.ORIGINAL and not small_deferred:
-        raise ValueError("a lodgment channel applies only to a small withholder that is a deferred BAS payer")
+    medium_deferred_agent = withholder == "medium" and deferred_bas_payer and channel is LodgmentChannel.AGENT
+    if channel is not LodgmentChannel.ORIGINAL and not (small_deferred or medium_deferred_agent):
+        raise ValueError("a lodgment channel applies only to a small withholder that is a deferred BAS payer, "
+                         "or the agent channel to a medium withholder that is one")
     if small_deferred:
         return lambda payday: quarterly_bas_due_date(_quarter_end(payday), channel)
     if withholder == "small":
         return _small
-    return _medium_deferred if deferred_bas_payer else _medium
+    if deferred_bas_payer:
+        return lambda payday: _medium_deferred(payday, channel)
+    return _medium

@@ -61,7 +61,10 @@ default. When the company qualifies, set `GstAssumptions.lodgment_channel` to
 `LodgmentChannel.ONLINE` (2 weeks later for quarters 1, 3 and 4) or
 `LodgmentChannel.AGENT` (the registered agent program date), and pass the same
 channel to `payg_instalment_schedule` and `paygw_due_rule` for amounts on that
-statement. Quarter 2 has no later date. A quarter with no confirmed agent date
+statement. A medium withholder that is a deferred BAS payer takes AGENT, which
+moves only its third-month quarterly statement, and not ONLINE; use ORIGINAL if
+it has a monthly PAYG instalment obligation, which the ATO excludes from the
+agent date. Quarter 2 has no later date. A quarter with no confirmed agent date
 raises: use the original date. FBT left to pay with the return comes from
 `fbt_schedule` and `fbt_weekly_flows`. An FBT refund stays in the schedule but
 enters the forecast only with `expected_receipt_on`, because 21 May is a payment
