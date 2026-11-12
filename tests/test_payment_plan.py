@@ -86,6 +86,25 @@ def test_the_payment_that_clears_the_debt_accrues_nothing_that_day():
     assert plan.schedule["closing_balance"].tolist() == [8002.51, 0.0]
 
 
+def test_paying_a_balance_rounded_up_from_half_a_cent_clears_it():
+    # 3,650.00 at 10.65% / 365 accrues exactly 1.065 on 5 January, so the
+    # balance of 3,651.065 rounds up to 3,651.07 and that payment clears it.
+    plan = _plan(
+        amount_owed=4000.0,
+        due_date=date(2026, 1, 5),
+        upfront=350.0,
+        upfront_on=date(2026, 1, 5),
+        instalment=4000.0,
+        first_instalment_on=date(2026, 1, 6),
+        frequency="weekly",
+    )
+    assert plan.schedule[["amount", "gic_accrued", "closing_balance"]].values.tolist() == [
+        [350.0, 1.07, 3651.07],
+        [3651.07, 0.0, 0.0],
+    ]
+    assert (plan.estimated_gic, plan.total_paid) == (1.07, 4001.07)
+
+
 def test_the_estimate_is_labelled_and_implies_no_approval():
     plan = _plan()
     assert plan.note == ESTIMATE_NOTE
