@@ -109,6 +109,19 @@ def test_runway_names_every_week_headroom_is_below_the_buffer():
     assert runway_summary(weekly, headroom_buffer=50.0)["headroom_breach_weeks"] == [3, 4]
 
 
+def test_a_week_ending_at_exactly_zero_is_not_named():
+    cfg = _lumpy_config().model_copy(update={"opening_cash": 170.0})
+    # ending cash: 180, 190, 0, 10
+    assert runway_summary(cash13_forecast(cfg))["negative_weeks"] == []
+
+
+def test_headroom_exactly_at_the_buffer_is_not_named():
+    weekly = cash13_forecast(_lumpy_config(facility_limit=100.0))
+    # headroom: 210, 220, 30, 40
+    assert runway_summary(weekly, headroom_buffer=30.0)["headroom_breach_weeks"] == []
+    assert runway_summary(weekly, headroom_buffer=40.0)["headroom_breach_weeks"] == [3]
+
+
 @pytest.mark.parametrize("bad", [-1.0, float("nan"), float("inf")])
 def test_a_bad_limit_or_buffer_is_refused(bad):
     with pytest.raises(ValueError):

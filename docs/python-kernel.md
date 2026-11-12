@@ -36,8 +36,11 @@ print(pyfpa.compare_scenarios(cash_config, scenarios))
 ```
 
 `compare_scenarios` returns one row per scenario, base first, with the cash
-trough (`min_cash`), its week, the first negative week and closing cash. It
-compares declared assumptions; it does not say which scenario is likely.
+trough (`min_cash`), its week, the first negative week, every week below zero
+(`negative_weeks`, a list) and closing cash. With a facility it adds
+`min_headroom`, `first_headroom_breach_week` and `headroom_breach_weeks`, the
+list of weeks headroom is below the buffer. It compares declared assumptions; it
+does not say which scenario is likely.
 
 The base kernel includes:
 

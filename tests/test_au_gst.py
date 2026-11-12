@@ -111,6 +111,17 @@ def test_a_refund_arrives_on_the_date_the_caller_expects(months):
     assert receipts[0].amount == -schedule["amount"].iloc[0]
 
 
+def test_an_expected_receipt_date_moves_only_the_refund_row(months):
+    refund = _refund_schedule(months).iloc[[0]]
+    # A payment row sharing the refund's label keeps its own due date (28 October, week 4).
+    schedule = pd.concat([refund, refund.assign(amount=500.0)], ignore_index=True)
+    receipts, disbursements = gst_weekly_flows(
+        schedule, window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2026, 11, 20)}
+    )
+    assert [flow.start_week for flow in receipts] == [8]
+    assert [(flow.start_week, flow.amount) for flow in disbursements] == [(4, 500.0)]
+
+
 def test_a_refund_expected_past_the_window_is_left_out(months):
     receipts, _ = gst_weekly_flows(
         _refund_schedule(months), window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2027, 1, 15)}

@@ -272,8 +272,8 @@ def gst_weekly_flows(
     A refund has no due date of its own: it depends on lodgment, ATO processing
     and offsets. By default it is banked on the statement's due date, a forecast
     assumption. `expected_receipt_on` maps a refund's `period_label` to the date
-    the caller expects the money instead, as `fbt_weekly_flows` takes one; a
-    label with no refund in the schedule is refused.
+    the caller expects the money instead, as `fbt_weekly_flows` takes one; only
+    refund rows move, and a label with no refund in the schedule is refused.
     """
     if expected_receipt_on:
         refunds = set(schedule.loc[schedule["amount"] < 0, "period_label"])
@@ -281,9 +281,9 @@ def gst_weekly_flows(
         if unknown:
             raise ValueError(
                 "expected_receipt_on names periods with no refund in the schedule: " + ", ".join(unknown))
-        labels_and_dates = zip(schedule["period_label"], schedule["due_date"], strict=True)
+        rows = zip(schedule["period_label"], schedule["due_date"], schedule["amount"], strict=True)
         schedule = schedule.assign(
-            due_date=[expected_receipt_on.get(label, due) for label, due in labels_and_dates])
+            due_date=[expected_receipt_on.get(label, due) if amount < 0 else due for label, due, amount in rows])
     return dated_weekly_flows(schedule, window_start, weeks, "BAS")
 
 
