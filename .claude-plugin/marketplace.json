@@ -1,5 +1,6 @@
 {
   "name": "au-fpa-pack",
+  "description": "Ryan Duguid's Australian FP&A pack for Claude Code.",
   "owner": {
     "name": "Ryan Duguid"
   },
