@@ -1,3 +1,12 @@
+# Unreleased
+
+Changed:
+
+- The Claude Code plugin is now named `au-fpa-pack`, not `openfpa`, with Ryan Duguid as its author, and the
+  repository is its own marketplace: `/plugin marketplace add ryanduguid/au-fpa-pack`, then
+  `/plugin install au-fpa-pack@au-fpa-pack`. Uninstall a plugin installed under the old name before
+  installing this one.
+
 # v0.5.0
 
 Breaking for code and workbooks written against 0.4.0:

@@ -1,9 +1,10 @@
 {
-  "name": "openfpa",
+  "name": "au-fpa-pack",
   "version": "0.5.0",
   "description": "Australian FP&A pack on openfpa: 30 June years, Xero AU, GST/BAS. Upstream is Jeff Brines / Guiderail.",
   "author": {
-    "name": "Guiderail"
+    "name": "Ryan Duguid",
+    "url": "https://github.com/ryanduguid"
   },
   "homepage": "https://github.com/ryanduguid/au-fpa-pack",
   "license": "LicenseRef-Duguid-Public-Attribution-1.0 AND MIT",

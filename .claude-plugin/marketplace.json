@@ -1,0 +1,14 @@
+{
+  "name": "au-fpa-pack",
+  "description": "Ryan Duguid's Australian FP&A pack for Claude Code.",
+  "owner": {
+    "name": "Ryan Duguid"
+  },
+  "plugins": [
+    {
+      "name": "au-fpa-pack",
+      "source": "./",
+      "description": "Australian FP&A skills: 30 June years, Xero AU, GST and BAS cash timing."
+    }
+  ]
+}
