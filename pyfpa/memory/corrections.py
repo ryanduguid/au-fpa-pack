@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.memory.intake import _split_frontmatter
@@ -21,6 +21,8 @@ _WINDOWS_DEVICE_NAMES = (
 
 
 class Override(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
     path: str
     value: float
 

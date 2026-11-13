@@ -145,3 +145,42 @@ def test_save_correction_revalidates_mutated_status(tmp_path):
     with pytest.raises(ValueError):
         save_correction(invalid, tmp_path, overwrite=True)
     assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("value", _NONFINITE)
+def test_correction_override_value_must_be_finite(value):
+    with pytest.raises(ValueError, match="finite"):
+        Override(path="channels[0].annual_revenue", value=value)
+
+
+@pytest.mark.parametrize("value", _NONFINITE)
+def test_save_correction_revalidates_nested_override_value(tmp_path, value):
+    correction = Correction(
+        slug="2026-07-aud-revenue", type="parametric",
+        target="channels[0].annual_revenue", status="applied", date="2026-07-01",
+        override=Override(path="channels[0].annual_revenue", value=24000),
+    )
+    save_correction(correction, tmp_path)
+    path = tmp_path / f"{correction.slug}.md"
+    before = path.read_bytes()
+    assert correction.override is not None
+    correction.override.value = value
+    with pytest.raises(ValueError, match="finite"):
+        save_correction(correction, tmp_path, overwrite=True)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("value", _NONFINITE)
+def test_cli_nonfinite_correction_refuses_without_saving(tmp_path, capsys, value):
+    workspace = initialize_workspace(tmp_path)
+    code = main([
+        "correction-record", str(tmp_path), "--slug", "invalid-aud-revenue",
+        "--type", "parametric", "--status", "applied",
+        "--target", "channels[0].annual_revenue", "--date", "2026-07-01",
+        "--override-path", "channels[0].annual_revenue", "--override-value="+str(value),
+    ])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["error"]["type"] == "invalid_correction"
+    json.dumps(payload, allow_nan=False)
+    assert not (workspace / "corrections/invalid-aud-revenue.md").exists()
