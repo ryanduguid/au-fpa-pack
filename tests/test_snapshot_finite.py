@@ -70,19 +70,20 @@ def test_save_revalidates_changed_evidence_before_opening(tmp_path, field, value
         save_snapshot(original, path)
         before = path.read_bytes()
     altered = original.model_copy(deep=True)
-    assert altered.score is not None
+    score = altered.score
+    assert score is not None
     if change == "copy":
         update = _invalid_document(field, value)
         if field == "predicted":
             altered = altered.model_copy(update={"predicted": update["predicted"]})
         else:
-            altered = altered.model_copy(update={"score": altered.score.model_copy(update=update["score"])})
+            altered = altered.model_copy(update={"score": score.model_copy(update=update["score"])})
     elif field == "predicted":
         altered.predicted["ending_cash"] = value
     elif field == "fitness":
-        altered.score.fitness = value
+        score.fitness = value
     else:
-        getattr(altered.score, field)["ending_cash"] = value
+        getattr(score, field)["ending_cash"] = value
     with pytest.raises(ValueError, match="finite"):
         save_snapshot(altered, path, overwrite=overwrite)
     if exists:
