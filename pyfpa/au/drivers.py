@@ -120,6 +120,17 @@ def _fetch(url: str, headers: dict[str, str] | None = None, timeout: int = 60) -
     return body
 
 
+def _observation_value(raw_value: str, series_id: str, period: str) -> float | None:
+    """Refuse non-finite numbers; defer unreadable-value skips to period validation."""
+    try:
+        value = float(raw_value)
+    except ValueError:
+        return None
+    if not math.isfinite(value):
+        raise ValueError(f"non-finite observation for {series_id} on {period}")
+    return value
+
+
 def fetch_rba_series(name: str) -> DriverSeries:
     """Fetch one RBA driver series by its key in ``RBA_SERIES``."""
     if name not in RBA_SERIES:
@@ -159,6 +170,7 @@ def fetch_rba_series(name: str) -> DriverSeries:
         if not raw_val:
             skipped.append(SkippedObservation(period=raw_date, reason="missing value"))
             continue
+        value = _observation_value(raw_val, series_id, raw_date)
         try:
             source_date = pd.Timestamp(raw_date).date()
             if pd.isna(source_date):
@@ -166,13 +178,10 @@ def fetch_rba_series(name: str) -> DriverSeries:
         except (ValueError, TypeError):
             skipped.append(SkippedObservation(period=raw_date, reason="invalid period"))
             continue
-        try:
-            value = float(raw_val)
-        except ValueError:
+
+        if value is None:
             skipped.append(SkippedObservation(period=raw_date, reason="invalid value"))
             continue
-        if not math.isfinite(value):
-            raise ValueError(f"non-finite observation for {series_id} on {raw_date}")
 
         if source_date in observations and observations[source_date] != value:
             raise ValueError(
@@ -258,6 +267,7 @@ def fetch_abs_series(
         if not value_raw:
             skipped.append(SkippedObservation(period=period_raw, reason="missing value"))
             continue
+        value = _observation_value(value_raw, dataflow, period_raw)
         freq = "Q" if "Q" in period_raw else "M"
         try:
             source_period = pd.Period(period_raw, freq=freq)
@@ -271,13 +281,9 @@ def fetch_abs_series(
                 f"ABS dataflow {dataflow} returned {freq} observations for {name!r}, "
                 f"which is {expected_frequency}: the dataflow's frequency has changed"
             )
-        try:
-            value = float(value_raw)
-        except ValueError:
+        if value is None:
             skipped.append(SkippedObservation(period=period_raw, reason="invalid value"))
             continue
-        if not math.isfinite(value):
-            raise ValueError(f"non-finite observation for {dataflow} on {period_raw}")
         period = str(source_period)
         if period in data:
             raise ValueError(f"duplicate ABS period {period}: select a single series with dimensions")
