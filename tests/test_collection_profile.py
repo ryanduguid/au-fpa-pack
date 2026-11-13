@@ -120,6 +120,25 @@ def test_a_profile_is_measured_from_the_months_each_invoice_was_paid_in():
     assert (revenue["total"] - df["d_ar"]).round(6).tolist() == [1000.0, 2500.0, 500.0]
 
 
+def test_receipt_amounts_given_as_text_are_added_as_numbers():
+    # Summed as text, '50' and '50' make '5050' and would pay this invoice in full.
+    invoices = pd.DataFrame({"invoice": ["A"], "amount": [5050.0], "issued_on": ["2026-07-10"]})
+    receipts = pd.DataFrame({"invoice": ["A", "A"], "amount": ["50", "50"],
+                             "received_on": ["2026-07-20", "2026-08-20"]})
+    with pytest.raises(ValueError, match="not paid to the cent"):
+        collection_profile_from_history(invoices, receipts)
+    paid = receipts.assign(amount=["5000", "50"])
+    assert collection_profile_from_history(invoices, paid) == pytest.approx([5000 / 5050, 50 / 5050])
+
+
+def test_a_day_first_text_date_is_refused():
+    # pandas reads '05/08/2026' month first, as 8 May rather than 5 August.
+    invoices, receipts = _history()
+    with pytest.raises(ValueError, match="ISO date"):
+        collection_profile_from_history(invoices.assign(issued_on=["2026-07-10", "2026-07-20", "05/08/2026"]),
+                                        receipts)
+
+
 def test_a_partly_paid_invoice_is_refused():
     invoices, receipts = _history()
     with pytest.raises(ValueError, match=r"not paid to the cent: \['C'\]"):
