@@ -120,6 +120,12 @@ def test_an_expected_receipt_date_moves_only_the_refund_row(months):
     )
     assert [flow.start_week for flow in receipts] == [8]
     assert [(flow.start_week, flow.amount) for flow in disbursements] == [(4, 500.0)]
+    # Expected after the window closes: the refund leaves the forecast and the payment stays.
+    receipts, disbursements = gst_weekly_flows(
+        schedule, window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2027, 1, 15)}
+    )
+    assert receipts == []
+    assert [(flow.start_week, flow.amount) for flow in disbursements] == [(4, 500.0)]
 
 
 def test_a_refund_expected_past_the_window_is_left_out(months):
