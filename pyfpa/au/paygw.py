@@ -51,8 +51,8 @@ def _quarter_end(payday: date) -> pd.Period:
     return pd.Period(payday, freq="Q-JUN").asfreq("M", how="end")
 
 
-def _medium(payday: date) -> date:
-    return monthly_activity_statement_due_date(pd.Period(payday, freq="M"))
+def _medium(payday: date, december_agent_date: bool = False) -> date:
+    return monthly_activity_statement_due_date(pd.Period(payday, freq="M"), december_agent_date=december_agent_date)
 
 
 def _medium_deferred(payday: date) -> date:
@@ -62,8 +62,8 @@ def _medium_deferred(payday: date) -> date:
     return monthly_activity_statement_due_date(month)
 
 
-def _small(payday: date) -> date:
-    return monthly_activity_statement_due_date(_quarter_end(payday))
+def _small(payday: date, december_agent_date: bool = False) -> date:
+    return monthly_activity_statement_due_date(_quarter_end(payday), december_agent_date=december_agent_date)
 
 
 def paygw_due_rule(
@@ -71,6 +71,7 @@ def paygw_due_rule(
     *,
     deferred_bas_payer: bool,
     channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
+    december_agent_date: bool = False,
 ) -> DueRule:
     """Due-date rule for PAYG withheld on a payday, for `due_rules["payg_withholding"]`.
 
@@ -78,17 +79,34 @@ def paygw_due_rule(
     docstring for what makes it a deferred BAS payer. A `channel` other than
     ORIGINAL moves a small deferred withholder's quarterly statement; a medium
     withholder's statements carry a monthly obligation and keep their dates.
+    `december_agent_date=True`, like `GstAssumptions.december_agent_date`, is
+    the caller's statement that the December monthly BAS takes the ATO's
+    21 February date (see `gst_bas.yaml`): the entity has up to $10 million
+    turnover, reports GST monthly, lodges electronically through a registered
+    agent and is not registered for deferred GST (the importer scheme, which
+    this code cannot see), and the statement is not one with only a monthly
+    PAYG withholding cycle. The code refuses the flag only for a deferred BAS
+    payer, which lodges no monthly GST, and with a channel other than AGENT.
+    The withholding on that statement takes its date.
     """
     channel = LodgmentChannel(channel)
     if withholder == "large":
         raise ValueError("large withholders pay within days of each payday; that timing is not modelled")
     if withholder not in ("small", "medium"):
         raise ValueError(f"unknown withholder category {withholder!r}; use 'small' or 'medium'")
+    if december_agent_date and deferred_bas_payer:
+        raise ValueError("december_agent_date cannot apply to a deferred BAS payer, which lodges no monthly GST")
+    if december_agent_date and channel is not LodgmentChannel.AGENT:
+        raise ValueError("december_agent_date applies only with the AGENT channel")
     small_deferred = withholder == "small" and deferred_bas_payer
-    if channel is not LodgmentChannel.ORIGINAL and not small_deferred:
-        raise ValueError("a lodgment channel applies only to a small withholder that is a deferred BAS payer")
+    if channel is not LodgmentChannel.ORIGINAL and not small_deferred and not december_agent_date:
+        raise ValueError(
+            "a lodgment channel applies only to a small withholder that is a deferred BAS payer, "
+            "or with december_agent_date")
     if small_deferred:
         return lambda payday: quarterly_bas_due_date(_quarter_end(payday), channel)
     if withholder == "small":
-        return _small
-    return _medium_deferred if deferred_bas_payer else _medium
+        return lambda payday: _small(payday, december_agent_date)
+    if deferred_bas_payer:
+        return _medium_deferred
+    return lambda payday: _medium(payday, december_agent_date)
