@@ -23,11 +23,15 @@
 # One day is left out, because the tables contradict themselves on it. They give
 # 28 September 2026 as the first business day after 25 September, and also list
 # 28 September as King's Birthday (WA), with 29 September as its first business
-# day. No list meets both rows. Leaving it out keeps 25 September on the ATO's 28
-# September and leaves 28 September standing, a day before the ATO's 29
-# September. Listing it would put 25 September a day after the ATO's date. The
-# City of Karratha and Town of Port Hedland held that holiday on 3 August 2026,
-# so it is not a holiday for the whole of WA.
+# day. No list meets both rows. The page's rule settles it: the City of Karratha
+# and Town of Port Hedland held that holiday on 3 August 2026, and 'The date on
+# which the public holiday is observed in the rest of WA is not a public holiday
+# in these regions', so 28 September was not a public holiday for the whole of
+# WA (https://www.wa.gov.au/service/employment/workplace-arrangements/public-holidays-western-australia,
+# last updated 2026-11-05, read 2026-11-14). Leaving it out keeps 25 September
+# on the ATO's 28 September and leaves 28 September standing, a day before the
+# ATO's 29 September. Listing it would put 25 September a day after the ATO's
+# date.
 #
 # 2026-01-01 to 2026-06-30 has no ATO table. It holds the days on the official
 # pages of all 8 jurisdictions, the ones payday-super-checker cites (read

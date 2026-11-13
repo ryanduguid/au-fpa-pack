@@ -1,3 +1,16 @@
+# Unreleased
+
+Changed:
+
+- `public_holidays.yaml` now holds Melbourne Cup on 3 November 2026 and Christmas Eve and New Year's Eve 2026, as
+  the ATO's table of lodgment and payment dates on weekends or public holidays does (last updated 1 July 2026, read
+  14 November 2026). A due date on one of those days now moves to the ATO's published date (4 November, 29 December
+  2026 or 4 January 2027) instead of standing, and `payment_plan_estimate` refuses one as a due date. This resolves
+  the 0.6.0 known issue for every row of the table but one. WA King's Birthday on 28 September 2026 stays out: the
+  table lists it, but also gives 28 September as the first business day after 25 September, and Karratha and Port
+  Hedland held that holiday on 3 August 2026, so it was not a public holiday for the whole of WA. A due date on 28
+  September 2026 therefore stands, a day before the ATO's 29 September.
+
 # v0.6.0
 
 Breaking for code written against 0.5.0: values that are not finite numbers (NaN, infinity, or a total that overflows to infinity) are now refused at the boundaries listed under Fixed, where 0.5.0 carried them into results and saved records. Saved records holding such values no longer load.
@@ -18,12 +31,6 @@ Changed:
   for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
   monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
   refused for a medium withholder, as a conservative choice rather than an ATO rule.
-- `public_holidays.yaml` now holds Melbourne Cup on 3 November 2026 and Christmas Eve and New Year's Eve 2026, as
-  the ATO's table of lodgment and payment dates on weekends or public holidays does (last updated 1 July 2026, read
-  14 November 2026). A due date on one of those days now moves to the ATO's published date (4 November, 29 December
-  2026 or 4 January 2027) instead of standing, and `payment_plan_estimate` refuses one as a due date. WA King's
-  Birthday on 28 September 2026 stays out: the table also gives that day as the first business day after 25
-  September, so no list can match both rows, and leaving it out keeps the earlier date.
 
 Fixed:
 

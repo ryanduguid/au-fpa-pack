@@ -51,6 +51,9 @@ for the whole of any state or territory: it moves the date in every state, so
 the December 2026 quarter is due on 2 March 2027 because 1 March is Labour Day in
 WA. The holiday list follows the ATO's table, so Christmas Eve and New Year's Eve,
 which are part-day holidays, move a date too, to 29 December 2026 and 4 January 2027.
+One row differs: a date on 28 September 2026 (WA King's Birthday) stands, a day
+before the ATO's 29 September, because the table also gives that day as the first
+business day after 25 September and 2 WA regions held the holiday in August.
 `schedule` shows the date the rule names as `nominal_due_date` and the
 effective date as `due_date`; forecast cash on `due_date`. Holidays come from the
 dated list in `public_holidays.yaml`, and a date outside its span raises.

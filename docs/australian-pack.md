@@ -168,10 +168,13 @@ due on Tuesday 2 March. The holidays are the dated list in `public_holidays.yaml
 which follows the ATO's tables. That includes Melbourne Cup, which regional areas
 replace, and Christmas Eve and New Year's Eve, which are holidays for only part of
 the day: a date on one moves to the ATO's 4 November, 29 December 2026 or 4 January
-2027. The tables contradict themselves on 28 September 2026: they give it as the
-first business day after 25 September, and also list it as WA King's Birthday,
-moving to 29 September. The list leaves it out, so 25 September moves to the ATO's
-28 September and 28 September stands, a day before the ATO's 29 September. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
+2027. The pack does not reproduce one row of those tables (last updated 1 July
+2026, read 14 November 2026). They list WA King's Birthday on 28 September 2026,
+moving to 29 September, but also give 28 September as the first business day
+after 25 September. Karratha and Port Hedland held that holiday on 3 August 2026,
+so it was not a public holiday for the whole of WA, and the list leaves it out:
+25 September moves to the ATO's 28 September, and a date on 28 September stands,
+a day before the ATO's 29 September. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
 schedule for a date before 2026 no longer computes. A refund on the due date is a forecast assumption, not a receipt
 promise; `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks it on the date you expect instead. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
 raises until the dates are re-checked. Explicit rate overrides must be finite and
