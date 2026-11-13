@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import math
+from fractions import Fraction
+from numbers import Integral
+
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 _CASH_COLUMNS = [
     "revenue", "gross_profit", "opex", "ebitda", "da", "interest",
@@ -10,8 +14,33 @@ _CASH_COLUMNS = [
 ]
 
 
+def _finite(value: float | Fraction, name: str) -> float:
+    try:
+        if math.isfinite(value):
+            result = float(value)
+            if result or value == 0:
+                return result
+    except (TypeError, ValueError, OverflowError):
+        pass
+    raise ValueError(f"{name} must be finite and within the supported numeric range")
+
+
+def _exact(value: float | Fraction, name: str) -> Fraction:
+    _finite(value, name)
+    # Preserve integral residuals and avoid fixed-width numpy integer arithmetic.
+    return Fraction(int(value)) if isinstance(value, Integral) else Fraction(value)
+
+
+def _finite_columns(frame: pd.DataFrame) -> None:
+    for column in (*_CASH_COLUMNS, "wc_cash_impact", "principal", "ending_cash", "bad_debts", "cogs"):
+        if column in frame.columns:
+            frame[column] = [_finite(value, column) for value in frame[column]]
+
+
 class Carveout(BaseModel):
     """Monthly contribution of the unit being divested (positive numbers)."""
+    model_config = ConfigDict(allow_inf_nan=False)
+
     revenue: float = Field(ge=0)
     gross_profit: float = Field(ge=0)
     opex: float = Field(ge=0)
@@ -59,13 +88,20 @@ def divest(
             "provision (income_tax); run the divestiture on a forecast without income_tax"
         )
     out = forecast.copy(deep=True)
+    _finite_columns(out)
+    carve_out = Carveout.model_validate(carve_out.model_dump())
+    tax_rate = _finite(tax_rate, "tax_rate")
     n = len(out.index)
     if not 0 <= sale_month <= n:
         raise ValueError("sale_month must be within the forecast horizon")
-    monthly_interest_saved = proceeds * annual_rate / 12.0
-    opening_cash = (
+    monthly_interest_saved = _finite(
+        _exact(proceeds, "proceeds") * _exact(annual_rate, "annual_rate") / 12,
+        "monthly interest saved",
+    )
+    opening_cash = _finite(
         float(forecast["ending_cash"].iloc[0])
-        - float(forecast["change_in_cash"].iloc[0])
+        - float(forecast["change_in_cash"].iloc[0]),
+        "opening cash",
     )
 
     for i in range(n):
@@ -105,6 +141,7 @@ def divest(
             )
 
     out["ending_cash"] = out["change_in_cash"].cumsum() + opening_cash
+    _finite_columns(out)
     return out
 
 
@@ -116,7 +153,23 @@ def net_debt_to_ebitda(
 ) -> float:
     """Net-debt / annualized-EBITDA derived from the forecast's EBITDA column.
 
-    Returns ``inf`` when total EBITDA is zero to avoid silent division by zero.
+    Returns ``inf`` for an empty forecast or exactly zero EBITDA. Missing or
+    non-finite evidence and unsupported monetary amounts or ratios are refused.
+    Annualisation accumulates exact float values before rounding once, so a
+    representable annual amount survives intermediate sum/multiply overflow.
     """
-    ebitda = float(forecast["ebitda"].sum()) * 12 / len(forecast) if len(forecast) else 0.0
-    return (debt_balance - cash) / ebitda if ebitda else float("inf")
+    net_debt = _finite(_exact(debt_balance, "debt_balance") - _exact(cash, "cash"), "net debt")
+    if not len(forecast):
+        return float("inf")
+    total = sum(
+        (_exact(value, "ebitda") for value in forecast["ebitda"]),
+        Fraction(),
+    )
+    annualized = total * Fraction(12, len(forecast))
+    if not annualized:
+        return float("inf")
+    ebitda = _finite(annualized, "annualized EBITDA")
+    leverage = _finite(net_debt / ebitda, "leverage")
+    if not leverage and net_debt:
+        raise ValueError("leverage is below the supported numeric range")
+    return leverage

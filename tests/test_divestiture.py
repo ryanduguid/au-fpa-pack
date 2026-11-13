@@ -128,3 +128,153 @@ def test_divest_removes_sold_units_cogs_when_column_present():
     identity = out["revenue"] - out["cogs"] - out["gross_profit"]
     assert identity.abs().max() == pytest.approx(0.0)
     assert (base["cogs"] == 60.0).all()
+
+
+@pytest.mark.parametrize("values,debt", [
+    ([1e307] * 12, 1.2e308),
+    ([1e307] * 24, 1.2e308),
+    ([1e308, 1e-308, -1e308], 4e-308),
+    ([2**62, 2**62], float(12 * 2**62)),
+    ([5e-324, 0.0], 3e-323),
+])
+def test_leverage_preserves_representable_annualisation(values, debt):
+    frame = pd.DataFrame({"ebitda": values})
+    assert net_debt_to_ebitda(frame, debt_balance=debt) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("values,debt,cash,term", [
+    ([1e308], 1e308, 0.0, "annualized EBITDA"),
+    ([1e-308], 1e308, 0.0, "leverage"),
+    ([1.0] * 12, 1e308, -1e308, "net debt"),
+    ([5e-324] + [0.0] * 24, 1.0, 0.0, "annualized EBITDA"),
+])
+def test_leverage_refuses_unsupported_arithmetic(values, debt, cash, term):
+    with pytest.raises(ValueError, match=term):
+        net_debt_to_ebitda(pd.DataFrame({"ebitda": values}), debt_balance=debt, cash=cash)
+
+
+@pytest.mark.parametrize("values", [
+    [float("nan")], [30.0, float("nan")], [float("inf")],
+    [float("-inf")], [float("inf"), float("-inf")], [None],
+])
+def test_leverage_refuses_missing_or_non_finite_ebitda(values):
+    with pytest.raises(ValueError, match="ebitda"):
+        net_debt_to_ebitda(pd.DataFrame({"ebitda": values}), debt_balance=360)
+
+
+@pytest.mark.parametrize("field", ["debt_balance", "cash"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_leverage_refuses_non_finite_scalars(field, value):
+    kwargs = {"debt_balance": 360.0, "cash": 0.0}
+    kwargs[field] = value
+    with pytest.raises(ValueError, match=field):
+        net_debt_to_ebitda(_base_forecast(), **kwargs)
+
+
+@pytest.mark.parametrize("values", [[], [0.0, 0.0], [30.0, -30.0]])
+def test_leverage_explicit_zero_and_empty_conventions(values):
+    assert net_debt_to_ebitda(pd.DataFrame({"ebitda": values}), debt_balance=100) == float("inf")
+
+
+def test_leverage_preserves_signed_ebitda():
+    assert net_debt_to_ebitda(pd.DataFrame({"ebitda": [-30.0] * 12}), debt_balance=360) == -1
+
+
+@pytest.mark.parametrize("column", [
+    "interest", "wc_cash_impact", "principal", "change_in_cash", "ending_cash", "bad_debts", "cogs",
+])
+def test_divest_refuses_missing_financial_evidence_without_mutation(column):
+    base = _base_forecast().assign(bad_debts=0.0, cogs=60.0)
+    base.loc[base.index[0], column] = float("nan")
+    before = base.copy(deep=True)
+    with pytest.raises(ValueError, match=column):
+        divest(base, _carveout(), sale_month=0, proceeds=0, annual_rate=0, tax_rate=0)
+    pd.testing.assert_frame_equal(base, before)
+
+
+@pytest.mark.parametrize("field", ["proceeds", "annual_rate", "tax_rate"])
+def test_divest_refuses_non_finite_scalars(field):
+    kwargs = {"proceeds": 0.0, "annual_rate": 0.0, "tax_rate": 0.0}
+    kwargs[field] = float("nan")
+    with pytest.raises(ValueError, match=field):
+        divest(_base_forecast(), _carveout(), sale_month=0, **kwargs)
+
+
+@pytest.mark.parametrize("field", ["revenue", "gross_profit", "opex", "da", "capex"])
+def test_carveout_refuses_infinity(field):
+    values = {"revenue": 20.0, "gross_profit": 8.0, "opex": 2.0, "da": 1.0, "capex": 0.5}
+    values[field] = float("inf")
+    with pytest.raises(ValueError):
+        Carveout.model_validate(values)
+
+
+def test_divest_refuses_unsupported_opening_cash_without_mutation():
+    base = _base_forecast().iloc[:1].copy()
+    base["ending_cash"] = 1e308
+    base["change_in_cash"] = -1e308
+    before = base.copy(deep=True)
+    with pytest.raises(ValueError, match="opening cash"):
+        divest(base, _carveout(), sale_month=0, proceeds=0, annual_rate=0, tax_rate=0)
+    pd.testing.assert_frame_equal(base, before)
+
+
+def test_divest_refuses_transformed_cumulative_cash_overflow():
+    row = {"revenue": 1e307, "cogs": 9e307, "gross_profit": -8e307,
+           "opex": 0.0, "ebitda": -8e307, "da": 0.0, "interest": 0.0,
+           "pretax_income": -8e307, "tax": 0.0, "net_income": -8e307,
+           "wc_cash_impact": 0.0, "operating_cash_flow": -8e307, "capex": 0.0,
+           "principal": 0.0, "free_cash_flow": -8e307, "change_in_cash": -8e307}
+    base = pd.DataFrame([row, row], index=pd.period_range("2026-07", periods=2, freq="M"))
+    base["ending_cash"] = [-8e307, -1.6e308]
+    before = base.copy(deep=True)
+    with pytest.raises(ValueError, match="ending_cash"):
+        divest(base, Carveout(revenue=1e307, gross_profit=1e307, opex=0),
+               sale_month=0, proceeds=0, annual_rate=0, tax_rate=0)
+    pd.testing.assert_frame_equal(base, before)
+
+
+def test_divest_preserves_representable_monthly_interest_savings():
+    base = _base_forecast().iloc[:1].copy()
+    base["interest"] = 1e308
+    result = divest(base, Carveout(revenue=0, gross_profit=0, opex=0),
+                    sale_month=0, proceeds=1e308, annual_rate=2, tax_rate=0)
+    assert result["interest"].iloc[0] == pytest.approx(8.333333333333333e307)
+
+
+def test_divest_refuses_unsupported_monthly_interest_savings():
+    with pytest.raises(ValueError, match="monthly interest saved"):
+        divest(_base_forecast(), _carveout(), sale_month=0,
+               proceeds=1e308, annual_rate=100, tax_rate=0)
+
+
+def test_divest_integer_input_columns_allow_fractional_results():
+    base = _base_forecast().iloc[:1].copy()
+    base["interest"] = base["interest"].astype("int64")
+    base["capex"] = base["capex"].astype("int64")
+    before = base.copy(deep=True)
+    result = divest(base, _carveout(), sale_month=0, proceeds=120, annual_rate=.12, tax_rate=.25)
+    assert result["interest"].iloc[0] == pytest.approx(2.8)
+    assert result["capex"].iloc[0] == pytest.approx(2.5)
+    pd.testing.assert_frame_equal(base, before)
+
+
+def test_leverage_preserves_integral_ebitda_residual():
+    frame = pd.DataFrame({"ebitda": [2**62 + 1, -(2**62)]})
+    assert net_debt_to_ebitda(frame, debt_balance=6) == 1
+
+
+def test_leverage_preserves_integral_net_debt_residual():
+    frame = pd.DataFrame({"ebitda": [1.0] * 12})
+    assert net_debt_to_ebitda(frame, debt_balance=2**62 + 12, cash=2**62) == 1
+
+
+def test_leverage_refuses_nonzero_ratio_underflow():
+    frame = pd.DataFrame({"ebitda": [1e307] * 12})
+    with pytest.raises(ValueError, match="leverage"):
+        net_debt_to_ebitda(frame, debt_balance=1e-308)
+
+
+def test_divest_refuses_nonzero_interest_savings_underflow():
+    with pytest.raises(ValueError, match="monthly interest saved"):
+        divest(_base_forecast(), _carveout(), sale_month=0,
+               proceeds=5e-324, annual_rate=1, tax_rate=0)
