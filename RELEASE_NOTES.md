@@ -38,8 +38,10 @@ Fixed:
 
 Known issues:
 
-- `verify_workbook` accepts `rel_tol=float("inf")` and an `expected` frame with no rows, and then reports a pass
-  whatever the workbook's formulas compute. Pass a finite tolerance and a non-empty frame.
+- `verify_workbook` accepts `rel_tol=float("inf")`, and then passes every line and check that evaluates to a number,
+  whatever the number. It also passes an `expected` frame with no rows when the frame names at least one line the
+  Model sheet carries, because no month is compared. NaN and error cells still fail. Pass a finite tolerance and a
+  frame with rows.
 - A NaN amount understates the totals in the cash briefing, an overflowing total renders as `inf`, and the forecast
   XLSX export writes NaN as a blank cell and infinities as text.
 - `public_holidays.yaml` still leaves out WA King's Birthday (28 September), Melbourne Cup (3 November), Christmas Eve
