@@ -57,6 +57,7 @@ def payg_instalment_schedule(
     rate: float | None = None,
     notified_amounts: Mapping[str, NotifiedAmount] | None = None,
     channel: LodgmentChannel | str = LodgmentChannel.ORIGINAL,
+    december_agent_date: bool = False,
 ) -> pd.DataFrame:
     """Instalments by quarter: columns quarter, due_date, amount.
 
@@ -71,12 +72,29 @@ def payg_instalment_schedule(
     `channel` other than ORIGINAL moves a deferred BAS payer's instalments to
     the date of the quarterly statement they sit on; instalment notices (forms
     R, S and T) do not qualify.
+
+    `december_agent_date=True`, like `GstAssumptions.december_agent_date`, is
+    the caller's statement that the December monthly BAS takes the ATO's
+    21 February date (see `gst_bas.yaml`): the entity has up to $10 million
+    turnover, reports GST monthly, lodges electronically through a registered
+    agent and is not registered for deferred GST (the importer scheme, which
+    this code cannot see), and the statement is not one with only a monthly
+    PAYG withholding cycle. The code refuses the flag only for a deferred BAS
+    payer, which lodges no monthly GST, and with a channel other than AGENT.
+    The December quarter's instalment on that statement takes its date, except
+    one whose notice was given after the quarter ended: its date comes from
+    s 45-112(3), and the flag does not move it, because the ATO pages read on
+    13 November 2026 do not say whether the 21 February date replaces it.
     """
     if (rate is None) == (notified_amounts is None):
         raise ValueError("give either rate or notified_amounts")
     channel = LodgmentChannel(channel)
-    if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer:
-        raise ValueError("a lodgment channel applies only to a deferred BAS payer")
+    if december_agent_date and deferred_bas_payer:
+        raise ValueError("december_agent_date cannot apply to a deferred BAS payer, which lodges no monthly GST")
+    if december_agent_date and channel is not LodgmentChannel.AGENT:
+        raise ValueError("december_agent_date applies only with the AGENT channel")
+    if channel is not LodgmentChannel.ORIGINAL and not deferred_bas_payer and not december_agent_date:
+        raise ValueError("a lodgment channel applies only to a deferred BAS payer, or with december_agent_date")
     if rate is not None and not 0 <= rate <= 1:
         raise ValueError("rate must be between 0 and 1")
     _validate_monthly_series(instalment_income)
@@ -97,7 +115,7 @@ def payg_instalment_schedule(
         if quarter_end > index.max():
             continue
         due = quarterly_bas_due_date(quarter_end, channel) if deferred_bas_payer else (
-            monthly_activity_statement_due_date(quarter_end))
+            monthly_activity_statement_due_date(quarter_end, december_agent_date=december_agent_date))
         if rate is not None:
             amount = rate * float(income.sum())
         else:
