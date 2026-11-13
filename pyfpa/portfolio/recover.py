@@ -77,7 +77,7 @@ def recover_actuals(snapshot: Snapshot) -> dict[str, float]:
 def best_snapshot(client_path: str | Path) -> Snapshot | None:
     """The lowest-fitness scored snapshot in <client>/.fpa/forecasts/ - the
     assumptions that worked best for that client. None if no snapshot has a finite,
-    non-negative fitness."""
+    non-negative fitness. Malformed saved snapshots raise a validation error."""
     forecasts = Workspace.open(client_path).memory / "forecasts"
     if not forecasts.exists():
         return None

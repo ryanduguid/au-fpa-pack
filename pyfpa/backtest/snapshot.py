@@ -6,7 +6,7 @@ from typing import Any
 
 import pandas as pd
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, FiniteFloat
 
 from pyfpa.backtest.score import DEFAULT_SCORE_LINES, ScoreResult, extract_lines
 from pyfpa.config.schemas import EntityConfig
@@ -17,10 +17,12 @@ class Snapshot(BaseModel):
     """The full record of one forecast: the assumptions it used, the lines it
     predicted, and (once the period closes) the realised score."""
 
+    model_config = ConfigDict(revalidate_instances="always")
+
     label: str
     created: str                  # caller-supplied date string; never generated here
     assumptions: dict[str, Any]   # serialised EntityConfig
-    predicted: dict[str, float]
+    predicted: dict[str, FiniteFloat]
     score: ScoreResult | None = None
 
 
@@ -46,7 +48,8 @@ def snapshot_forecast(
 def save_snapshot(snapshot: Snapshot, path: str | Path, *, overwrite: bool = False) -> None:
     """Serialise a Snapshot to YAML at the given path."""
     destination = Path(path)
-    text = yaml.safe_dump(snapshot.model_dump(), sort_keys=False)
+    validated = Snapshot.model_validate(snapshot.model_dump())
+    text = yaml.safe_dump(validated.model_dump(), sort_keys=False)
     with destination.open("w" if overwrite else "x", encoding="utf-8") as output:
         output.write(text)
 

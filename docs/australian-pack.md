@@ -68,6 +68,16 @@ frame = payroll_forecast(
 
 Skills: `fpa-au-payroll`, `fpa-au-gst-bas`, `fpa-au-xero`, `fpa-au-drivers`.
 
+### Forecast snapshots
+
+Forecast predictions, score fitness, per-line errors and weights must be finite.
+Snapshots are validated when created or loaded and revalidated before saving,
+including after a caller changes a nested mapping or uses `model_copy`. Invalid
+records are refused before a destination is opened. A scorecard build reports
+`invalid_snapshot` and preserves its previous output. Selection through
+`best_snapshot` and portfolio validation also report malformed saved records
+rather than silently ignoring them. Older finite snapshots without recorded actual signs remain readable.
+
 ### Worked GST assumptions
 
 GST-free sales and input-taxed sales both exclude output GST, but their
