@@ -68,6 +68,14 @@ frame = payroll_forecast(
 
 Skills: `fpa-au-payroll`, `fpa-au-gst-bas`, `fpa-au-xero`, `fpa-au-drivers`.
 
+### Source reconciliation
+
+CSV reconciliation requires finite expected controls and finite, non-negative
+tolerances. Source totals, mapped totals, variances and relative variances must
+also be finite. Overflow is refused before returning reconciliation evidence or
+scaffolding a connector, including when every individual CSV amount is finite.
+Ordinary arithmetic and the default half-cent absolute tolerance are unchanged.
+
 ### Forecast snapshots
 
 Forecast predictions, score fitness, per-line errors and weights must be finite.
