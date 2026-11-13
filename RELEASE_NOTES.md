@@ -1,3 +1,14 @@
+# Unreleased
+
+Changed:
+
+- `paygw_due_rule("medium", deferred_bas_payer=True, channel=LodgmentChannel.AGENT)` is no longer refused. It moves
+  the third month's withholding to the registered agent program date of the quarterly statement it sits on, so it
+  shares the GST's date, and leaves the first 2 months on the 21st. The ATO's registered agent lodgment program page
+  for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
+  monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
+  refused for a medium withholder, as a conservative choice rather than an ATO rule.
+
 # v0.5.0
 
 Breaking for code and workbooks written against 0.4.0:
