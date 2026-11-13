@@ -72,3 +72,42 @@ def test_forecast_biweekly_and_same_week_merge():
     assert df["disbursements"].tolist() == [10.0, 10.0, 60.0, 10.0, 10.0]
     # net: 90,-10,40,-10,90 ; ending: 90,80,120,110,200
     assert df["ending_cash"].tolist() == [90.0, 80.0, 120.0, 110.0, 200.0]
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"receipts": [{"name": "Sales", "amount": 1e308, "start_week": 1}] * 2},
+        {"disbursements": [{"name": "Payroll", "amount": 1e308, "start_week": 1}] * 2},
+        {"opening_cash": 1e308, "receipts": [{"name": "Sales", "amount": 1e308, "start_week": 1}]},
+        {"opening_cash": -1e308, "disbursements": [{"name": "Payroll", "amount": 1e308, "start_week": 1}]},
+        {"weeks": 2, "receipts": [{"name": "Sales", "amount": 1e308, "start_week": 1, "recurrence": "weekly"}]},
+        {"opening_cash": 1e308, "facility_limit": 1e308},
+        {
+            "receipts": [{"name": "Sales", "amount": 1e308, "start_week": 1}] * 2,
+            "disbursements": [{"name": "Payroll", "amount": 1e308, "start_week": 1}] * 2,
+        },
+    ],
+    ids=["receipt-total", "payment-total", "cash-positive", "cash-negative", "cumulative-cash", "headroom", "offsetting-totals"],
+)
+def test_forecast_rejects_arithmetic_overflow(overrides):
+    # Every supplied amount is finite; summing them must not publish inf or NaN.
+    cfg = Cash13Config.model_validate({"opening_cash": 0.0, "weeks": 1, **overrides})
+    with pytest.raises(ValueError, match="non-finite"):
+        cash13_forecast(cfg)
+
+
+def test_forecast_preserves_large_finite_results():
+    cfg = Cash13Config(
+        opening_cash=1e308,
+        weeks=1,
+        receipts=[WeeklyFlow(name="Sales", amount=1e307, start_week=1)],
+        disbursements=[WeeklyFlow(name="Payroll", amount=1e307, start_week=1)],
+        facility_limit=1e307,
+    )
+    frame = cash13_forecast(cfg)
+    assert frame["receipts"].tolist() == [1e307]
+    assert frame["disbursements"].tolist() == [1e307]
+    assert frame["net_cash"].tolist() == [0.0]
+    assert frame["ending_cash"].tolist() == [1e308]
+    assert frame["headroom"].tolist() == [1.1e308]
