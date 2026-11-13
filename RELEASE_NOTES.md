@@ -1,5 +1,10 @@
 # Unreleased
 
+Added:
+
+- `runway_summary` names every week whose ending cash is below zero in `negative_weeks`, and with a facility every week headroom is below the buffer in `headroom_breach_weeks`. The briefing from `to_briefing_md` adds a 'Weeks below zero' line, so a one-week dip reads apart from a month below zero. In the Lumbridge example a 45-day late receipt leaves weeks 4, 5 and 6 below zero. `compare_scenarios` rows and the Ridgeline decision pack carry the same lists, and the decision pack's metric dictionary declares `negative_weeks`.
+- `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks a BAS refund on the date the caller expects, as `fbt_weekly_flows` does for FBT. Only refund rows move. Without it a refund still lands on the statement's due date, a forecast assumption; a label with no refund in the schedule is refused.
+
 Changed:
 
 - The Claude Code plugin is now named `au-fpa-pack`, not `openfpa`, with Ryan Duguid as its author, and the

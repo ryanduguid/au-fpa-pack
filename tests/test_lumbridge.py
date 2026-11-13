@@ -50,6 +50,15 @@ def test_delayed_receipt_changes_cash_and_receivables_without_changing_profit():
         forecast(delay_days=-1)
 
 
+def test_the_45_day_delay_names_the_weeks_below_zero():
+    from pyfpa.cash13.runway import runway_summary
+
+    forecast = functions()["forecast"]
+    assert runway_summary(forecast()["weekly"])["negative_weeks"] == []
+    # October closes at ($11,960) in week 4 and the trough of ($25,160) falls in week 6.
+    assert runway_summary(forecast(delay_days=45)["weekly"])["negative_weeks"] == [4, 5, 6]
+
+
 def test_source_reconciliation_refuses_an_unmapped_account(tmp_path):
     import shutil
 

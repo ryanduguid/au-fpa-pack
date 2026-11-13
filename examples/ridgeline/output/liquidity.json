@@ -15,6 +15,13 @@
         "min_cash": -146000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          6,
+          7,
+          8,
+          11
+        ],
         "ending_cash": 16000.0
       },
       "meets_floor_without_buffer": false,
@@ -24,6 +31,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 162000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -35,6 +43,15 @@
         "min_cash": -164000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          11,
+          13
+        ],
         "ending_cash": -29000.0
       },
       "meets_floor_without_buffer": false,
@@ -44,6 +61,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 135000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -55,6 +73,15 @@
         "min_cash": -146000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11
+        ],
         "ending_cash": 16000.0
       },
       "meets_floor_without_buffer": false,
@@ -64,6 +91,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 162000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -75,6 +103,16 @@
         "min_cash": -164000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11,
+          13
+        ],
         "ending_cash": -29000.0
       },
       "meets_floor_without_buffer": false,
@@ -84,6 +122,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 135000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -95,6 +134,17 @@
         "min_cash": -146000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
         "ending_cash": 16000.0
       },
       "meets_floor_without_buffer": false,
@@ -104,6 +154,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 162000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -115,6 +166,18 @@
         "min_cash": -164000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          13
+        ],
         "ending_cash": -29000.0
       },
       "meets_floor_without_buffer": false,
@@ -124,6 +187,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 135000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -135,6 +199,17 @@
         "min_cash": -208000.0,
         "min_week": 6,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
         "ending_cash": 16000.0
       },
       "meets_floor_without_buffer": false,
@@ -144,6 +219,7 @@
         "min_cash": 0.0,
         "min_week": 6,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 224000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -155,6 +231,18 @@
         "min_cash": -217000.0,
         "min_week": 6,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          13
+        ],
         "ending_cash": -29000.0
       },
       "meets_floor_without_buffer": false,
@@ -164,6 +252,7 @@
         "min_cash": 0.0,
         "min_week": 6,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 188000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -175,6 +264,18 @@
         "min_cash": -266000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
         "ending_cash": 16000.0
       },
       "meets_floor_without_buffer": false,
@@ -184,6 +285,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 282000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -195,6 +297,19 @@
         "min_cash": -284000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
         "ending_cash": -29000.0
       },
       "meets_floor_without_buffer": false,
@@ -204,6 +319,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 255000.0
       },
       "one_off_receipts_beyond_horizon": []
@@ -215,6 +331,19 @@
         "min_cash": -266000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
         "ending_cash": -104000.0
       },
       "meets_floor_without_buffer": false,
@@ -224,6 +353,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 162000.0
       },
       "one_off_receipts_beyond_horizon": [
@@ -241,6 +371,19 @@
         "min_cash": -284000.0,
         "min_week": 7,
         "first_negative_week": 3,
+        "negative_weeks": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
         "ending_cash": -149000.0
       },
       "meets_floor_without_buffer": false,
@@ -250,6 +393,7 @@
         "min_cash": 0.0,
         "min_week": 7,
         "first_negative_week": null,
+        "negative_weeks": [],
         "ending_cash": 135000.0
       },
       "one_off_receipts_beyond_horizon": [

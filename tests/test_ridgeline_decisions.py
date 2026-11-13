@@ -31,6 +31,10 @@ def test_ridgeline_decisions_have_exact_weekly_results_and_one_frame_per_scenari
     assert pack["scenarios"][1]["one_off_receipts_beyond_horizon"] == [  # nosec B101
         {"name": "Wholesale AR collection", "amount": 120000.0, "week": 14}]
     assert "ending_cash_dec" not in pack["metrics"]  # nosec B101
+    for row in pack["scenarios"]:
+        reported = set(row) - {"scenario", "changed_assumptions", "one_off_receipts_beyond_horizon"}
+        assert reported <= set(pack["metrics"]), row["scenario"]  # nosec B101
+    assert pack["scenarios"][0]["negative_weeks"] == [3, 6, 7, 8, 11]  # nosec B101
     assert pack["metrics"]["ending_cash"]["unit"] == "model currency units"  # nosec B101
 
 
