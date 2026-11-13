@@ -401,6 +401,29 @@ def test_rba_table_without_units_and_with_unreadable_rows(monkeypatch):
     assert series.data == {"2026-02": 3.85}  # nosec B101: pytest outcome assertion
 
 
+def test_rba_snapshot_records_unavailable_and_malformed_observations(monkeypatch, tmp_path):
+    raw = _rba_table(
+        "Series ID,FIRMMCRTD", "not a date,3.70", "02-Feb-2026,n/a",
+        "27-Feb-2026,3.85", "28-Feb-2026,",
+    )
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = load_snapshot(save_snapshot(fetch_rba_series("cash_rate_target"), tmp_path))
+    assert series.data == {"2026-02": 3.85}  # nosec B101: pytest outcome assertion
+    assert [(row.period, row.reason) for row in series.skipped_observations] == [  # nosec B101
+        ("not a date", "invalid period"),
+        ("02-Feb-2026", "invalid value"),
+        ("28-Feb-2026", "missing value"),
+    ]
+
+
+@pytest.mark.parametrize("value", ["inf", "-inf", "NaN", "1e309"])
+def test_rba_refuses_non_finite_observation_even_if_later_superseded(monkeypatch, value):
+    raw = _rba_table("Series ID,FIRMMCRTD", f"02-Feb-2026,{value}", "27-Feb-2026,3.85")
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match=r"non-finite.*FIRMMCRTD.*02-Feb-2026"):
+        fetch_rba_series("cash_rate_target")
+
+
 def test_abs_response_without_time_or_observation_columns_is_refused(monkeypatch):
     monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: b"PERIOD,VALUE\n2026-Q1,4.0\n")
@@ -423,9 +446,112 @@ def test_abs_skips_blank_and_unreadable_observations(monkeypatch):
     assert fetch_abs_series("wpi").data == {"2026Q3": 4.2}  # nosec B101: pytest outcome assertion
 
 
+def test_abs_snapshot_records_unavailable_and_malformed_observations(monkeypatch, tmp_path):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE\n2026-Q1,\n2026-Q2,not a number\n2026-Q3,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = load_snapshot(save_snapshot(fetch_abs_series("wpi"), tmp_path))
+    assert series.data == {"2026Q3": 4.2}  # nosec B101: pytest outcome assertion
+    assert [(row.period, row.reason) for row in series.skipped_observations] == [  # nosec B101
+        ("2026-Q1", "missing value"),
+        ("2026-Q2", "invalid value"),
+    ]
+
+
+@pytest.mark.parametrize("value", ["inf", "-inf", "NaN", "1e309"])
+def test_abs_refuses_non_finite_observation(monkeypatch, value):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = f"TIME_PERIOD,OBS_VALUE\n2026-Q1,{value}\n2026-Q2,4.2\n".encode()
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match=r"non-finite.*WPI_H.*2026-Q1"):
+        fetch_abs_series("wpi")
+
+
+def test_snapshot_rejects_non_finite_data_on_read_and_before_creating_file(tmp_path):
+    old_path = tmp_path / "old.json"
+    original = _series()
+    old_payload = original.model_dump(mode="json")
+    old_payload["data"]["2026-08"] = float("inf")
+    old_path.write_text(json.dumps(old_payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="finite"):
+        load_snapshot(old_path)
+
+    original.data["2026-08"] = float("inf")
+    with pytest.raises(ValueError, match="finite|compliant"):
+        save_snapshot(original, tmp_path)
+    assert list(tmp_path.iterdir()) == [old_path]  # nosec B101: pytest outcome assertion
+
+
 def test_abs_refuses_a_repeated_period_in_one_series(monkeypatch):
     monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
     raw = b"TIME_PERIOD,OBS_VALUE\n2026-Q1,4.0\n2026-Q1,4.1\n"
     monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
     with pytest.raises(ValueError, match="duplicate ABS period 2026Q1"):
         fetch_abs_series("wpi")
+
+
+@pytest.mark.parametrize("period", ["", "NaT", "not a date"])
+@pytest.mark.parametrize("value", ["inf", "-inf", "NaN", "1e309"])
+def test_rba_refuses_non_finite_value_with_invalid_period(monkeypatch, period, value):
+    raw = _rba_table("Series ID,FIRMMCRTD", f"{period},{value}", "27-Feb-2026,3.85")
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="non-finite.*FIRMMCRTD"):
+        fetch_rba_series("cash_rate_target")
+
+
+@pytest.mark.parametrize("period", ["", "NaT", "not a date"])
+@pytest.mark.parametrize("value", ["inf", "-inf", "NaN", "1e309"])
+def test_abs_refuses_non_finite_value_with_invalid_period(monkeypatch, period, value):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = f"TIME_PERIOD,OBS_VALUE\n{period},{value}\n2026-Q2,4.2\n".encode()
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="non-finite.*WPI_H"):
+        fetch_abs_series("wpi")
+
+
+def test_abs_unreadable_value_cannot_bypass_frequency_guard(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE\n2026-01,not a number\n2026-Q2,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    with pytest.raises(ValueError, match="returned M observations"):
+        fetch_abs_series("wpi")
+
+
+@pytest.mark.parametrize("source", ["rba", "abs"])
+def test_invalid_period_reason_precedes_unreadable_value(monkeypatch, source):
+    if source == "rba":
+        raw = _rba_table(
+            "Series ID,FIRMMCRTD", "not a date,not a number", "27-Feb-2026,3.85",
+        )
+    else:
+        monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+        raw = b"TIME_PERIOD,OBS_VALUE\nnot a date,not a number\n2026-Q2,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = fetch_rba_series("cash_rate_target") if source == "rba" else fetch_abs_series("wpi")
+    assert [(row.period, row.reason) for row in series.skipped_observations] == [
+        ("not a date", "invalid period"),
+    ]
+
+
+def test_abs_unreadable_value_with_invalid_quarter_records_period_reason(monkeypatch):
+    monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+    raw = b"TIME_PERIOD,OBS_VALUE\n2026-Q9,not a number\n2026-Q2,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = fetch_abs_series("wpi")
+    assert [(row.period, row.reason) for row in series.skipped_observations] == [
+        ("2026-Q9", "invalid period"),
+    ]
+
+
+@pytest.mark.parametrize("source", ["rba", "abs"])
+def test_snapshot_records_missing_period_with_finite_value(monkeypatch, source):
+    if source == "rba":
+        raw = _rba_table("Series ID,FIRMMCRTD", "NaT,3.70", "27-Feb-2026,3.85")
+    else:
+        monkeypatch.setenv("ABS_API_KEY", "synthetic-unused")
+        raw = b"TIME_PERIOD,OBS_VALUE\nNaT,4.0\n2026-Q2,4.2\n"
+    monkeypatch.setattr(drivers, "_fetch", lambda *args, **kwargs: raw)
+    series = fetch_rba_series("cash_rate_target") if source == "rba" else fetch_abs_series("wpi")
+    assert [(row.period, row.reason) for row in series.skipped_observations] == [
+        ("NaT", "invalid period"),
+    ]

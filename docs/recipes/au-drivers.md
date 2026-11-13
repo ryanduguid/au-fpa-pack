@@ -61,6 +61,14 @@ retrieval date. Re-running never overwrites an existing file; a
 revision by the RBA creates a new dated snapshot, and which one a
 forecast used stays auditable.
 
+Check `skipped_observations` before using a snapshot in a forecast. Each
+entry records the source period and whether its value was missing, its
+period was invalid or its value could not be read. RBA monthly values
+still use the latest valid daily observation. A non-finite value fails
+the fetch even when its source period is invalid. The batch script
+reports the error for that series. Unreadable values still undergo period
+and frequency checks before being recorded as skipped.
+
 ABS observations must represent one series. Select dimensions explicitly
 when a dataflow contains multiple series, using the exact column names and
 codes from its export:
