@@ -95,6 +95,54 @@ def test_refund_position_flows_back(months):
     assert receipts[0].amount > 0
 
 
+def _refund_schedule(months):
+    frame = monthly_gst(pd.Series(10000.0, index=months), pd.Series(90000.0, index=months))
+    return bas_schedule(frame["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
+
+
+def test_a_refund_arrives_on_the_date_the_caller_expects(months):
+    schedule = _refund_schedule(months)
+    # Due 28 October (week 4); the caller expects the money on 20 November (week 8).
+    receipts, disbursements = gst_weekly_flows(
+        schedule, window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2026, 11, 20)}
+    )
+    assert disbursements == []
+    assert [(flow.name, flow.start_week) for flow in receipts] == [("BAS 2027Q1", 8)]
+    assert receipts[0].amount == -schedule["amount"].iloc[0]
+
+
+def test_an_expected_receipt_date_moves_only_the_refund_row(months):
+    refund = _refund_schedule(months).iloc[[0]]
+    # A payment row sharing the refund's label keeps its own due date (28 October, week 4).
+    schedule = pd.concat([refund, refund.assign(amount=500.0)], ignore_index=True)
+    receipts, disbursements = gst_weekly_flows(
+        schedule, window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2026, 11, 20)}
+    )
+    assert [flow.start_week for flow in receipts] == [8]
+    assert [(flow.start_week, flow.amount) for flow in disbursements] == [(4, 500.0)]
+    # Expected after the window closes: the refund leaves the forecast and the payment stays.
+    receipts, disbursements = gst_weekly_flows(
+        schedule, window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2027, 1, 15)}
+    )
+    assert receipts == []
+    assert [(flow.start_week, flow.amount) for flow in disbursements] == [(4, 500.0)]
+
+
+def test_a_refund_expected_past_the_window_is_left_out(months):
+    receipts, _ = gst_weekly_flows(
+        _refund_schedule(months), window_start=date(2026, 10, 1), expected_receipt_on={"2027Q1": date(2027, 1, 15)}
+    )
+    assert receipts == []
+
+
+@pytest.mark.parametrize("label", ["2027Q2", "2031Q1"])
+def test_an_expected_receipt_date_needs_a_refund_in_that_period(net_gst, label):
+    # net_gst's quarters are payments, and 2031Q1 is not in the schedule at all.
+    schedule = bas_schedule(net_gst["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
+    with pytest.raises(ValueError, match="no refund"):
+        gst_weekly_flows(schedule, window_start=date(2026, 10, 1), expected_receipt_on={label: date(2026, 11, 20)})
+
+
 def test_gst_weekly_flows_maps_due_dates_to_weeks(net_gst):
     schedule = bas_schedule(net_gst["net_gst"], GstAssumptions(bas_cycle=BasCycle.QUARTERLY))
     receipts, disbursements = gst_weekly_flows(schedule, window_start=date(2026, 10, 1))

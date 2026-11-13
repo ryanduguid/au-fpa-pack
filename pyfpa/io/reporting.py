@@ -15,6 +15,15 @@ def _money(value: float) -> str:
     return f"{sign}${abs(value):,.0f}"
 
 
+def _weeks_text(weeks: list[int]) -> str:
+    if not weeks:
+        return "none"
+    if len(weeks) == 1:
+        return f"1 (week {weeks[0]})"
+    listed = ", ".join(str(week) for week in weeks[:-1]) + f" and {weeks[-1]}"
+    return f"{len(weeks)} (weeks {listed})"
+
+
 def to_briefing_md(
     forecast_df: pd.DataFrame,
     *,
@@ -52,8 +61,11 @@ def to_briefing_md(
             "",
             f"- **Trough:** {_money(runway['min_cash'])} (week {runway['min_week']})",
             f"- **First negative week:** {first_neg_text}",
-            "",
         ]
+        # A hand-built runway without the key keeps the briefing it had before.
+        if "negative_weeks" in runway:
+            lines.append(f"- **Weeks below zero:** {_weeks_text(runway['negative_weeks'])}")
+        lines.append("")
 
     lines += [
         "## Monthly",

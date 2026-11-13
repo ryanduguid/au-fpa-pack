@@ -1,5 +1,10 @@
 # Unreleased
 
+Added:
+
+- `runway_summary` names every week whose ending cash is below zero in `negative_weeks`, and with a facility every week headroom is below the buffer in `headroom_breach_weeks`. The briefing from `to_briefing_md` adds a 'Weeks below zero' line, so a one-week dip reads apart from a month below zero. In the Lumbridge example a 45-day late receipt leaves weeks 4, 5 and 6 below zero. `compare_scenarios` rows and the Ridgeline decision pack carry the same lists, and the decision pack's metric dictionary declares `negative_weeks`.
+- `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks a BAS refund on the date the caller expects, as `fbt_weekly_flows` does for FBT. Only refund rows move. Without it a refund still lands on the statement's due date, a forecast assumption; a label with no refund in the schedule is refused.
+
 Changed:
 
 - `paygw_due_rule("medium", deferred_bas_payer=True, channel=LodgmentChannel.AGENT)` is no longer refused. It moves
@@ -12,6 +17,10 @@ Changed:
   repository is its own marketplace: `/plugin marketplace add ryanduguid/au-fpa-pack`, then
   `/plugin install au-fpa-pack@au-fpa-pack`. Uninstall a plugin installed under the old name before
   installing this one.
+
+Fixed:
+
+- An eligible business's December monthly BAS is due 21 February, and that date now reaches the PAYG withholding and instalments on it, not only the GST. `paygw_due_rule` and `payg_instalment_schedule` take `december_agent_date=True` with the `AGENT` channel, as `GstAssumptions` does; before, withholding and instalments on that statement stayed on 21 January. Source: ATO, 'Activity statements', registered agent lodgment program (last updated 1 July 2026, read 13 November 2026): the December business activity statement is not due for lodgment and payment until 21 February for business clients with up to $10 million annual turnover who report GST monthly and lodge electronically; businesses registered for deferred GST are not eligible. The flag is the caller's statement that the business meets those conditions, is not registered for deferred GST (the importer scheme, which the code cannot see) and that the statement is not one with only a monthly PAYG withholding cycle. The code refuses the flag for a deferred BAS payer, which lodges no monthly GST, and with a channel other than `AGENT`. It does not move an instalment whose notice came after the quarter ended, which stays on its s 45-112(3) date.
 
 # v0.5.0
 

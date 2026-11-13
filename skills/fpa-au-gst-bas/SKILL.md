@@ -61,10 +61,12 @@ default. When the company qualifies, set `GstAssumptions.lodgment_channel` to
 `LodgmentChannel.ONLINE` (2 weeks later for quarters 1, 3 and 4) or
 `LodgmentChannel.AGENT` (the registered agent program date), and pass the same
 channel to `payg_instalment_schedule` and `paygw_due_rule` for amounts on that
-statement. A medium withholder that is a deferred BAS payer takes AGENT, which
-moves only its third-month quarterly statement, and not ONLINE; use ORIGINAL if
-it has a monthly PAYG instalment obligation, which the ATO excludes from the
-agent date. Quarter 2 has no later date. A quarter with no confirmed agent date
+statement. With `GstAssumptions.december_agent_date`, pass `december_agent_date=True`
+to both as well, so the withholding and instalments on the December monthly BAS
+move to 21 February with its GST. A medium withholder that is a deferred BAS
+payer takes AGENT, which moves only its third-month quarterly statement, and not
+ONLINE; use ORIGINAL if it has a monthly PAYG instalment obligation, which the
+ATO excludes from the agent date. Quarter 2 has no later date. A quarter with no confirmed agent date
 raises: use the original date. FBT left to pay with the return comes from
 `fbt_schedule` and `fbt_weekly_flows`. An FBT refund stays in the schedule but
 enters the forecast only with `expected_receipt_on`, because 21 May is a payment
@@ -78,8 +80,10 @@ deadline and not a refund date.
   `monthly_gst` purchases.
 - A quarter is only scheduled when all 3 months exist in the series;
   partial trailing quarters are dropped, not prorated.
-- Refund positions (heavy capex) return as receipts; check the refund
-  is plausible before banking it in week 4.
+- Refund positions (heavy capex) return as receipts on the statement's due
+  date; check the refund is plausible before banking it in week 4, and pass
+  `expected_receipt_on={"2027Q1": date(...)}` to `gst_weekly_flows` when the
+  company expects the money on another day.
 
 ## Calculator comparison
 

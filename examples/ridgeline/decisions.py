@@ -18,6 +18,8 @@ METRICS = {
                  "formula": "first week at min_cash"},
     "first_negative_week": {"unit": "one-based forecast week or null", "period": "configured weekly horizon",
                             "formula": "first week where ending_cash < 0"},
+    "negative_weeks": {"unit": "list of one-based forecast weeks, empty when none", "period": "configured weekly horizon",
+                       "formula": "every week where ending_cash < 0"},
     "ending_cash": {"unit": "model currency units", "period": "final configured forecast week",
                     "formula": "ending_cash in the last weekly frame row"},
     "ending_cash_change": {"unit": "model currency units", "period": "final configured forecast week",
