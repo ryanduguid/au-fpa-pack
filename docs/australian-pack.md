@@ -78,6 +78,10 @@ Ordinary arithmetic and the default half-cent absolute tolerance are unchanged.
 
 ### Forecast snapshots
 
+Saved intake, corrections and experiments are revalidated before writing. Invalid
+confidence, inconsistent experiment decisions, non-finite experiment metrics and
+non-finite correction values are refused whilst preserving any existing destination.
+
 Forecast predictions, score fitness, per-line errors and weights must be finite.
 Snapshots are validated when created or loaded and revalidated before saving,
 including after a caller changes a nested mapping or uses `model_copy`. Invalid

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 ExperimentStatus = Literal["draft", "proposed", "accepted", "rejected", "reverted"]
 CheckResult = Literal["pass", "fail", "not_run"]
@@ -26,6 +26,8 @@ class ExperimentDecision(BaseModel):
 
 class Experiment(BaseModel):
     """Evidence and ratification record for one company-specific model change."""
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     schema_version: int = 1
     slug: str = Field(pattern=r"^[a-z0-9][a-z0-9._-]*$")
@@ -84,6 +86,7 @@ def save_experiment(
     overwrite: bool = False,
 ) -> Path:
     """Save an experiment as YAML; history is never overwritten implicitly."""
+    experiment = Experiment.model_validate(experiment.model_dump())
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{experiment.slug}.experiment.yaml"
