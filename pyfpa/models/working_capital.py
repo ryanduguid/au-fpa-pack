@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -81,6 +83,51 @@ def _replenished_inventory(cogs: pd.Series, target: pd.Series, opening: float) -
         purchases.append(bought)
         closing.append(stock)
     return pd.Series(purchases, index=cogs.index), pd.Series(closing, index=cogs.index)
+
+
+def collection_profile_from_history(invoices: pd.DataFrame, receipts: pd.DataFrame) -> list[float]:
+    """A `collection_profile` measured from fully paid invoices.
+
+    `invoices` has columns invoice, issued_on and amount; `receipts` has invoice,
+    received_on and amount, one row per payment, so part payments count in the
+    months they arrived. The share at lag k is the money received k calendar
+    months after the month of issue, over everything invoiced. Pass the result as
+    `WorkingCapitalConfig.collection_profile`, or state a profile instead; nothing
+    derives one unless the caller does. Receipts show no bad debts, so with
+    `bad_debt_share` scale the shares to add up to 1 less it.
+
+    Refuses an invoice that is not paid to the cent, which would leave its unpaid
+    part out and overstate how fast customers pay: leave out invoices still open.
+    """
+    for frame, name, date_column in ((invoices, "invoices", "issued_on"), (receipts, "receipts", "received_on")):
+        missing = {"invoice", date_column, "amount"} - set(frame.columns)
+        if missing:
+            raise ValueError(f"{name} needs columns invoice, {date_column} and amount; missing {sorted(missing)}")
+        amounts = pd.to_numeric(frame["amount"], errors="coerce")
+        if frame.empty or not (np.isfinite(amounts) & (amounts > 0)).all():
+            raise ValueError(f"{name} must have rows, and each amount must be a finite number above 0")
+        if frame[date_column].isna().any():
+            raise ValueError(f"every {name} row needs a {date_column} date")
+    if invoices["invoice"].duplicated().any():
+        raise ValueError("each invoice must appear once in invoices")
+    issued = pd.Series(pd.to_datetime(invoices["issued_on"]).to_numpy(), index=invoices["invoice"])
+    unknown = sorted(set(receipts["invoice"]) - set(issued.index), key=str)
+    if unknown:
+        raise ValueError(f"receipts name invoices that are not in invoices: {unknown}")
+    received = pd.to_datetime(receipts["received_on"])
+    issued_for_receipt = issued.loc[receipts["invoice"]].to_numpy()
+    if (received.to_numpy() < issued_for_receipt).any():
+        raise ValueError("a receipt is dated before its invoice was issued")
+    paid = receipts.groupby("invoice")["amount"].sum().reindex(invoices["invoice"], fill_value=0.0)
+    unpaid = [invoice for invoice, owed, got in zip(invoices["invoice"], invoices["amount"], paid, strict=True)
+              if abs(float(owed) - float(got)) >= 0.005]
+    if unpaid:
+        raise ValueError(f"invoices not paid to the cent: {unpaid}; leave out invoices still open")
+    lags = (received.dt.to_period("M") - pd.PeriodIndex(issued_for_receipt, freq="M")).map(lambda offset: offset.n)
+    by_lag = receipts["amount"].astype(float).groupby(lags.to_numpy()).sum()
+    # Over the money received, which matches the invoices to the cent, so the shares add up to 1.
+    total = math.fsum(by_lag)
+    return [float(by_lag.get(lag, 0.0)) / total for lag in range(int(by_lag.index.max()) + 1)]
 
 
 def working_capital_from_config(
