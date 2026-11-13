@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from math import isfinite
+
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 _COLUMNS = [
     "units", "revenue", "cogs", "gross_profit", "gross_margin",
@@ -10,6 +12,8 @@ _COLUMNS = [
 
 
 class Sku(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
     name: str
     units: float = Field(ge=0)       # annual units
     price: float = Field(ge=0)       # per-unit selling price
@@ -37,8 +41,13 @@ def sku_profitability(skus: list[Sku]) -> pd.DataFrame:
         })
 
     df = pd.DataFrame(rows).set_index("sku")
+    for column in df:
+        if any(not isfinite(value) for value in df[column]):
+            raise ValueError(f"{column} must be finite")
     df = df.sort_values("revenue", ascending=False)
     total_revenue = df["revenue"].sum()
+    if not isfinite(total_revenue):
+        raise ValueError("total revenue must be finite")
     share = df["revenue"] / total_revenue if total_revenue else df["revenue"] * 0.0
     return df.assign(
         revenue_share=share,
