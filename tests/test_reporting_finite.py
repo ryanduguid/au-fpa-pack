@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -105,3 +106,26 @@ def test_forecast_export_preserves_text_labels(tmp_path):
     forecast_to_excel(frame, destination)
     restored = pd.read_excel(destination, sheet_name="Forecast", index_col=0)
     assert restored["scenario"].tolist() == frame["scenario"].tolist()
+
+
+@pytest.mark.parametrize("dtype", ["int64", "Int64", object])
+def test_boxed_integer_headline_totals_do_not_wrap(dtype):
+    frame = pd.DataFrame({name: [0] * 4 for name in ["revenue", "ebitda", "net_income", "ending_cash"]})
+    frame["revenue"] = pd.Series([np.int64(1 << 62)] * 4, dtype=dtype)
+    assert "- **Revenue:** $18,446,744,073,709,551,616" in to_briefing_md(frame)
+
+
+@pytest.mark.parametrize("dtype", ["int64", "Int64", object])
+def test_minimum_signed_integer_cash_keeps_its_sign(dtype):
+    frame = _frame()
+    frame["ending_cash"] = pd.Series([np.int64(-(1 << 63))] * len(frame), index=frame.index, dtype=dtype)
+    text = to_briefing_md(frame)
+    assert "- **Ending cash:** -$9,223,372,036,854,775,808" in text
+    assert text.count("-$9,223,372,036,854,775,808") == 4
+    assert "-$-" not in text
+
+
+def test_minimum_signed_integer_runway_cash_keeps_its_sign():
+    runway = {"min_cash": np.int64(-(1 << 63)), "min_week": 1, "first_negative_week": 1}
+    text = to_briefing_md(_frame(), runway=runway)
+    assert "- **Trough:** -$9,223,372,036,854,775,808 (week 1)" in text

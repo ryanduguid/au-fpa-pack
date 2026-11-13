@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 from numbers import Integral, Number
 from pathlib import Path
 from typing import Any
@@ -22,10 +23,16 @@ def _require_finite(value: Any) -> None:
 
 
 def _money(value: float) -> str:
+    if isinstance(value, Integral):
+        value = int(value)
     _require_finite(value)
     sign = "-" if value < 0 else ""
     amount = f"{abs(value):,}" if isinstance(value, Integral) else f"{abs(value):,.0f}"
     return f"{sign}${amount}"
+
+
+def _total(values: Iterable[float]) -> float:
+    return sum(int(value) if isinstance(value, Integral) else value for value in values)
 
 
 def _weeks_text(weeks: list[int]) -> str:
@@ -62,9 +69,9 @@ def to_briefing_md(
             _require_finite(value)
     lines = [f"# {title}", "", "## Headline", ""]
     lines += [
-        f"- **Revenue:** {_money(sum(df['revenue'].tolist()))}",
-        f"- **EBITDA:** {_money(sum(df['ebitda'].tolist()))}",
-        f"- **Net income:** {_money(sum(df['net_income'].tolist()))}",
+        f"- **Revenue:** {_money(_total(df['revenue']))}",
+        f"- **EBITDA:** {_money(_total(df['ebitda']))}",
+        f"- **Net income:** {_money(_total(df['net_income']))}",
         f"- **Ending cash:** {_money(df['ending_cash'].iloc[-1])}",
         "",
     ]
