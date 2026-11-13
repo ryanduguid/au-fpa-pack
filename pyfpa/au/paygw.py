@@ -25,17 +25,17 @@ due on the 21st for the first two months and a quarterly statement due on the
 28th for the third (ATO, "Activity statements", registered agent lodgment
 program, last updated 1 July 2026).
 
-That page (read again on 13 November 2026) gives the third month's quarterly
-statement the agent program date when an agent lodges it electronically. A
-quarterly statement is eligible unless it includes a PAYG instalment monthly
-obligation, is a consolidated head company's PAYG instalment statement, belongs
-to an entity with a GST monthly cycle, or is an instalment notice; monthly
-withholding is not among them. "Activity statements with only a monthly PAYG IT
+The third month's quarterly statement takes the agent program date when an
+agent lodges it electronically. That date is inferred from the same page's
+exclusion list (read again on 13 November 2026): a quarterly statement is
+eligible unless it includes a PAYG instalment monthly obligation, is a
+consolidated head company's PAYG instalment statement, belongs to an entity
+with a GST monthly cycle, or is an instalment notice, and monthly withholding
+is not among them. "Activity statements with only a monthly PAYG IT
 withholding cycle are not eligible", so the first two months stay on the 21st.
 This rule cannot see a monthly PAYG instalment obligation: use ORIGINAL for an
-entity that has one. The 2-week online concession is not applied to a medium
-withholder, because the ATO's BAS due dates page states no eligibility for a
-statement carrying monthly withholding.
+entity that has one. Refusing the 2-week online concession for a medium
+withholder is this code's conservative choice, not an ATO rule.
 
 The dates come from the activity statement rules in `gst_bas.yaml`, with their
 next-business-day move and reviewed_until horizon, so PAYG withholding and GST

@@ -7,7 +7,7 @@ Changed:
   shares the GST's date, and leaves the first 2 months on the 21st. The ATO's registered agent lodgment program page
   for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
   monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
-  refused for a medium withholder.
+  refused for a medium withholder, as a conservative choice rather than an ATO rule.
 
 # v0.5.0
 
