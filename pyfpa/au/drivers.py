@@ -25,13 +25,15 @@ from __future__ import annotations
 
 import io
 import json
+import math
 import os
 import urllib.request
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Literal
 
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, FiniteFloat
 
 RBA_BASE = "https://www.rba.gov.au/statistics/tables/csv"
 ABS_BASE = "https://indicator.api.abs.gov.au/v1"
@@ -83,6 +85,13 @@ ABS_FREQUENCIES = {
 _UA = "au-fpa-pack (github.com/ryanduguid/au-fpa-pack)"
 
 
+class SkippedObservation(BaseModel):
+    """Source period and reason for omitting an observation."""
+
+    period: str
+    reason: Literal["missing value", "invalid period", "invalid value"]
+
+
 class DriverSeries(BaseModel):
     """One fetched series with provenance."""
 
@@ -94,7 +103,8 @@ class DriverSeries(BaseModel):
     units: str = ""
     frequency: str = ""
     dimensions: dict[str, str] = Field(default_factory=dict)
-    data: dict[str, float] = Field(default_factory=dict)  # {period: value}
+    data: dict[str, FiniteFloat] = Field(default_factory=dict)  # {period: value}
+    skipped_observations: list[SkippedObservation] = Field(default_factory=list)
 
     def to_series(self) -> pd.Series:
         """Series indexed by PeriodIndex (M or Q as recorded)."""
@@ -123,7 +133,9 @@ def fetch_rba_series(name: str) -> DriverSeries:
     # (Description, Frequency, Units, Source, Publication date,
     # 'Series ID') followed by dd-Mon-yyyy data rows.
     start = next(i for i, line in enumerate(lines) if line.startswith("Title,"))
-    frame = pd.read_csv(io.StringIO("\n".join(lines[start:])), header=None, dtype=str)
+    frame = pd.read_csv(
+        io.StringIO("\n".join(lines[start:])), header=None, dtype=str, keep_default_na=False,
+    )
 
     header_row = frame.index[frame[0] == "Series ID"]
     if header_row.empty:
@@ -140,16 +152,27 @@ def fetch_rba_series(name: str) -> DriverSeries:
         units = str(frame.loc[units_row[0], col])
 
     observations: dict[date, float] = {}
+    skipped: list[SkippedObservation] = []
     for i in range(header_row[0] + 1, len(frame)):
         raw_date = str(frame.iloc[i, 0]).strip()
         raw_val = str(frame.iloc[i, col]).strip()
-        if not raw_date or raw_date == "nan" or raw_val in ("", "nan"):
+        if not raw_val:
+            skipped.append(SkippedObservation(period=raw_date, reason="missing value"))
             continue
         try:
             source_date = pd.Timestamp(raw_date).date()
-            value = float(raw_val)
+            if pd.isna(source_date):
+                raise ValueError("missing date")
         except (ValueError, TypeError):
+            skipped.append(SkippedObservation(period=raw_date, reason="invalid period"))
             continue
+        try:
+            value = float(raw_val)
+        except ValueError:
+            skipped.append(SkippedObservation(period=raw_date, reason="invalid value"))
+            continue
+        if not math.isfinite(value):
+            raise ValueError(f"non-finite observation for {series_id} on {raw_date}")
 
         if source_date in observations and observations[source_date] != value:
             raise ValueError(
@@ -170,6 +193,7 @@ def fetch_rba_series(name: str) -> DriverSeries:
         units=units,
         frequency="M",
         data=data,
+        skipped_observations=skipped,
     )
 
 
@@ -196,7 +220,7 @@ def fetch_abs_series(
     dataflow = ABS_DATAFLOWS[name]
     url = f"{ABS_BASE}/data/{dataflow}/csv"
     raw = _fetch(url, headers={"x-api-key": key}).decode("utf-8-sig")
-    frame = pd.read_csv(io.StringIO(raw), dtype=str)
+    frame = pd.read_csv(io.StringIO(raw), dtype=str, keep_default_na=False)
 
     # SDMX-CSV shape varies per dataflow; locate the time + observation
     # columns by their standard names.
@@ -212,7 +236,7 @@ def fetch_abs_series(
             raise ValueError(f"unknown ABS dimension {column!r}")
         frame = frame.loc[frame[column] == dimension_value]
     unit_col = next((c for c in frame.columns if c.upper() in ("UNIT_MEASURE", "UNIT")), None)
-    units = frame[unit_col].dropna().unique().tolist() if unit_col else []
+    units = frame.loc[frame[unit_col] != "", unit_col].unique().tolist() if unit_col else []
     if len(units) > 1:
         raise ValueError("ambiguous ABS units; select a single series with dimensions")
     # Observation attributes may change over time within one series.
@@ -227,22 +251,34 @@ def fetch_abs_series(
     # to_series() then folded into the same quarter as a duplicate.
     expected_frequency = ABS_FREQUENCIES[name]
     data: dict[str, float] = {}
+    skipped: list[SkippedObservation] = []
     for _, row in frame.iterrows():
         period_raw = str(row[time_col]).strip()
         value_raw = str(row[obs_col]).strip()
-        if not period_raw or value_raw in ("", "nan"):
+        if not value_raw:
+            skipped.append(SkippedObservation(period=period_raw, reason="missing value"))
             continue
         freq = "Q" if "Q" in period_raw else "M"
+        try:
+            source_period = pd.Period(period_raw, freq=freq)
+            if pd.isna(source_period):
+                raise ValueError("missing period")
+        except (ValueError, TypeError):
+            skipped.append(SkippedObservation(period=period_raw, reason="invalid period"))
+            continue
         if freq != expected_frequency:
             raise ValueError(
                 f"ABS dataflow {dataflow} returned {freq} observations for {name!r}, "
                 f"which is {expected_frequency}: the dataflow's frequency has changed"
             )
         try:
-            period = str(pd.Period(period_raw, freq=freq))
             value = float(value_raw)
-        except (ValueError, TypeError):
+        except ValueError:
+            skipped.append(SkippedObservation(period=period_raw, reason="invalid value"))
             continue
+        if not math.isfinite(value):
+            raise ValueError(f"non-finite observation for {dataflow} on {period_raw}")
+        period = str(source_period)
         if period in data:
             raise ValueError(f"duplicate ABS period {period}: select a single series with dimensions")
         data[period] = value
@@ -260,6 +296,7 @@ def fetch_abs_series(
         dimensions=selection,
         frequency=frequency,
         data=data,
+        skipped_observations=skipped,
     )
 
 
@@ -269,6 +306,7 @@ def save_snapshot(series: DriverSeries, directory: str | Path) -> Path:
     Filename: ``<source>_<name>_<retrieved>.json``. Never overwrites an
     existing snapshot; the same day re-fetch appends a counter.
     """
+    payload = json.dumps(series.model_dump(mode="json"), indent=2, allow_nan=False)
     directory = Path(directory)
     # Library API; the caller chooses its own snapshot directory.
     directory.mkdir(parents=True, exist_ok=True)  # NOSONAR
@@ -278,7 +316,7 @@ def save_snapshot(series: DriverSeries, directory: str | Path) -> Path:
     while True:
         try:
             with path.open("x", encoding="utf-8") as output:
-                output.write(json.dumps(series.model_dump(mode="json"), indent=2))
+                output.write(payload)
             break
         except FileExistsError:
             path = directory / f"{base}_{counter}.json"
