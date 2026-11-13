@@ -110,6 +110,7 @@ def promote_challenger(
         raise ValueError("promotion requires approved_at")
     if objective is None:
         raise ValueError("objective is required for promotion validation")
+    epoch = ResearchEpoch.model_validate(epoch.model_dump())
     evaluation = epoch.evaluation
     if (
         epoch.status != "proposed"
