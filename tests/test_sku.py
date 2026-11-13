@@ -63,3 +63,37 @@ def test_revenue_pareto_does_not_follow_profit_ranking():
 def test_pareto_breakpoint_counts_every_sku_when_the_threshold_is_never_reached():
     df = sku_profitability(_skus())
     assert pareto_breakpoint(df, threshold=1.5) == len(df)  # nosec B101: pytest outcome assertion
+
+
+@pytest.mark.parametrize("field", ["units", "price", "unit_cost"])
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")])
+def test_sku_requires_finite_assumptions(field, value):
+    values = {"name": "Synthetic", "units": 1.0, "price": 10.0, "unit_cost": 5.0}
+    values[field] = value
+    with pytest.raises(ValueError):
+        Sku.model_validate(values)
+
+
+@pytest.mark.parametrize("units, price, cost, column", [
+    (1e200, 1e200, 1.0, "revenue"),
+    (1e200, 1.0, 1e200, "cogs"),
+    (1.0, 1e-308, 1e308, "gross_margin"),
+])
+def test_sku_refuses_finite_input_overflow(units, price, cost, column):
+    with pytest.raises(ValueError, match=column + ".*finite"):
+        sku_profitability([Sku(name="Synthetic", units=units, price=price, unit_cost=cost)])
+
+
+def test_sku_refuses_finite_row_total_overflow():
+    skus = [Sku(name=name, units=1, price=1e308, unit_cost=0) for name in ("A", "B")]
+    with pytest.raises(ValueError, match="total revenue.*finite"):
+        sku_profitability(skus)
+
+
+def test_sku_large_finite_revenue_keeps_pareto_shares():
+    frame = sku_profitability([Sku(name="A", units=1, price=5e307, unit_cost=0),
+                               Sku(name="B", units=1, price=5e307, unit_cost=0)])
+    assert frame["revenue"].tolist() == [5e307, 5e307]
+    assert frame["revenue_share"].tolist() == [0.5, 0.5]
+    assert frame["cumulative_revenue_pct"].tolist() == [0.5, 1.0]
+    assert pareto_breakpoint(frame) == 2

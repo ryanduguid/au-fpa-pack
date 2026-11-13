@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from math import isfinite
+
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from pyfpa.config.schemas import Channel
 
@@ -16,6 +18,8 @@ class Segment(BaseModel):
     (segment COGS is generally not broken out). This model mirrors that: each
     segment carries its net sales and an Adjusted-EBITDA margin.
     """
+    model_config = ConfigDict(allow_inf_nan=False)
+
     name: str
     net_sales: float = Field(ge=0)
     growth_rate: float = 0.0          # annual YoY, compounded per forecast year
@@ -29,6 +33,8 @@ def segment_pnl(segments: list[Segment]) -> pd.DataFrame:
     rows = []
     for s in segments:
         adjusted_ebitda = s.net_sales * s.ebitda_margin
+        if not isfinite(adjusted_ebitda):
+            raise ValueError("adjusted_ebitda must be finite")
         rows.append({
             "name": s.name,
             "net_sales": s.net_sales,
@@ -51,6 +57,9 @@ def roll_up_segments(segments: list[Segment]) -> pd.Series:
     total["ebitda_margin"] = (
         total["adjusted_ebitda"] / total["net_sales"] if total["net_sales"] else 0.0
     )
+    for column, value in total.items():
+        if not isfinite(value):
+            raise ValueError(f"{column} must be finite")
     return total[_COLUMNS]
 
 

@@ -60,3 +60,36 @@ def test_segments_to_channels_applies_consolidated_cogs():
     assert pvg.annual_revenue == 488_143.0
     assert pvg.growth_rate == 0.0
     assert channels[3].growth_rate == 0.05  # non-default growth carried through
+
+
+@pytest.mark.parametrize("field", ["net_sales", "growth_rate", "ebitda_margin"])
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")])
+def test_segment_requires_finite_assumptions(field, value):
+    values = {"name": "Synthetic", "net_sales": 100.0, "ebitda_margin": 0.1}
+    values[field] = value
+    with pytest.raises(ValueError):
+        Segment.model_validate(values)
+
+
+def test_segment_pnl_refuses_finite_input_overflow():
+    with pytest.raises(ValueError, match="adjusted_ebitda.*finite"):
+        segment_pnl([Segment(name="Synthetic", net_sales=1e308, ebitda_margin=2)])
+
+
+@pytest.mark.parametrize("sales, margin, column", [
+    (1e308, 0.1, "net_sales"),
+    (5e307, 2.0, "adjusted_ebitda"),
+])
+def test_segment_rollup_refuses_finite_row_total_overflow(sales, margin, column):
+    segments = [Segment(name=name, net_sales=sales, ebitda_margin=margin) for name in ("A", "B")]
+    with pytest.raises(ValueError, match=column + ".*finite"):
+        roll_up_segments(segments)
+
+
+def test_segment_large_finite_values_are_preserved():
+    segments = [Segment(name="A", net_sales=5e307, ebitda_margin=0.1),
+                Segment(name="B", net_sales=5e307, ebitda_margin=-0.05)]
+    total = roll_up_segments(segments)
+    assert total["net_sales"] == pytest.approx(1e308)
+    assert total["adjusted_ebitda"] == pytest.approx(2.5e306)
+    assert total["ebitda_margin"] == pytest.approx(0.025)
