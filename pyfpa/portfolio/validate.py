@@ -61,8 +61,9 @@ def validate_prior(
     held-out client is not held out. A fold whose peer-derived value leaves the
     held-out client with no scorable forecast, because generation, extraction or scoring
     refuses the result, counts as an infinitely worse fit,
-    so the prior cannot validate and the other folds still run. Unusable stored
-    evidence is excluded before peer selection; unsupported validation reduction
+    so the prior cannot validate and the other folds still run. Snapshots that fail
+    schema validation raise before peer selection; otherwise, unusable stored
+    evidence is excluded before peer selection. Unsupported validation reduction
     arithmetic raises ValueError rather than being blamed on a candidate fold.
 
     Pass `candidate` to stamp its digest and an attestation into the result.

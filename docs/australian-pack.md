@@ -75,8 +75,8 @@ Snapshots are validated when created or loaded and revalidated before saving,
 including after a caller changes a nested mapping or uses `model_copy`. Invalid
 records are refused before a destination is opened. A scorecard build reports
 `invalid_snapshot` and preserves its previous output. Selection through
-`best_snapshot` also reports malformed saved records rather than silently
-ignoring them. Older finite snapshots without recorded actual signs remain readable.
+`best_snapshot` and portfolio validation also report malformed saved records
+rather than silently ignoring them. Older finite snapshots without recorded actual signs remain readable.
 
 ### Worked GST assumptions
 

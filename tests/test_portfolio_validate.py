@@ -255,9 +255,7 @@ def test_unsupported_scoring_refuses_fold_and_attempts_every_client(
 
 
 @pytest.mark.parametrize("field,value", [
-    ("fitness", float("inf")), ("fitness", float("nan")), ("fitness", -1.0),
-    ("error", float("inf")), ("error", float("nan")),
-    ("weight", float("inf")), ("weight", float("nan")),
+    ("fitness", -1.0),
     ("weight", -1.0), ("weight", 0.0), ("weight_total", 1e308),
     ("weight_underflow", 1e308),
     ("driver", float("inf")),
@@ -274,8 +272,6 @@ def test_unusable_stored_evidence_is_excluded_before_candidate_scoring(tmp_path,
     assert snapshot.score is not None
     if field == "fitness":
         snapshot.score.fitness = value
-    elif field == "error":
-        snapshot.score.per_line["revenue"] = value
     elif field in ("weight", "weight_total"):
         snapshot.score.weights = {line: value for line in snapshot.score.weights}
     elif field == "weight_underflow":
@@ -412,3 +408,43 @@ def test_unnamed_validation_needs_only_the_finite_peer_medians(tmp_path, cash):
     assert result.validated
     assert result.candidate_digest == ""
     assert result.attestation == ""
+
+
+@pytest.mark.parametrize("field", ["fitness", "error", "weight"])
+@pytest.mark.parametrize("value", [float("inf"), float("nan")])
+def test_corrupt_stored_score_is_refused_before_candidate_scoring(tmp_path, monkeypatch, field, value):
+    import importlib
+    from pathlib import Path
+
+    import yaml
+
+    from pyfpa.backtest.snapshot import load_snapshot
+
+    clients = [_make_client(tmp_path, name, 45.0) for name in ("a", "b", "c")]
+    path = Path(clients[0].path) / ".fpa" / "forecasts" / "2026.snapshot.yaml"
+    before = path.read_bytes()
+    snapshot = load_snapshot(path)
+    assert snapshot.score is not None
+    if field == "fitness":
+        snapshot.score.fitness = value
+    elif field == "error":
+        snapshot.score.per_line["revenue"] = value
+    else:
+        snapshot.score.weights = {line: value for line in snapshot.score.weights}
+    with pytest.raises(ValueError, match="finite"):
+        save_snapshot(snapshot, path, overwrite=True)
+    assert path.read_bytes() == before
+
+    # External corruption must be injected without the validated save API.
+    path.write_text(yaml.safe_dump(snapshot.model_dump()), encoding="utf-8")
+    corrupted = path.read_bytes()
+    module = importlib.import_module("pyfpa.portfolio.validate")
+
+    def unexpected_candidate_work(*args, **kwargs):
+        pytest.fail("Malformed stored evidence reached candidate forecasting or scoring")
+
+    monkeypatch.setattr(module, "cashflow_from_config", unexpected_candidate_work)
+    monkeypatch.setattr(module, "score_forecast", unexpected_candidate_work)
+    with pytest.raises(ValueError, match="finite"):
+        validate_prior("working_capital.dio_days", clients, tolerance=float("inf"))
+    assert path.read_bytes() == corrupted
