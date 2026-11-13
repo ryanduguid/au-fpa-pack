@@ -108,10 +108,12 @@ def test_cli_refuses_nonfinite_tolerances(tmp_path, run_cli, cli_workspace, opti
         "reconcile-source", str(tmp_path), "--source-id", "fabricated-aud",
         "--expected-json", '{"a": 99, "b": -40}', f"{option}={value}",
     )
-    assert result.returncode == 1, result.stdout
-    payload = json.loads(result.stdout)
+    # Negative values already use the CLI's usage-error path, before reconciliation.
+    assert result.returncode == (2 if value == "-inf" else 1), result.stdout
+    payload = json.loads(result.stderr if value == "-inf" else result.stdout)
     assert payload["ok"] is False
-    assert "finite" in payload["error"]["message"]
+    assert ("non-negative" if value == "-inf" else "finite") in payload["error"]["message"]
+    json.dumps(payload, allow_nan=False)
 
 
 @pytest.mark.parametrize("extra", [[], ["--allow-unmapped"]])
