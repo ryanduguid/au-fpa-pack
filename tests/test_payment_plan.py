@@ -207,10 +207,10 @@ def test_bad_terms_are_refused(overrides, message):
         _plan(**overrides)
 
 
-@pytest.mark.parametrize("due", [date(2026, 9, 28), date(2026, 11, 3), date(2026, 12, 24), date(2026, 12, 31)])
-def test_a_day_the_ato_lists_but_the_statute_does_not_exclude_is_a_valid_due_date(due):
-    plan = _plan(due_date=due, upfront_on=due, first_instalment_on=due + timedelta(days=1), instalment=9000.0)
-    assert plan.estimated_gic > 0
+@pytest.mark.parametrize("due", [date(2026, 11, 3), date(2026, 12, 24), date(2026, 12, 31)])
+def test_a_holiday_the_atos_table_lists_is_not_a_due_date(due):
+    with pytest.raises(ValueError, match="not a business day"):
+        _plan(due_date=due, upfront_on=due, first_instalment_on=due + timedelta(days=1), instalment=9000.0)
 
 
 def test_a_debt_due_before_july_crosses_the_quarter_at_each_rate():

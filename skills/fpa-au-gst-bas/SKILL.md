@@ -49,10 +49,12 @@ The quarterly cycle is 28 Oct / 28 Feb / 28 Apr / 28 Jul, and monthly is the
 next business day. A weekend is not a business day, and nor is a public holiday
 for the whole of any state or territory: it moves the date in every state, so
 the December 2026 quarter is due on 2 March 2027 because 1 March is Labour Day in
-WA. Christmas Eve and New Year's Eve are part-day holidays and do not move a date.
-The ATO's table publishes 29 December 2026 and 4 January 2027 for them, as guidance
-with no stated basis for a part day, so cite the later date only as the ATO's and
-not as the statutory one. `schedule` shows the date the rule names as `nominal_due_date` and the
+WA. The holiday list follows the ATO's table, so Christmas Eve and New Year's Eve,
+which are part-day holidays, move a date too, to 29 December 2026 and 4 January 2027.
+One row differs: a date on 28 September 2026 (WA King's Birthday) stands, a day
+before the ATO's 29 September, because the table also gives that day as the first
+business day after 25 September and 2 WA regions held the holiday in August.
+`schedule` shows the date the rule names as `nominal_due_date` and the
 effective date as `due_date`; forecast cash on `due_date`. Holidays come from the
 dated list in `public_holidays.yaml`, and a date outside its span raises.
 

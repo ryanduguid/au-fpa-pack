@@ -22,10 +22,10 @@ from pyfpa.au.gst import (
     quarterly_bas_due_date,
 )
 from pyfpa.au.paygw import paygw_due_rule
-from pyfpa.au.rates import load_public_holidays
 
 # Tables 1 and 2 of the ATO's 'Lodgment and payment dates on weekends or public
-# holidays' (last updated 1 July 2026): each listed holiday and its first business day.
+# holidays' (last updated 1 July 2026, read 14 November 2026): each listed holiday and
+# its first business day.
 ATO_FIRST_BUSINESS_DAY = {
     date(2026, 8, 3): date(2026, 8, 4),
     date(2026, 9, 25): date(2026, 9, 28),
@@ -48,6 +48,7 @@ ATO_FIRST_BUSINESS_DAY = {
     date(2027, 6, 7): date(2027, 6, 8),
     date(2027, 6, 14): date(2027, 6, 15),
 }
+KINGS_BIRTHDAY_WA = date(2026, 9, 28)
 
 
 def test_the_december_2026_quarter_is_due_on_2_march_2027():
@@ -66,25 +67,28 @@ def test_the_december_2026_quarter_is_due_on_2_march_2027():
         (date(2027, 8, 2), date(2027, 8, 3)),  # Picnic Day, past the ATO's tables.
         (date(2026, 2, 28), date(2026, 3, 3)),  # A weekend then Labour Day (WA), before July.
         (date(2026, 9, 25), date(2026, 9, 28)),  # The ATO's date for the Victorian holiday.
-        (date(2026, 9, 28), date(2026, 9, 28)),  # King's Birthday is not for the whole of WA.
-        (date(2026, 11, 3), date(2026, 11, 3)),  # Melbourne Cup is not for the whole of Victoria.
-        (date(2026, 12, 24), date(2026, 12, 24)),  # Christmas Eve is a part day.
-        (date(2026, 12, 31), date(2026, 12, 31)),  # New Year's Eve is a part day.
+        (date(2026, 11, 3), date(2026, 11, 4)),  # Melbourne Cup (VIC), as the ATO's table has it.
+        (date(2026, 12, 24), date(2026, 12, 29)),  # Christmas Eve, a part day the ATO's table lists.
+        (date(2026, 12, 31), date(2027, 1, 4)),  # New Year's Eve, a part day the ATO's table lists.
     ],
 )
 def test_a_due_date_moves_past_every_day_that_is_not_a_business_day(due, business_day):
     assert _next_business_day(due) == business_day
 
 
-@pytest.mark.parametrize(("holiday", "first_business_day"), ATO_FIRST_BUSINESS_DAY.items())
-def test_a_due_date_never_falls_after_the_atos_published_date(holiday, first_business_day):
-    assert _next_business_day(holiday) <= first_business_day
+@pytest.mark.parametrize(
+    ("holiday", "first_business_day"),
+    [(holiday, day) for holiday, day in ATO_FIRST_BUSINESS_DAY.items() if holiday != KINGS_BIRTHDAY_WA],
+)
+def test_a_due_date_on_a_listed_holiday_is_the_atos_published_date(holiday, first_business_day):
+    assert _next_business_day(holiday) == first_business_day
 
 
-def test_a_part_day_holiday_is_not_listed_in_any_year():
-    # Only part of 24 and 31 December is a holiday, so neither is 'a day which is a
-    # public holiday' under s 8AAZMB(2)(b); public_holidays.yaml gives the State Acts.
-    assert not [day for day in load_public_holidays()["holidays"] if (day.month, day.day) in {(12, 24), (12, 31)}]
+def test_the_one_row_not_reproduced_falls_a_day_before_the_atos_date():
+    # The 25 September row treats 28 September as a business day, and 2 WA regions
+    # held King's Birthday on 3 August 2026, as public_holidays.yaml says.
+    assert _next_business_day(KINGS_BIRTHDAY_WA) == KINGS_BIRTHDAY_WA
+    assert ATO_FIRST_BUSINESS_DAY[KINGS_BIRTHDAY_WA] == date(2026, 9, 29)
 
 
 def test_a_series_from_january_2026_computes_and_the_window_drops_its_past_rows():

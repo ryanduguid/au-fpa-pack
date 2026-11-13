@@ -9,41 +9,29 @@
 # Register on 2026-11-05 (C2026C00468, compilation 227).
 #
 # 2026-07-01 to 2027-06-30 copies Tables 1 and 2 of the ATO page below (last
-# updated 2026-07-01, read 2026-11-05), which list weekdays only. Weekends are
+# updated 2026-07-01, read 2026-11-14), which list weekdays only. Weekends are
 # not business days anyway.
 # https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/lodgment-and-payment-dates-on-weekends-or-public-holidays
+# The page says 'A public holiday is defined as a day that is a public holiday
+# for the whole of any state or territory in Australia', and its tables give a
+# first business day after every day they list. The list follows the tables,
+# including Melbourne Cup (VIC) on 3 November 2026, which regional councils
+# replace, and Christmas Eve (QLD, NT, SA) and New Year's Eve (NT, SA), which
+# the State Acts make holidays from the evening only (read 2026-11-06). The page
+# does not say why such a day counts.
 #
-# Those tables also list 4 days left out here, because the statute needs a day
-# that is a public holiday for the whole of a State and none of them is:
-# - King's Birthday (WA), 28 September 2026. The City of Karratha and Town of Port
-#   Hedland held it on 3 August 2026, and the WA page below says the date for the
-#   rest of WA 'is not a public holiday in these regions'.
-# - Melbourne Cup, 3 November 2026. Public Holidays Act 1993 (Vic) s 8A lets a
-#   non-metropolitan council substitute another day, and Business Victoria lists
-#   2026 replacements:
-#   https://business.vic.gov.au/business-information/public-holidays/victorian-non-metropolitan-public-holidays-2026
-# - Christmas Eve and New Year's Eve, here 24 and 31 December 2026, and the same
-#   in every later year. Only part of each day is a holiday, and the test is 'a day
-#   which is a public holiday' (s 8AAZMB(2)(b), and s 995-1, read on AustLII on
-#   2026-11-06); 'for the whole of' goes to place, not to the hours.
-#   - Holidays Act 1983 (Qld) s 2(3) covers 24 December from 6pm, and s 2(4) applies
-#     that only to entitlements under the listed industrial laws (reprint current
-#     from 2022-09-15).
-#   - Public Holidays Act 2023 (SA) s 3 fixes days, s 4 makes 'the part of the day
-#     from 7pm' on both dates a holiday, and s 8(3) keeps a part-day public holiday
-#     out of that Act's own rule moving payments (version 10.9.2026).
-#   - Public Holidays Act 1981 (NT) s 5 and Schedule 2 observe 'days or parts of
-#     days', here from 7.00 pm on both dates. Nothing limits them, so this is the
-#     one arguable case, but it too separates a part from a day.
-#   - Fair Work Act 2009 (Cth) s 115(1)(b) says 'day, or part-day' where a
-#     Commonwealth Act means both; these provisions do not.
-#   No court decision was found. All read 2026-11-06.
-#   The ATO's table gives 29 December 2026 and 4 January 2027 for these days. Its
-#   page restates the statute's test and gives no basis for a part day, so that is
-#   published guidance, not the statute, and these dates stand.
-# So 25 September 2026 gives the ATO's 28 September, and each of the 4 days stands
-# as a due date, before the ATO's date. A due date may fall before the ATO's
-# published date, never after the law's.
+# One day is left out, because the tables contradict themselves on it. They give
+# 28 September 2026 as the first business day after 25 September, and also list
+# 28 September as King's Birthday (WA), with 29 September as its first business
+# day. No list meets both rows. The page's rule settles it: the City of Karratha
+# and Town of Port Hedland held that holiday on 3 August 2026, and 'The date on
+# which the public holiday is observed in the rest of WA is not a public holiday
+# in these regions', so 28 September was not a public holiday for the whole of
+# WA (https://www.wa.gov.au/service/employment/workplace-arrangements/public-holidays-western-australia,
+# last updated 2026-11-05, read 2026-11-14). Leaving it out keeps 25 September
+# on the ATO's 28 September and leaves 28 September standing, a day before the
+# ATO's 29 September. Listing it would put 25 September a day after the ATO's
+# date.
 #
 # 2026-01-01 to 2026-06-30 has no ATO table. It holds the days on the official
 # pages of all 8 jurisdictions, the ones payday-super-checker cites (read
@@ -82,8 +70,11 @@ holidays:
   2026-08-03: Picnic Day (NT)
   2026-09-25: Friday before AFL Grand Final (VIC)
   2026-10-05: Labour Day (ACT, NSW, SA); King's Birthday (QLD)
+  2026-11-03: Melbourne Cup (VIC)
+  2026-12-24: Christmas Eve (QLD, NT, SA)
   2026-12-25: Christmas Day
   2026-12-28: Additional public holiday for Boxing Day; Proclamation Day (SA)
+  2026-12-31: New Year's Eve (NT, SA)
   2027-01-01: New Year's Day
   2027-01-26: Australia Day
   2027-03-01: Labour Day (WA)
