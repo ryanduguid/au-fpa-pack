@@ -78,6 +78,11 @@ records are refused before a destination is opened. A scorecard build reports
 `best_snapshot` and portfolio validation also report malformed saved records
 rather than silently ignoring them. Older finite snapshots without recorded actual signs remain readable.
 
+Research objectives and numeric epoch evidence must also be finite. Evaluation,
+saving and promotion revalidate mutable inputs. Large finite weights retain their
+relative influence without overflowing their total. Invalid saves preserve the
+destination; existing holdout, hard-check and approval requirements still apply.
+
 ### Worked GST assumptions
 
 GST-free sales and input-taxed sales both exclude output GST, but their

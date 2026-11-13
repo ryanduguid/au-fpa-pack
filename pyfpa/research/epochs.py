@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 from pyfpa.memory.experiments import ExperimentCheck
 from pyfpa.research.objective import ResearchObjective
@@ -21,14 +21,14 @@ IMPROVEMENT_CLAMP = 1.0
 
 
 class EpochEvaluation(BaseModel):
-    champion_metrics: dict[str, float]
-    challenger_metrics: dict[str, float]
-    per_metric_improvement: dict[str, float]
-    weighted_improvement: float
-    complexity_cost: float
+    champion_metrics: dict[str, FiniteFloat]
+    challenger_metrics: dict[str, FiniteFloat]
+    per_metric_improvement: dict[str, FiniteFloat]
+    weighted_improvement: FiniteFloat
+    complexity_cost: FiniteFloat
     champion_complexity: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     challenger_complexity: float | None = Field(default=None, ge=0, allow_inf_nan=False)
-    objective_gain: float
+    objective_gain: FiniteFloat
     hard_checks_passed: bool
     regression_guard_passed: bool = True
     promotion_eligible: bool
@@ -81,6 +81,7 @@ def evaluate_challenger(
     challenger_complexity: float = 0.0,
 ) -> EpochEvaluation:
     """Compare a challenger to the champion under a company-specific objective."""
+    objective = ResearchObjective.model_validate(objective.model_dump())
     missing = [
         metric.name
         for metric in objective.metrics
@@ -95,7 +96,9 @@ def evaluate_challenger(
     if missing_checks:
         raise ValueError(f"missing hard checks: {missing_checks}")
 
-    total_weight = sum(metric.weight for metric in objective.metrics)
+    # Scaling preserves relative weights without overflowing their finite sum.
+    weight_scale = max(metric.weight for metric in objective.metrics)
+    total_weight = sum(metric.weight / weight_scale for metric in objective.metrics)
     improvements: dict[str, float] = {}
     weighted = 0.0
     regression_guard_passed = True
@@ -130,7 +133,7 @@ def evaluate_challenger(
             regression_guard_passed = False
         improvement = max(-IMPROVEMENT_CLAMP, min(IMPROVEMENT_CLAMP, raw_improvement))
         improvements[metric.name] = improvement
-        weighted += (metric.weight / total_weight) * improvement
+        weighted += ((metric.weight / weight_scale) / total_weight) * improvement
 
     complexity_cost = objective.complexity_penalty * max(
         0.0, challenger_complexity - champion_complexity
@@ -164,11 +167,13 @@ def save_epoch(
     *,
     overwrite: bool = False,
 ) -> Path:
+    epoch = ResearchEpoch.model_validate(epoch.model_dump())
+    content = yaml.safe_dump(epoch.model_dump(), sort_keys=False)
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{epoch.epoch_id}.epoch.yaml"
     with path.open("w" if overwrite else "x", encoding="utf-8") as output:
-        output.write(yaml.safe_dump(epoch.model_dump(), sort_keys=False))
+        output.write(content)
     return path
 
 

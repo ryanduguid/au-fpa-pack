@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 from pyfpa.io.loaders import read_yaml, write_yaml
 
@@ -12,7 +12,7 @@ MetricDirection = Literal["lower", "higher"]
 
 class MetricObjective(BaseModel):
     name: str
-    weight: float = Field(gt=0)
+    weight: FiniteFloat = Field(gt=0)
     direction: MetricDirection = "lower"
 
 
@@ -21,9 +21,9 @@ class ResearchObjective(BaseModel):
 
     metrics: list[MetricObjective] = Field(min_length=1)
     hard_checks: list[str] = Field(default_factory=list)
-    min_improvement: float = Field(default=0.0, ge=0)
-    complexity_penalty: float = Field(default=0.0, ge=0)
-    max_metric_regression: float | None = Field(default=None, gt=0)
+    min_improvement: FiniteFloat = Field(default=0.0, ge=0)
+    complexity_penalty: FiniteFloat = Field(default=0.0, ge=0)
+    max_metric_regression: FiniteFloat | None = Field(default=None, gt=0)
     """Hard guard on raw per-metric regression. When set, a challenger whose raw
     (pre-clamp) improvement on ANY metric falls below -max_metric_regression is
     never promotion eligible, regardless of its weighted score. This keeps the
@@ -44,6 +44,7 @@ def save_research_objective(
     objective: ResearchObjective,
     path: str | Path,
 ) -> None:
+    objective = ResearchObjective.model_validate(objective.model_dump())
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     write_yaml(path, objective.model_dump())
