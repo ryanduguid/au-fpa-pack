@@ -16,7 +16,10 @@ import pytest
 
 from pyfpa.config.schemas import EntityConfig
 from pyfpa.excel.model_workbook import model_to_excel
-from pyfpa.models.working_capital import working_capital_from_config
+from pyfpa.models.working_capital import (
+    collection_profile_from_history,
+    working_capital_from_config,
+)
 
 
 def _config(working_capital: dict, *, ar: float = 0.0) -> EntityConfig:
@@ -94,3 +97,67 @@ def test_the_excel_export_refuses_a_profile_before_writing_anything(tmp_path):
     with pytest.raises(ValueError, match="collection_profile"):
         model_to_excel(_config({"collection_profile": [0.5, 0.5]}), path)
     assert not path.exists()
+
+
+# Fabricated history with known lags. A (1,000, issued 10 July) is paid on 25 July,
+# lag 0; B (2,000, 20 July) on 15 August, lag 1; C (1,000, 5 August) half on
+# 1 September, lag 1, and half on 3 October, lag 2. Of 4,000 invoiced: 1,000 at lag 0,
+# 2,500 at lag 1 and 500 at lag 2.
+def _history() -> tuple[pd.DataFrame, pd.DataFrame]:
+    invoices = pd.DataFrame({"invoice": ["A", "B", "C"], "amount": [1000.0, 2000.0, 1000.0],
+                             "issued_on": ["2026-07-10", "2026-07-20", "2026-08-05"]})
+    receipts = pd.DataFrame({"invoice": ["A", "B", "C", "C"], "amount": [1000.0, 2000.0, 500.0, 500.0],
+                             "received_on": ["2026-07-25", "2026-08-15", "2026-09-01", "2026-10-03"]})
+    return invoices, receipts
+
+
+def test_a_profile_is_measured_from_the_months_each_invoice_was_paid_in():
+    profile = collection_profile_from_history(*_history())
+    assert profile == pytest.approx([0.25, 0.625, 0.125])
+    # The measured profile is a valid stated one, and collects as stated.
+    revenue, cogs = _frames([4000, 0, 0])
+    df = working_capital_from_config(_config({"collection_profile": profile}), revenue, cogs)
+    assert (revenue["total"] - df["d_ar"]).round(6).tolist() == [1000.0, 2500.0, 500.0]
+
+
+def test_receipt_amounts_given_as_text_are_added_as_numbers():
+    # Summed as text, '50' and '50' make '5050' and would pay this invoice in full.
+    invoices = pd.DataFrame({"invoice": ["A"], "amount": [5050.0], "issued_on": ["2026-07-10"]})
+    receipts = pd.DataFrame({"invoice": ["A", "A"], "amount": ["50", "50"],
+                             "received_on": ["2026-07-20", "2026-08-20"]})
+    with pytest.raises(ValueError, match="not paid to the cent"):
+        collection_profile_from_history(invoices, receipts)
+    paid = receipts.assign(amount=["5000", "50"])
+    assert collection_profile_from_history(invoices, paid) == pytest.approx([5000 / 5050, 50 / 5050])
+
+
+def test_a_day_first_text_date_is_refused():
+    # pandas reads '05/08/2026' month first, as 8 May rather than 5 August.
+    invoices, receipts = _history()
+    with pytest.raises(ValueError, match="ISO date"):
+        collection_profile_from_history(invoices.assign(issued_on=["2026-07-10", "2026-07-20", "05/08/2026"]),
+                                        receipts)
+
+
+def test_a_partly_paid_invoice_is_refused():
+    invoices, receipts = _history()
+    with pytest.raises(ValueError, match=r"not paid to the cent: \['C'\]"):
+        collection_profile_from_history(invoices, receipts.iloc[:3])
+
+
+@pytest.mark.parametrize(
+    ("change", "match"),
+    [
+        (lambda inv, rec: (inv, rec.assign(received_on=["2026-07-09", *rec["received_on"][1:]])), "before its invoice"),
+        (lambda inv, rec: (inv, rec.assign(invoice=["A", "B", "C", "D"])), "not in invoices"),
+        (lambda inv, rec: (inv.assign(invoice=["A", "A", "C"]), rec), "appear once"),
+        (lambda inv, rec: (inv.assign(amount=[1000.0, float("nan"), 1000.0]), rec), "finite number above 0"),
+        (lambda inv, rec: (inv, rec.assign(amount=[1000.0, 2000.0, 0.0, 1000.0])), "finite number above 0"),
+        (lambda inv, rec: (inv, rec.iloc[:0]), "must have rows"),
+        (lambda inv, rec: (inv.assign(issued_on=["2026-07-10", None, "2026-08-05"]), rec), "row needs a issued_on date"),
+        (lambda inv, rec: (inv.drop(columns="issued_on"), rec), r"missing \['issued_on'\]"),
+    ],
+)
+def test_history_that_cannot_give_a_profile_is_refused(change, match):
+    with pytest.raises(ValueError, match=match):
+        collection_profile_from_history(*change(*_history()))

@@ -1,5 +1,13 @@
 # Unreleased
 
+Added:
+
+- `collection_profile_from_history(invoices, receipts)` measures a `collection_profile` from fully paid invoices: the share
+  of the money invoiced in a month that arrived that month and in each month after, counting part payments when they
+  arrived. It refuses an invoice not paid to the cent, a receipt dated before its invoice and a receipt for an unknown
+  invoice, and text dates that are not ISO. Open invoices are the slow payers, so use a cohort issued long enough
+  ago to have fully paid. A stated profile still works as before; nothing derives one unless the caller does.
+
 Changed:
 
 - `paygw_due_rule("medium", deferred_bas_payer=True, channel=LodgmentChannel.AGENT)` is no longer refused. It moves

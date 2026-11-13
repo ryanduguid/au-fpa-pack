@@ -114,7 +114,10 @@ from pyfpa.models.cogs import cogs_from_config
 from pyfpa.models.debt import debt_from_config
 from pyfpa.models.opex import opex_from_config
 from pyfpa.models.revenue import revenue_from_config
-from pyfpa.models.working_capital import working_capital_from_config
+from pyfpa.models.working_capital import (
+    collection_profile_from_history,
+    working_capital_from_config,
+)
 from pyfpa.portfolio import (
     ApprovalScope,
     ConfidentialityReview,
@@ -214,6 +217,7 @@ __all__ = [
     "cash13_forecast",
     "cashflow_from_config",
     "cogs_from_config",
+    "collection_profile_from_history",
     "compare_scenarios",
     "connector_bundle_path",
     "connector_generated_root",
