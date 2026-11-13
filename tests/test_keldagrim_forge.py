@@ -103,15 +103,14 @@ def test_receipt_delay_scenario_scores_the_delayed_workbook(tmp_path):
 
     def delay(wb):
         model = wb["Model"]
-        row = _labels(model)["wc_cash_impact"]
-        columns = {
-            model.cell(row=1, column=c).value: c
-            for c in range(2, model.max_column + 1)
-        }
-        for label, sign in ((shift["month"], "-"), (shift["to_month"], "+")):
-            column = columns[label]
-            original = model.cell(row=row, column=column).value
-            model.cell(row=row, column=column, value=f"={original[1:]}{sign}({amount})")
+        row = _labels(model)["ar_balance"]
+        # The receipt remains outstanding until collection. Let the existing
+        # change-in-AR formula derive the cash delay and its later release.
+        for column in range(2, model.max_column + 1):
+            month = model.cell(1, column).value
+            if shift["month"] <= month < shift["to_month"]:
+                original = model.cell(row, column).value
+                model.cell(row, column, value=f"{original}+({amount})")
 
     # the undelayed build must fail the delayed scenario ...
     result = _run_drill(tmp_path, scenario="receipt-delay")
@@ -129,3 +128,27 @@ def test_receipt_delay_scenario_scores_the_delayed_workbook(tmp_path):
     payload = _payload(result)
     assert result.returncode == 1
     assert payload["numbers"]["passed"] is False
+
+
+def test_receipt_delay_refuses_cash_only_override_without_outstanding_receivable(tmp_path):
+    shift = yaml.safe_load(SCENARIOS.read_text(encoding="utf-8"))["receipt-delay"]
+    amount = float(shift["amount"])
+
+    def cash_only(wb):
+        model = wb["Model"]
+        row = _labels(model)["wc_cash_impact"]
+        columns = {model.cell(1, c).value: c for c in range(2, model.max_column + 1)}
+        for month, sign in ((shift["month"], "-"), (shift["to_month"], "+")):
+            column = columns[month]
+            original = model.cell(row, column).value
+            model.cell(row, column, value=f"{original}{sign}({amount})")
+
+    result = _run_drill(tmp_path, mutate=cash_only, scenario="receipt-delay")
+    payload = _payload(result)
+    # The cash/P&L outputs match the scenario, but unchanged receivables do
+    # not support that cash movement. The independent tie must catch it.
+    assert result.returncode == 1
+    assert payload["structure"]["passed"] is True
+    assert payload["numbers"]["max_rel_deviation"] < 1e-6
+    assert payload["numbers"]["failures"]
+    assert all(f.startswith("check_direct_cash ") for f in payload["numbers"]["failures"])

@@ -33,7 +33,11 @@ The workbook must reproduce these engine lines for every month: `revenue`,
 For the stress run, model the Anvil line's largest receipt slipping a month as
 [scenarios.yaml](scenarios.yaml) defines it: the $238,017 receipt moves from
 the December 2026 working-capital cash impact to January 2027, and the cash
-rows that derive from it follow. Score that workbook with
+rows that derive from it follow. Keep the uncollected $238,017 in December
+receivables, returning to the base balance when it is collected in January.
+In the standard workbook, adjust `ar_balance` and let its existing change in
+receivables formula derive the cash movement. A cash-only override would
+leave receivables inconsistent with the delayed receipt. Score that workbook with
 `--scenario receipt-delay`; the base scenario scores the undelayed build.
 
 ## Score it

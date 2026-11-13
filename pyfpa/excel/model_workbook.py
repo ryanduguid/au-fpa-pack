@@ -520,6 +520,39 @@ def _build_model(
         lambda m, col: f"={col}{r_ni}-({col}{r_pretax}-{col}{r_tax})",
     )
 
+    # Derive cash directly from sales, balance movements and cash costs. This
+    # does not reuse the profit bridge or its D&A, WC, OCF and FCF intermediates.
+    direct_checks = []
+    rounding_budgets = []
+    for month in range(n):
+        col = get_column_letter(_MODEL_START_COL + month)
+        previous = get_column_letter(_MODEL_START_COL + month - 1) if month else ""
+        prior_ar = f"{previous}{r_ar}" if month else "open_ar"
+        prior_ap = f"{previous}{r_ap}" if month else "open_ap"
+        prior_inventory = f"{previous}{r_inv}" if month else "open_inventory"
+        direct_checks.append(
+            f"={col}{r_chg}-("
+            f"{col}{r_rev}-({col}{r_ar}-{prior_ar})"
+            f"-{col}{r_cogs}-({col}{r_inv}-{prior_inventory})"
+            f"+({col}{r_ap}-{prior_ap})"
+            f"-{col}{r_opex}-{col}{r_int}-{col}{r_tax}"
+            f"-{col}{r_capex}-{col}{r_prin})"
+        )
+        # Two binary64 addition/subtraction paths of depth at most 16 have
+        # combined error <= 2*gamma(16) < 4e-15 times their absolute leaves.
+        # D&A occurs twice on the indirect path. Scale before summing so a
+        # finite allowance does not require the gross sum itself to be finite.
+        leaves = [
+            f"{col}{row}" for row in
+            (r_rev, r_cogs, r_opex, r_da, r_da, r_int, r_tax, r_capex, r_prin,
+             r_ar, r_ap, r_inv)
+        ] + [prior_ar, prior_ap, prior_inventory]
+        rounding_budgets.append(
+            "=" + "+".join(f"4E-15*MAX({leaf},-{leaf})" for leaf in leaves)
+        )
+    alloc.emit_cells("check_direct_cash", direct_checks, fmt="0.00E+00")
+    alloc.emit_cells("direct_cash_rounding", rounding_budgets, fmt="0.00E+00")
+
     ws.freeze_panes = "B2"
 
 
