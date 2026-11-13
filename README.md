@@ -88,7 +88,7 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 
 ## Package
 
-**Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.5.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
+**Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.6.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
 
 On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install the PyPI distribution named `pyfpa`: it is an unrelated project that also installs a top-level `pyfpa` package.
 

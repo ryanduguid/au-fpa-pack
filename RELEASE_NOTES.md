@@ -1,4 +1,6 @@
-# Unreleased
+# v0.6.0
+
+Breaking for code written against 0.5.0: values that are not finite numbers (NaN, infinity, or a total that overflows to infinity) are now refused at the boundaries listed under Fixed, where 0.5.0 carried them into results and saved records. Saved records holding such values no longer load.
 
 Added:
 
@@ -16,6 +18,36 @@ Changed:
   for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
   monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
   refused for a medium withholder, as a conservative choice rather than an ATO rule.
+
+Fixed:
+
+- The 13-week cash forecast raises `ValueError` when finite inputs overflow a weekly monetary column, for example 2
+  receipts of `1e308` in one week, instead of publishing infinite receipts and cash (#310).
+- Segment and SKU analysis refuses non-finite assumptions and results, so an overflowing SKU total no longer reports
+  zero revenue shares (#311). Divestiture and leverage calculations refuse missing, non-finite and unrepresentable
+  values and avoid intermediate overflow (#312).
+- RBA and ABS driver snapshots record each omitted observation with its period and reason, and refuse non-finite
+  observations (#313).
+- Forecast scorecards, research epochs and their rankings refuse non-finite predictions, scores, errors and weights
+  when created, loaded or saved; large finite research weights keep their relative influence instead of overflowing
+  their total (#314, #315).
+- Reconciliation refuses non-finite controls, tolerances, totals and variances before the CLI reports success or a
+  connector is scaffolded (#318).
+- Company memory is validated before it is saved: incoming confidence outside 0 to 1 and non-finite correction values
+  or experiment metrics are refused, so an invalid record no longer replaces valid history (#319).
+- `verify_workbook` refuses a tolerance that is not finite or is negative, and an empty `expected` frame, where it
+  could report a pass without comparing anything. The standard model workbook adds `check_direct_cash` and `direct_cash_rounding` rows; the check
+  rebuilds the change in cash from sales, receivables, inventory, payables, cash costs, tax, interest, capex and
+  principal, so an omitted addback or payment that the profit bridge and ending cash carry together now fails. It
+  shares the model's own balances and is not a bank reconciliation (#320).
+
+Known issues:
+
+- A NaN amount understates the totals in the cash briefing, an overflowing total renders as `inf`, and the forecast
+  XLSX export writes NaN as a blank cell and infinities as text.
+- `public_holidays.yaml` still leaves out WA King's Birthday (28 September), Melbourne Cup (3 November), Christmas Eve
+  and New Year's Eve 2026, which the ATO's due-date table lists, so a BAS, PAYG withholding or instalment date that
+  falls on one is earlier than the ATO's. A later release will match the ATO's table.
 
 # v0.5.0
 
