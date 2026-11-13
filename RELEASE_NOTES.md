@@ -35,13 +35,14 @@ Fixed:
   connector is scaffolded (#318).
 - Company memory is validated before it is saved: incoming confidence outside 0 to 1 and non-finite correction values
   or experiment metrics are refused, so an invalid record no longer replaces valid history (#319).
+- `verify_workbook` refuses a tolerance that is not finite or is negative, and an empty `expected` frame, where it
+  could report a pass without comparing anything. The standard model workbook adds `check_direct_cash` and `direct_cash_rounding` rows; the check
+  rebuilds the change in cash from sales, receivables, inventory, payables, cash costs, tax, interest, capex and
+  principal, so an omitted addback or payment that the profit bridge and ending cash carry together now fails. It
+  shares the model's own balances and is not a bank reconciliation (#320).
 
 Known issues:
 
-- `verify_workbook` accepts `rel_tol=float("inf")`, and then passes every line and check that evaluates to a number,
-  whatever the number. It also passes an `expected` frame with no rows when the frame names at least one line the
-  Model sheet carries, because no month is compared. NaN and error cells still fail. Pass a finite tolerance and a
-  frame with rows.
 - A NaN amount understates the totals in the cash briefing, an overflowing total renders as `inf`, and the forecast
   XLSX export writes NaN as a blank cell and infinities as text.
 - `public_holidays.yaml` still leaves out WA King's Birthday (28 September), Melbourne Cup (3 November), Christmas Eve
