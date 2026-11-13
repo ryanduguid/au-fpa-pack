@@ -96,9 +96,12 @@ def evaluate_challenger(
     if missing_checks:
         raise ValueError(f"missing hard checks: {missing_checks}")
 
-    # Scaling preserves relative weights without overflowing their finite sum.
-    weight_scale = max(metric.weight for metric in objective.metrics)
-    total_weight = sum(metric.weight / weight_scale for metric in objective.metrics)
+    total_weight = sum(metric.weight for metric in objective.metrics)
+    weight_scale = 1.0
+    if not math.isfinite(total_weight):
+        # Preserve ordinary scores exactly; scale only an overflowing total.
+        weight_scale = max(metric.weight for metric in objective.metrics)
+        total_weight = sum(metric.weight / weight_scale for metric in objective.metrics)
     improvements: dict[str, float] = {}
     weighted = 0.0
     regression_guard_passed = True
