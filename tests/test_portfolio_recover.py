@@ -52,12 +52,11 @@ def test_best_snapshot_none_when_unscored_or_missing(tmp_path):
     assert best_snapshot(tmp_path) is None
 
 
-def test_best_snapshot_ignores_unusable_fitness(tmp_path):
+def test_best_snapshot_ignores_negative_fitness(tmp_path):
     forecasts = tmp_path / ".fpa" / "forecasts"
     forecasts.mkdir(parents=True, exist_ok=True)
-    for name, fitness in (("a", -float("inf")), ("b", float("nan")), ("c", -0.5)):
-        save_snapshot(_snap(name, fitness, {"revenue": 1.0}, {"revenue": 0.0}),
-                      forecasts / f"{name}.snapshot.yaml")
+    save_snapshot(_snap("c", -0.5, {"revenue": 1.0}, {"revenue": 0.0}),
+                  forecasts / "c.snapshot.yaml")
     assert best_snapshot(tmp_path) is None
     save_snapshot(_snap("d", 0.2, {"revenue": 1.0}, {"revenue": 0.0}), forecasts / "d.snapshot.yaml")
     best = best_snapshot(tmp_path)
@@ -74,7 +73,11 @@ def test_best_snapshot_ignores_unusable_fitness(tmp_path):
     (100.0, float("nan")),
 ])
 def test_recover_actuals_refuses_unsupported_consumed_evidence(prediction, error):
-    snapshot = _snap("p", abs(error), {"cash": prediction}, {"cash": error})
+    snapshot = _snap("p", 0.0, {"cash": 0.0}, {"cash": 0.0})
+    # Bypass construction to keep exercising the consumer's defensive checks.
+    snapshot.predicted["cash"] = prediction
+    assert snapshot.score is not None
+    snapshot.score.per_line["cash"] = error
     with pytest.raises(ValueError, match="cash.*finite"):
         recover_actuals(snapshot)
 

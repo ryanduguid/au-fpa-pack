@@ -5,7 +5,7 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, FiniteFloat
 
 from pyfpa.analysis.reconcile import reconcile
 
@@ -105,9 +105,11 @@ def aggregate_periods(
 
 
 class ScoreResult(BaseModel):
-    fitness: float                       # weighted MAPE across scored lines; lower is better
-    per_line: dict[str, float]           # signed error, (predicted - actual) / |actual|
-    weights: dict[str, float]            # the (renormalized) weights actually used
+    model_config = ConfigDict(revalidate_instances="always")
+
+    fitness: FiniteFloat                       # weighted MAPE across scored lines; lower is better
+    per_line: dict[str, FiniteFloat]           # signed error, (predicted - actual) / |actual|
+    weights: dict[str, FiniteFloat]            # the (renormalized) weights actually used
     # The sign of each scored actual. per_line divides by |actual|, so the error
     # alone cannot always recover a negative actual. None on scores written
     # before this was recorded; see pyfpa.portfolio.recover.recover_actuals.
