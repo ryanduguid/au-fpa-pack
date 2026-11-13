@@ -154,6 +154,7 @@ def test_a_partly_paid_invoice_is_refused():
         (lambda inv, rec: (inv.assign(amount=[1000.0, float("nan"), 1000.0]), rec), "finite number above 0"),
         (lambda inv, rec: (inv, rec.assign(amount=[1000.0, 2000.0, 0.0, 1000.0])), "finite number above 0"),
         (lambda inv, rec: (inv, rec.iloc[:0]), "must have rows"),
+        (lambda inv, rec: (inv.assign(issued_on=["2026-07-10", None, "2026-08-05"]), rec), "row needs a issued_on date"),
         (lambda inv, rec: (inv.drop(columns="issued_on"), rec), r"missing \['issued_on'\]"),
     ],
 )
