@@ -520,6 +520,25 @@ def _build_model(
         lambda m, col: f"={col}{r_ni}-({col}{r_pretax}-{col}{r_tax})",
     )
 
+    # Derive cash directly from sales, balance movements and cash costs. This
+    # does not reuse the profit bridge or its D&A, WC, OCF and FCF intermediates.
+    direct_checks = []
+    for month in range(n):
+        col = get_column_letter(_MODEL_START_COL + month)
+        previous = get_column_letter(_MODEL_START_COL + month - 1) if month else ""
+        prior_ar = f"{previous}{r_ar}" if month else "open_ar"
+        prior_ap = f"{previous}{r_ap}" if month else "open_ap"
+        prior_inventory = f"{previous}{r_inv}" if month else "open_inventory"
+        direct_checks.append(
+            f"={col}{r_chg}-("
+            f"{col}{r_rev}-({col}{r_ar}-{prior_ar})"
+            f"-{col}{r_cogs}-({col}{r_inv}-{prior_inventory})"
+            f"+({col}{r_ap}-{prior_ap})"
+            f"-{col}{r_opex}-{col}{r_int}-{col}{r_tax}"
+            f"-{col}{r_capex}-{col}{r_prin})"
+        )
+    alloc.emit_cells("check_direct_cash", direct_checks)
+
     ws.freeze_panes = "B2"
 
 

@@ -77,6 +77,10 @@ def verify_workbook(
         ``'[<filename_exact_case>]MODEL'!<COL><ROW>``
     The sheet name is stored as-uppercase in the solution dict.
     """
+    if not math.isfinite(rel_tol) or rel_tol < 0:
+        raise ValueError("rel_tol must be finite and non-negative")
+    if expected.empty:
+        raise ValueError("expected forecast must not be empty")
     formulas = _load_formulas()
     path = Path(path)
     wb = load_workbook(path)

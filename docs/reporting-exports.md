@@ -19,3 +19,12 @@ The model exporter retains its Assumptions and Model sheets and their formulas.
 The forecast exporter retains its Forecast sheet. Run the usual structure and
 formula verification before relying on a workbook; a completed file write does
 not establish accounting correctness.
+
+The standard model workbook includes a direct cash check built from sales,
+receivables, inventory, payables and cash costs. It can detect an omitted
+D&A addback, tax payment, capex or principal payment even when the profit
+bridge and ending cash carry that error together. Harbour Light adds its
+non-cash leave provision and accrued GST less settlements to the check.
+The check shares the model’s source balances and costs; it is not an external
+bank reconciliation. Verification requires non-empty expected data and a
+finite, non-negative tolerance, including zero for an exact comparison.

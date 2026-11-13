@@ -63,7 +63,9 @@ def _build_workbook(path: str | Path) -> None:
                     if str(period.asfreq("Q-JUN")) == event.period_label
                 )
         prior_gst = "opening_gst" if i == 0 else f"{previous}{rows['gst_payable']}"
+        direct_check = ws.cell(rows["check_direct_cash"], i + 2).value
         formulas = {
+            "check_direct_cash": f"{direct_check}-{col}{rows['leave_provisions']}-{col}{rows['gst_accrued']}+{col}{rows['gst_settled']}",
             "leave_provisions": f"={payroll_ref}*leave_share_of_payroll",
             "gst_accrued": f"=({col}{rows['revenue']}*taxable_sales_share-{col}{rows['cogs']}-{col}{rows['opex']}+{payroll_ref})*gst_rate",
             "gst_settled": "=" + "+".join(settlements or ["0"]),
