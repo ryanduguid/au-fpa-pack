@@ -3,8 +3,9 @@ receipt-delay:
   description: >
     The Anvil line's largest monthly receipt, taken as its peak month revenue
     in the base forecast, slips one month: collected in January 2027 instead
-    of December 2026. Model it in the working-capital cash impact, and the
-    cash rows that derive from it follow.
+    of December 2026. Keep the uncollected amount in December receivables
+    until January collection. The change in receivables drives the
+    working-capital cash impact and the cash rows that derive from it.
   month: "2026-12"
   to_month: "2027-01"
   amount: 238017.0
