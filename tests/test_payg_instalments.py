@@ -76,13 +76,12 @@ def test_a_late_notice_date_that_lands_on_a_weekend_moves_to_the_monday():
 @pytest.mark.parametrize(
     ("quarter_end", "notified_on", "due"),
     [
-        ("2026-06", date(2026, 9, 7), date(2026, 9, 28)),  # King's Birthday, not for the whole of WA.
-        ("2026-09", date(2026, 10, 13), date(2026, 11, 3)),  # Melbourne Cup, not for the whole of Victoria.
-        ("2026-09", date(2026, 12, 3), date(2026, 12, 24)),  # Christmas Eve, a part day.
-        ("2026-09", date(2026, 12, 10), date(2026, 12, 31)),  # New Year's Eve, a part day.
+        ("2026-09", date(2026, 10, 13), date(2026, 11, 4)),  # Melbourne Cup (VIC).
+        ("2026-09", date(2026, 12, 3), date(2026, 12, 29)),  # Christmas Eve, then Christmas and Boxing Day.
+        ("2026-09", date(2026, 12, 10), date(2027, 1, 4)),  # New Year's Eve, then New Year's Day.
     ],
 )
-def test_a_late_notice_date_on_a_day_the_statute_does_not_exclude_stands(quarter_end, notified_on, due):
+def test_a_late_notice_date_on_a_holiday_the_atos_table_lists_moves_to_its_date(quarter_end, notified_on, due):
     income = pd.Series(1000.0, index=pd.period_range("2026-04", "2026-09", freq="M"))
     notices = {"2026-06": _notice(400.0), "2026-09": _notice(400.0)} | {quarter_end: _notice(400.0, notified_on)}
     schedule = payg_instalment_schedule(income, deferred_bas_payer=False, notified_amounts=notices)

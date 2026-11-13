@@ -18,6 +18,12 @@ Changed:
   for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
   monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
   refused for a medium withholder, as a conservative choice rather than an ATO rule.
+- `public_holidays.yaml` now holds Melbourne Cup on 3 November 2026 and Christmas Eve and New Year's Eve 2026, as
+  the ATO's table of lodgment and payment dates on weekends or public holidays does (last updated 1 July 2026, read
+  14 November 2026). A due date on one of those days now moves to the ATO's published date (4 November, 29 December
+  2026 or 4 January 2027) instead of standing, and `payment_plan_estimate` refuses one as a due date. WA King's
+  Birthday on 28 September 2026 stays out: the table also gives that day as the first business day after 25
+  September, so no list can match both rows, and leaving it out keeps the earlier date.
 
 Fixed:
 

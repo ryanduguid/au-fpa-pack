@@ -165,13 +165,13 @@ for the whole of any State, the Australian Capital Territory or the Northern
 Territory is not a business day, in any State. 28 February 2027 falls on a Sunday
 and Monday 1 March is Labour Day throughout Western Australia, so that payment is
 due on Tuesday 2 March. The holidays are the dated list in `public_holidays.yaml`,
-taken from the ATO's tables without 4 days, so a date on one of them stands, before
-the ATO's date. Regional areas replace the WA King's Birthday and Melbourne Cup.
-Christmas Eve and New Year's Eve are holidays for only part of the day, so neither
-is 'a day which is a public holiday' under s 8AAZMB(2)(b). The ATO's table gives
-29 December 2026 and 4 January 2027 for those 2 days; that is published guidance
-with no stated basis for a part day, so ask a registered tax agent before relying
-on it. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
+which follows the ATO's tables. That includes Melbourne Cup, which regional areas
+replace, and Christmas Eve and New Year's Eve, which are holidays for only part of
+the day: a date on one moves to the ATO's 4 November, 29 December 2026 or 4 January
+2027. The tables contradict themselves on 28 September 2026: they give it as the
+first business day after 25 September, and also list it as WA King's Birthday,
+moving to 29 September. The list leaves it out, so 25 September moves to the ATO's
+28 September and 28 September stands, a day before the ATO's 29 September. A day outside the list's span (1 January 2026 to 31 August 2027) raises, so a
 schedule for a date before 2026 no longer computes. A refund on the due date is a forecast assumption, not a receipt
 promise; `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks it on the date you expect instead. A period ending after `reviewed_until` in `gst_bas.yaml` (30 June 2027)
 raises until the dates are re-checked. Explicit rate overrides must be finite and

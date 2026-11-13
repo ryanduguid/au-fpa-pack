@@ -27,8 +27,6 @@ from pyfpa.au.rates import load_public_holidays
 
 QUARTER_ENDS = [pd.Period(month, freq="M") for month in ("2026-09", "2026-12", "2027-03", "2027-06")]
 MONTHS = list(pd.period_range("2026-07", "2027-06", freq="M"))
-# Listed by the ATO, but regional areas replace the first 2 and the last 2 are part days.
-NOT_STATUTORY_HOLIDAYS = {date(2026, 9, 28), date(2026, 11, 3), date(2026, 12, 24), date(2026, 12, 31)}
 
 
 def _rows(cycle: str, channel: str, facts: Facts) -> list[dict]:
@@ -45,7 +43,8 @@ def _assert_matches(row: dict, nominal: date, effective: date) -> None:
 
 def test_the_holiday_list_holds_the_same_days_to_june_2027():
     ours = {day for day in load_public_holidays()["holidays"] if COVERS_FROM <= day <= COVERS_TO}
-    assert ours == set(HOLIDAYS) - NOT_STATUTORY_HOLIDAYS
+    # The ATO's table gives 28 September 2026 as the first business day after 25 September.
+    assert ours == set(HOLIDAYS) - {date(2026, 9, 28)}
 
 
 def test_original_quarterly_dates_match():
