@@ -27,6 +27,7 @@ def reconcile(tmp_path, amounts, targets, expected=None, **options):
         MappingRule(
             source_id="fabricated-aud", source_value=f"{i:03}", target=target or "",
             status="mapped" if target else "ignored",
+            rationale="Fabricated account deliberately outside the model" if target is None else "",
         )
         for i, target in enumerate(targets)
     ])
