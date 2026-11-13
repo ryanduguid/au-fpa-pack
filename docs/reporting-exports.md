@@ -28,3 +28,15 @@ non-cash leave provision and accrued GST less settlements to the check.
 The check shares the model’s source balances and costs; it is not an external
 bank reconciliation. Verification requires non-empty expected data and a
 finite, non-negative tolerance, including zero for an exact comparison.
+
+`check_direct_cash` shows the raw dollar difference. For positive tolerances,
+verification also allows the small `direct_cash_rounding` amount. This is
+`4e-15` times the sum of the absolute shared source amounts on both paths,
+including both D&A occurrences and current/prior working capital balances.
+Each amount is scaled before summing to avoid an overflowing gross total.
+The coefficient bounds rounding across 2 binary64 addition/subtraction paths
+of depth at most 16; changes to those paths need that bound reassessed.
+Harbour Light includes its leave and GST amounts. Differences within this
+allowance cannot be distinguished from roundoff. The allowance must be finite
+and non-negative, and does not scale with the caller's tolerance. The previous
+3 checks keep their absolute tolerance; zero tolerance permits no allowance.

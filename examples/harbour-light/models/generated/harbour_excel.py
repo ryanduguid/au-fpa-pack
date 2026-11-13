@@ -64,8 +64,13 @@ def _build_workbook(path: str | Path) -> None:
                 )
         prior_gst = "opening_gst" if i == 0 else f"{previous}{rows['gst_payable']}"
         direct_check = ws.cell(rows["check_direct_cash"], i + 2).value
+        rounding = ws.cell(rows["direct_cash_rounding"], i + 2).value
         formulas = {
             "check_direct_cash": f"{direct_check}-{col}{rows['leave_provisions']}-{col}{rows['gst_accrued']}+{col}{rows['gst_settled']}",
+            "direct_cash_rounding": str(rounding) + "".join(
+                f"+4E-15*MAX({col}{rows[name]},-{col}{rows[name]})"
+                for name in ("leave_provisions", "gst_accrued", "gst_settled")
+            ),
             "leave_provisions": f"={payroll_ref}*leave_share_of_payroll",
             "gst_accrued": f"=({col}{rows['revenue']}*taxable_sales_share-{col}{rows['cogs']}-{col}{rows['opex']}+{payroll_ref})*gst_rate",
             "gst_settled": "=" + "+".join(settlements or ["0"]),
@@ -74,7 +79,9 @@ def _build_workbook(path: str | Path) -> None:
             "operating_cash_flow": f"={col}{rows['net_income']}+{col}{rows['da']}+{col}{rows['wc_cash_impact']}+{col}{rows['leave_provisions']}+{col}{rows['gst_cash_impact']}",
         }
         for name, formula in formulas.items():
-            ws.cell(rows[name], i + 2, formula).number_format = MONEY_FORMAT
+            ws.cell(rows[name], i + 2, formula).number_format = (
+                "0.00E+00" if name in {"check_direct_cash", "direct_cash_rounding"} else MONEY_FORMAT
+            )
     wb.save(path)
 
 

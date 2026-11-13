@@ -67,6 +67,10 @@ def verify_workbook(
 
     Rows labelled ``check_*`` are the workbook's own ties: every month must
     evaluate to zero within ``rel_tol``, or the verification fails.
+    For positive tolerances, ``check_direct_cash`` also permits the finite,
+    non-negative dollar allowance in ``direct_cash_rounding`` for binary64
+    rounding across its two independent arithmetic paths. Zero tolerance
+    requires exact equality for every check.
 
     ``inputs`` maps ``'Sheet!A1'`` to a value that replaces that input cell
     before calculation, as a user changing it in Excel would, so a scenario
@@ -166,7 +170,19 @@ def verify_workbook(
             if isinstance(raw, bool) or not isinstance(raw, (int, float)):
                 failures.append(f"{label} month {m_idx + 1}: check returned {raw!s}, expected 0")
                 continue
-            if not abs(float(raw)) <= rel_tol:
+            rounding = 0.0
+            if label == "check_direct_cash" and rel_tol > 0:
+                budget_row = labels.get("direct_cash_rounding")
+                budget_ref = f"'[{path.name}]MODEL'!{col_letter}{budget_row}"
+                budget = solution[budget_ref].value[0][0] if budget_ref in solution else None
+                if (isinstance(budget, bool) or not isinstance(budget, (int, float))
+                        or not math.isfinite(budget) or budget < 0):
+                    failures.append(f"{label} month {m_idx + 1}: invalid direct cash rounding allowance")
+                    continue
+                rounding = float(budget)
+            # Subtract the finite tolerance instead of adding it to the budget,
+            # which could overflow and accidentally permit a non-finite check.
+            if not math.isfinite(raw) or abs(float(raw)) - rel_tol > rounding:
                 failures.append(f"{label} month {m_idx + 1}: check is non-zero ({float(raw)})")
 
     return VerifyReport(
