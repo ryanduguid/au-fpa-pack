@@ -43,6 +43,7 @@ def save_correction(correction: Correction, directory: str | Path, *, overwrite:
     The slug must be a filename stem, without path or device syntax. The caller
     controls the directory and its links; explicit overwrite follows file links.
     """
+    correction = Correction.model_validate(correction.model_dump())
     slug = correction.slug
     # Dot-only slugs are path syntax and would load back under another stem.
     if not slug.strip(".") or any(char in slug for char in ("/", "\\", ":", "\0")):

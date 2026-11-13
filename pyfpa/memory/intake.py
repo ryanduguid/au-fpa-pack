@@ -136,9 +136,9 @@ def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 
 def save_intake(intake: Intake, path: str | Path) -> None:
     """Save intake as YAML frontmatter plus human-readable markdown notes."""
+    data = Intake.model_validate(intake.model_dump()).model_dump()
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = intake.model_dump()
     notes = data.pop("notes", "")
     text = "---\n" + yaml.safe_dump(data, sort_keys=False) + "---\n"
     if notes:
@@ -188,6 +188,8 @@ def record_intake_fact(
     resolved_confidence = confidence
     if resolved_confidence is None:
         resolved_confidence = 1.0 if source_type == "user" else 0.8
+    if source_type != "user" and not 0 <= resolved_confidence <= 1:
+        raise ValueError("confidence must be between 0 and 1")
 
     existing = _fact_by_key(intake).get(key)
     if source_type == "user":

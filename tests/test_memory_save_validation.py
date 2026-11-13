@@ -102,6 +102,7 @@ def test_save_experiment_revalidates_mutated_ratification(tmp_path, field):
     path = save_experiment(experiment, tmp_path)
     before = path.read_bytes()
     if field == "decision":
+        assert experiment.decision is not None
         experiment.decision.outcome = "rejected"
     else:
         getattr(experiment, field).clear()
