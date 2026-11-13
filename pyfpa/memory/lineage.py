@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from collections import Counter
 from pathlib import Path
 from typing import Any, Literal
@@ -220,6 +221,12 @@ def profile_table(path: str | Path) -> dict[str, Any]:
     }
 
 
+def _finite_reconciliation_value(value: float, name: str) -> float:
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    return value
+
+
 def reconcile_account_table(
     path: str | Path,
     *,
@@ -241,7 +248,17 @@ def reconcile_account_table(
 
     Without expected totals, passed reports mapping coverage only. The CLI
     requires expected_provided before reporting successful reconciliation.
+    Controls, tolerances and calculated evidence must be finite; tolerances
+    must also be non-negative. Unrepresentable arithmetic is refused.
     """
+    for name, value in (("tolerance", tolerance), ("abs_tolerance", abs_tolerance)):
+        _finite_reconciliation_value(value, name)
+        if value < 0:
+            raise ValueError(f"{name} must be non-negative")
+    expected = {
+        target: _finite_reconciliation_value(float(amount), f"expected total for {target!r}")
+        for target, amount in (expected or {}).items()
+    }
     path = Path(path)
     if path.suffix.casefold() != ".csv":
         raise ValueError("reconcile-source currently supports CSV files")
@@ -267,6 +284,7 @@ def reconcile_account_table(
                 continue
             rows.append((account, _parse_amount(row.get(amount_column))))
 
+    source_total = _finite_reconciliation_value(sum(amount for _, amount in rows), "source total")
     accounts = [account for account, _ in rows]
     duplicates = sorted(
         account for account, count in Counter(accounts).items() if count > 1
@@ -288,16 +306,22 @@ def reconcile_account_table(
         rule = rules.get(account)
         if rule is None or rule.status == "ignored":
             continue
-        mapped_totals[rule.target] = mapped_totals.get(rule.target, 0.0) + amount
+        mapped_totals[rule.target] = _finite_reconciliation_value(
+            mapped_totals.get(rule.target, 0.0) + amount, f"mapped total for {rule.target!r}",
+        )
+    mapped_total = _finite_reconciliation_value(sum(mapped_totals.values()), "mapped total")
 
     variances: dict[str, dict[str, float | bool | None]] = {}
-    expected = expected or {}
     for target in sorted(set(mapped_totals) | set(expected)):
         mapped = float(mapped_totals[target]) if target in mapped_totals else None
         expected_value = float(expected[target]) if target in expected else None
         variance = mapped - expected_value if mapped is not None and expected_value is not None else None
         # Divide by the size of the expected value so a negative line keeps the variance's sign.
         variance_pct = variance / abs(expected_value) if expected_value and variance is not None else None
+        if variance is not None:
+            _finite_reconciliation_value(variance, f"variance for {target!r}")
+        if variance_pct is not None:
+            _finite_reconciliation_value(variance_pct, f"relative variance for {target!r}")
         # Rounded to 9 places so float representation error cannot push an
         # exact boundary difference, such as half a cent, outside the limit.
         within = variance is not None and (
@@ -320,8 +344,8 @@ def reconcile_account_table(
         "source_id": source_id,
         "path": str(path),
         "row_count": len(rows),
-        "source_total": sum(amount for _, amount in rows),
-        "mapped_total": sum(mapped_totals.values()),
+        "source_total": source_total,
+        "mapped_total": mapped_total,
         "mapped_totals": mapped_totals,
         "duplicates": duplicates,
         "unmapped": unmapped,
