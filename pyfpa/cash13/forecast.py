@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from datetime import date
 
 import pandas as pd
@@ -44,4 +45,7 @@ def cash13_forecast(cfg: Cash13Config) -> pd.DataFrame:
     )
     if cfg.facility_limit is not None:
         frame["headroom"] = frame["ending_cash"] + cfg.facility_limit
+    for column in frame:
+        if not all(math.isfinite(value) for value in frame[column]):
+            raise ValueError(f"{column} contains non-finite values")
     return frame
