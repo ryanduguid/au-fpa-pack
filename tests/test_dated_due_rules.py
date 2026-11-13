@@ -136,6 +136,36 @@ def test_a_channel_is_refused_for_withholding_outside_a_quarterly_statement(with
         paygw_due_rule(withholder, deferred_bas_payer=deferred, channel=channel)
 
 
+# ATO, "Activity statements", registered agent lodgment program (last updated
+# 1 July 2026, read 13 November 2026): a quarterly statement is eligible unless it
+# has a monthly PAYG instalment obligation, a head company's instalments, a GST
+# monthly cycle or is an instalment notice; monthly withholding does not exclude it.
+@pytest.mark.parametrize(
+    ("payday", "due"),
+    [
+        (date(2026, 7, 14), date(2026, 8, 21)),   # first month: monthly statement
+        (date(2026, 8, 14), date(2026, 9, 21)),   # second month: monthly statement
+        (date(2026, 9, 14), date(2026, 11, 25)),  # third month: quarterly statement, agent date
+        (date(2026, 12, 14), date(2027, 3, 2)),   # quarter 2 has no agent date
+        (date(2027, 3, 12), date(2027, 5, 26)),
+    ],
+)
+def test_medium_deferred_withholding_takes_the_agent_date_on_its_quarterly_statement(payday, due):
+    assert paygw_due_rule("medium", deferred_bas_payer=True, channel=AGENT)(payday) == due
+
+
+def test_medium_deferred_withholding_shares_its_quarterly_statements_gst_date():
+    gst = bas_schedule(pd.Series(6000.0, index=pd.period_range("2026-07", periods=3, freq="M")),
+                       GstAssumptions(lodgment_channel=AGENT))
+    rule = paygw_due_rule("medium", deferred_bas_payer=True, channel=AGENT)
+    assert rule(date(2026, 9, 14)) == gst["due_date"].iloc[0]
+
+
+def test_the_agent_channel_is_refused_for_a_medium_withholder_that_is_not_deferred():
+    with pytest.raises(ValueError, match="agent channel to a medium withholder that is one"):
+        paygw_due_rule("medium", deferred_bas_payer=False, channel=AGENT)
+
+
 def test_instalments_follow_the_statement_they_sit_on():
     income = pd.Series(1000.0, index=pd.period_range("2026-07", periods=6, freq="M"))
     schedule = payg_instalment_schedule(income, deferred_bas_payer=True, rate=0.05, channel=ONLINE)

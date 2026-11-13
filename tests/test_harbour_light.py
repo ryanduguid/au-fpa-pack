@@ -148,6 +148,17 @@ def test_run_harbour_writes_artifacts(tmp_path):
     assert "13-Week" in text
 
 
+def test_the_committed_briefing_regenerates_unchanged(tmp_path):
+    # A due-date change moves the briefing's cash; the committed copy must move with it.
+    # Line endings are normalised, because a Windows checkout may store CRLF.
+    pytest.importorskip("formulas")
+    import run_harbour as runner
+
+    runner.run_harbour(tmp_path)
+    committed = (EXAMPLE / "output" / "briefing.md").read_bytes().replace(b"\r\n", b"\n")
+    assert (tmp_path / "briefing.md").read_bytes().replace(b"\r\n", b"\n") == committed
+
+
 def test_workbook_cash_recalculates_after_opening_gst_edit(tmp_path):
     pytest.importorskip("formulas")
     import harbour_model as hm
