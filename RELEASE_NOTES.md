@@ -1,10 +1,5 @@
 # Unreleased
 
-Added:
-
-- `runway_summary` names every week whose ending cash is below zero in `negative_weeks`, and with a facility every week headroom is below the buffer in `headroom_breach_weeks`. The briefing from `to_briefing_md` adds a 'Weeks below zero' line, so a one-week dip reads apart from a month below zero. In the Lumbridge example a 45-day late receipt leaves weeks 4, 5 and 6 below zero. `compare_scenarios` rows and the Ridgeline decision pack carry the same lists, and the decision pack's metric dictionary declares `negative_weeks`.
-- `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks a BAS refund on the date the caller expects, as `fbt_weekly_flows` does for FBT. Only refund rows move. Without it a refund still lands on the statement's due date, a forecast assumption; a label with no refund in the schedule is refused.
-
 Changed:
 
 - `paygw_due_rule("medium", deferred_bas_payer=True, channel=LodgmentChannel.AGENT)` is no longer refused. It moves
@@ -13,14 +8,6 @@ Changed:
   for activity statements (last updated 1 July 2026, read 13 November 2026) excludes a quarterly statement with a
   monthly PAYG instalment obligation or a GST monthly cycle, but not one with monthly withholding. `ONLINE` is still
   refused for a medium withholder.
-- The Claude Code plugin is now named `au-fpa-pack`, not `openfpa`, with Ryan Duguid as its author, and the
-  repository is its own marketplace: `/plugin marketplace add ryanduguid/au-fpa-pack`, then
-  `/plugin install au-fpa-pack@au-fpa-pack`. Uninstall a plugin installed under the old name before
-  installing this one.
-
-Fixed:
-
-- An eligible business's December monthly BAS is due 21 February, and that date now reaches the PAYG withholding and instalments on it, not only the GST. `paygw_due_rule` and `payg_instalment_schedule` take `december_agent_date=True` with the `AGENT` channel, as `GstAssumptions` does; before, withholding and instalments on that statement stayed on 21 January. Source: ATO, 'Activity statements', registered agent lodgment program (last updated 1 July 2026, read 13 November 2026): the December business activity statement is not due for lodgment and payment until 21 February for business clients with up to $10 million annual turnover who report GST monthly and lodge electronically; businesses registered for deferred GST are not eligible. The flag is the caller's statement that the business meets those conditions, is not registered for deferred GST (the importer scheme, which the code cannot see) and that the statement is not one with only a monthly PAYG withholding cycle. The code refuses the flag for a deferred BAS payer, which lodges no monthly GST, and with a channel other than `AGENT`. It does not move an instalment whose notice came after the quarter ended, which stays on its s 45-112(3) date.
 
 # v0.5.0
 
@@ -37,13 +24,19 @@ Added:
 - `pyfpa.config.loader.config_from_bytes` validates an `EntityConfig` from the exact bytes of a YAML file; `load_config` now uses it, with the same UTF-8 and newline handling.
 - 13-week cash flows can recur `monthly` or `quarterly`. Such a flow takes an `anchor_date` and recurs every 1 or 3 months from it on its day of month, or on the month's last day when that is earlier, so the 31st falls on 28 or 29 February. `Cash13Config.window_start`, the first day of week 1, places each date in the week that contains it, as `gst_weekly_flows` does; dates before week 1, outside `start_week` to `end_week` or past the horizon are dropped. A monthly or quarterly flow without an `anchor_date`, an `anchor_date` on any other recurrence and a monthly or quarterly flow in a config without `window_start` are refused. A scenario delay moves the `anchor_date` by the same number of weeks. `expand_flow` takes the window start as an optional third argument.
 
-- Australian due dates by lodgment channel: `LodgmentChannel` on `GstAssumptions`, `payg_instalment_schedule` and `paygw_due_rule` takes the 2-week online concession or the registered agent program date, and `december_agent_date` the 21 February date for an eligible December monthly BAS. The default stays on the original dates, and an agent date the ATO has not confirmed is refused. `fbt_due_date`, `fbt_schedule` and `fbt_weekly_flows` add FBT return and payment dates, from the new `fbt.yaml`; an FBT refund enters the forecast only on an `expected_receipt_on` date from the caller.
+- Australian due dates by lodgment channel: `LodgmentChannel` on `GstAssumptions`, `payg_instalment_schedule` and `paygw_due_rule` takes the 2-week online concession or the registered agent program date. `december_agent_date=True` with the `AGENT` channel, on `GstAssumptions`, `paygw_due_rule` and `payg_instalment_schedule`, takes the 21 February date for an eligible December monthly BAS, for the GST, PAYG withholding and instalments on that statement. Source: ATO, 'Activity statements', registered agent lodgment program (last updated 1 July 2026, read 13 November 2026): the December business activity statement is not due for lodgment and payment until 21 February for business clients with up to $10 million annual turnover who report GST monthly and lodge electronically; businesses registered for deferred GST are not eligible. The flag is the caller's statement that the business meets those conditions, is not registered for deferred GST (the importer scheme, which the code cannot see) and that the statement is not one with only a monthly PAYG withholding cycle. The code refuses the flag for a deferred BAS payer, which lodges no monthly GST, and with a channel other than `AGENT`. It does not move an instalment whose notice came after the quarter ended, which stays on its s 45-112(3) date. The default stays on the original dates, and an agent date the ATO has not confirmed is refused. `fbt_due_date`, `fbt_schedule` and `fbt_weekly_flows` add FBT return and payment dates, from the new `fbt.yaml`; an FBT refund enters the forecast only on an `expected_receipt_on` date from the caller.
 - `payment_plan_estimate` and `payment_plan_weekly_flows` show what paying an ATO debt by instalments would cost, with GIC worked daily from the effective due date using the dated `gic.yaml`. The result is labelled an estimate and implies no ATO approval, and a plan needing a day outside `gic.yaml` is refused. A plan is a scenario only: the base case keeps statutory dates. `fpa-cash-runway` and `fpa-cfo-judgment` now carry a guardrail against presenting deferred tax, super or payroll as a source of cash without its consequences.
+- `runway_summary` names every week whose ending cash is below zero in `negative_weeks`, and with a facility every week headroom is below the buffer in `headroom_breach_weeks`. The briefing from `to_briefing_md` adds a 'Weeks below zero' line, so a one-week dip reads apart from a month below zero. In the Lumbridge example a 45-day late receipt leaves weeks 4, 5 and 6 below zero. `compare_scenarios` rows and the Ridgeline decision pack carry the same lists, and the decision pack's metric dictionary declares `negative_weeks`.
+- `gst_weekly_flows(..., expected_receipt_on={period_label: date})` banks a BAS refund on the date the caller expects, as `fbt_weekly_flows` does for FBT. Only refund rows move. Without it a refund still lands on the statement's due date, a forecast assumption; a label with no refund in the schedule is refused.
 
 Changed:
 
+- The Claude Code plugin is now named `au-fpa-pack`, not `openfpa`, with Ryan Duguid as its author, and the
+  repository is its own marketplace: `/plugin marketplace add ryanduguid/au-fpa-pack`, then
+  `/plugin install au-fpa-pack@au-fpa-pack`. Uninstall a plugin installed under the old name before
+  installing this one.
 - Australian BAS, PAYG withholding and PAYG instalment due dates now move past a public holiday for the whole of any State, the ACT or the NT, as Taxation Administration Act 1953 s 8AAZMB and Schedule 1 s 388-52 require, and not only past a weekend. The December 2026 quarter is due on Tuesday 2 March 2027, not Monday 1 March, which is WA Labour Day. Holidays come from the dated `public_holidays.yaml`, and a date before 1 January 2026 or after 31 August 2027 is refused. The list leaves out WA King's Birthday, Melbourne Cup, Christmas Eve and New Year's Eve, which the ATO's table lists, because none is a day that is a public holiday for the whole of a State, so a date on one falls before the ATO's. `bas_schedule` gains a `nominal_due_date` column beside the effective `due_date`.
-- `.claude-plugin/plugin.json` now carries the package's version, 0.4.0, instead of 0.1.0, and a test keeps the 2 equal.
+- `.claude-plugin/plugin.json` now carries the package's version, 0.5.0, instead of 0.1.0, and a test keeps the 2 equal.
 - A `proposed` or `promoted` `ResearchEpoch` now needs a holdout period that does not overlap its training periods. Saved epochs that lack one no longer load until their periods are recorded or their status changes.
 
 Fixed:
