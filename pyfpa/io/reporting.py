@@ -22,16 +22,15 @@ def _require_finite(value: Any) -> None:
     raise ValueError("financial reporting values must be finite numbers")
 
 
-def _money(value: float) -> str:
-    if isinstance(value, Integral):
-        value = int(value)
+def _money(value: int | float) -> str:
     _require_finite(value)
     sign = "-" if value < 0 else ""
-    amount = f"{abs(value):,}" if isinstance(value, Integral) else f"{abs(value):,.0f}"
-    return f"{sign}${amount}"
+    if isinstance(value, Integral):
+        return f"{sign}${abs(int(value)):,}"
+    return f"{sign}${abs(value):,.0f}"
 
 
-def _total(values: Iterable[float]) -> float:
+def _total(values: Iterable[int | float]) -> int | float:
     return sum(int(value) if isinstance(value, Integral) else value for value in values)
 
 
