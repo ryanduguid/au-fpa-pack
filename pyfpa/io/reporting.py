@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import math
+from collections.abc import Iterable
+from numbers import Integral, Number
 from pathlib import Path
 from typing import Any
 
@@ -10,9 +13,25 @@ from pyfpa.io.atomic import staged_output
 _REQUIRED_COLUMNS = {"revenue", "ebitda", "net_income", "ending_cash"}
 
 
-def _money(value: float) -> str:
+def _require_finite(value: Any) -> None:
+    try:
+        if isinstance(value, Integral) or math.isfinite(value):
+            return
+    except (TypeError, ValueError, OverflowError):
+        pass
+    raise ValueError("financial reporting values must be finite numbers")
+
+
+def _money(value: int | float) -> str:
+    _require_finite(value)
     sign = "-" if value < 0 else ""
+    if isinstance(value, Integral):
+        return f"{sign}${abs(int(value)):,}"
     return f"{sign}${abs(value):,.0f}"
+
+
+def _total(values: Iterable[int | float]) -> int | float:
+    return sum(int(value) if isinstance(value, Integral) else value for value in values)
 
 
 def _weeks_text(weeks: list[int]) -> str:
@@ -44,11 +63,14 @@ def to_briefing_md(
         # inside the headline block.
         raise ValueError("forecast_df has no rows to brief")
     df = forecast_df
+    for column in _REQUIRED_COLUMNS:
+        for value in df[column]:
+            _require_finite(value)
     lines = [f"# {title}", "", "## Headline", ""]
     lines += [
-        f"- **Revenue:** {_money(df['revenue'].sum())}",
-        f"- **EBITDA:** {_money(df['ebitda'].sum())}",
-        f"- **Net income:** {_money(df['net_income'].sum())}",
+        f"- **Revenue:** {_money(_total(df['revenue']))}",
+        f"- **EBITDA:** {_money(_total(df['ebitda']))}",
+        f"- **Net income:** {_money(_total(df['net_income']))}",
         f"- **Ending cash:** {_money(df['ending_cash'].iloc[-1])}",
         "",
     ]
@@ -73,11 +95,11 @@ def to_briefing_md(
         "| Month | Revenue | EBITDA | Net Income | Ending Cash |",
         "|---|---|---|---|---|",
     ]
-    for period, row in df.iterrows():
+    columns = ["revenue", "ebitda", "net_income", "ending_cash"]
+    for period, revenue, ebitda, net_income, ending_cash in df[columns].itertuples(name=None):
         lines.append(
-            f"| {period} | {_money(row['revenue'])} | "
-            f"{_money(row['ebitda'])} | {_money(row['net_income'])} | "
-            f"{_money(row['ending_cash'])} |"
+            f"| {period} | {_money(revenue)} | {_money(ebitda)} | "
+            f"{_money(net_income)} | {_money(ending_cash)} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -87,6 +109,12 @@ def forecast_to_excel(forecast_df: pd.DataFrame, path: str | Path) -> None:
     # The stream carries no suffix, so pandas always writes xlsx bytes.
     if Path(path).suffix.lower() != ".xlsx":
         raise ValueError(f"forecast_to_excel writes .xlsx only, not {Path(path).name}")
+    for _, series in forecast_df.items():
+        if series.isna().any():
+            raise ValueError("forecast values must be finite; missing cells are not reportable")
+        for value in series:
+            if isinstance(value, Number):
+                _require_finite(value)
     with staged_output(path) as staged:
         with staged.open("wb") as stream:
             forecast_df.to_excel(stream, sheet_name="Forecast")
