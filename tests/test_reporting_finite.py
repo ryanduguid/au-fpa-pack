@@ -70,3 +70,38 @@ def test_finite_reporting_preserves_headline_and_monthly_values(tmp_path):
     forecast_to_excel(frame, destination)
     restored = pd.read_excel(destination, sheet_name="Forecast", index_col=0)
     pd.testing.assert_frame_equal(restored.reset_index(drop=True), frame.reset_index(drop=True), check_dtype=False)
+
+
+@pytest.mark.parametrize("invalid", [None, pd.NA, "missing"])
+def test_briefing_refuses_missing_or_text_financial_values(invalid):
+    frame = _frame().astype(object)
+    frame.loc[frame.index[0], "revenue"] = invalid
+    with pytest.raises(ValueError, match="finite"):
+        to_briefing_md(frame)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf"), pd.NA])
+def test_forecast_export_refuses_invalid_numbers_in_mixed_columns(tmp_path, invalid):
+    frame = _frame()
+    frame["notes"] = pd.Series(["review", invalid, "agreed"], index=frame.index, dtype=object)
+    with pytest.raises(ValueError, match="finite"):
+        forecast_to_excel(frame, tmp_path / "report.xlsx")
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("column,title", [("revenue", "Revenue"), ("ebitda", "EBITDA"), ("net_income", "Net income")])
+def test_integer_headlines_and_monthly_rows_keep_dollars_with_float_columns(column, title):
+    frame = pd.DataFrame({name: [0.25] * 4 for name in ["revenue", "ebitda", "net_income", "ending_cash"]})
+    frame[column] = pd.Series([(1 << 62) + 3] * 4, dtype="int64")
+    text = to_briefing_md(frame)
+    assert f"- **{title}:** $18,446,744,073,709,551,628" in text
+    assert text.count("$4,611,686,018,427,387,907") == 4
+
+
+def test_forecast_export_preserves_text_labels(tmp_path):
+    frame = _frame()
+    frame["scenario"] = ["base", "delayed", "recovered"]
+    destination = tmp_path / "report.xlsx"
+    forecast_to_excel(frame, destination)
+    restored = pd.read_excel(destination, sheet_name="Forecast", index_col=0)
+    assert restored["scenario"].tolist() == frame["scenario"].tolist()

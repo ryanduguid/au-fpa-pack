@@ -15,6 +15,14 @@ other hard links continue to contain the previous report. These exports provide
 atomic replacement on the destination filesystem, without a power-loss durability
 guarantee. The destination's parent directory must already exist.
 
+Briefings reject missing or non-finite financial values, including runway cash
+and overflowing headline totals. Integer headlines and monthly rows retain their
+whole-dollar values without int64 wraparound or conversion to floating point.
+Forecast exports reject missing cells and non-finite numbers before creating
+staging files; text labels remain supported. These checks preserve the existing
+report when the proposed values are invalid. Excel's numeric precision limits
+still apply to finite values written to the workbook.
+
 The model exporter retains its Assumptions and Model sheets and their formulas.
 The forecast exporter retains its Forecast sheet. Run the usual structure and
 formula verification before relying on a workbook; a completed file write does
