@@ -54,6 +54,20 @@ def _run_calculator(payment: RolePay, executable: Path, timeout: float) -> tuple
     return body, process.stdout
 
 
+def _has_evidence(body: dict[str, Any]) -> bool:
+    """Whether the result names its warnings, sources, source date and scope."""
+    warnings = body.get("warnings")
+    sources = body.get("sources")
+    return (
+        isinstance(warnings, list) and bool(warnings)
+        and all(isinstance(w, str) and w.strip() for w in warnings)
+        and isinstance(sources, list) and bool(sources)
+        and all(isinstance(source, str) and source.strip() for source in sources)
+        and isinstance(body.get("source_checked"), str) and bool(body["source_checked"].strip())
+        and isinstance(body.get("scope"), str) and bool(body["scope"].strip())
+    )
+
+
 def _withholding(body: dict[str, Any], payment: RolePay, engine_version: str) -> Decimal:
     """The withholding from a successful result, once its identity and evidence check out."""
     rates = body.get("rates")
@@ -70,16 +84,7 @@ def _withholding(body: dict[str, Any], payment: RolePay, engine_version: str) ->
             f"{body.get('engine')} {body.get('engine_version')}, "
             f"{body.get('calculation')} {body.get('period')} scale {scale}"
         )
-    warnings = body.get("warnings")
-    sources = body.get("sources")
-    if (
-        not isinstance(warnings, list) or not warnings
-        or not all(isinstance(w, str) and w.strip() for w in warnings)
-        or not isinstance(sources, list) or not sources
-        or not all(isinstance(source, str) and source.strip() for source in sources)
-        or not isinstance(body.get("source_checked"), str) or not body["source_checked"].strip()
-        or not isinstance(body.get("scope"), str) or not body["scope"].strip()
-    ):
+    if not _has_evidence(body):
         raise ValueError("calculator response is missing source or scope evidence")
     amounts = body.get("amounts")
     value = amounts.get("withholding") if isinstance(amounts, dict) else None
