@@ -56,6 +56,15 @@ for event in events:
     print(event.component, event.due_date, event.amount)
 ```
 
+```text
+net_wages 2026-07-31 4190.0
+payg_withholding 2026-08-21 810.0
+```
+
+$810 is the Schedule 1 amount for payments from 1 July 2026: $5,000 a month
+is $1,153.99 a week, scale 2's coefficients for it (a = 0.3227,
+b = 185.1935) give $187 a week, and $187 × 13 / 3 rounds to $810.
+
 Each result keeps the calculator's full JSON in `evidence_json`, with its
 sources, source date and warnings: keep it with the forecast. A refusal, a
 timeout, a missing executable, a different `engine_version` or a result without
