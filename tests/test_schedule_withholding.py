@@ -8,7 +8,7 @@ import subprocess
 import sys
 from dataclasses import replace
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Context, Decimal, localcontext
 from pathlib import Path
 from unittest.mock import patch
 
@@ -27,7 +27,8 @@ def _response(payment=PAY, **changes):
     body = {
         "ok": True, "engine": "australian-tax-calculators", "engine_version": "1.0.0",
         "calculation": "payg_withholding", "period": f"{payment.year} {payment.pay_period}",
-        "amounts": {"withholding": "1.00"}, "scope": "regular earnings only",
+        "amounts": {"withholding": "1.00"}, "rates": {"scale": str(payment.scale)},
+        "scope": "regular earnings only",
         "sources": ["https://www.ato.gov.au/"], "source_checked": "2026-07-01",
         "warnings": ["Operator-confirmed scope; obtain human review."],
     }
@@ -155,6 +156,9 @@ def test_withholding_record_rejects_impossible_or_unevidenced_results(amount, ev
     {"amounts": {"withholding": "invalid"}}, {"amounts": {"withholding": "NaN"}},
     {"amounts": {"withholding": "-1"}}, {"amounts": {"withholding": "1.001"}},
     {"amounts": {"withholding": "371"}},
+    # Schedule 1 withholds whole dollars, and the result must be for the scale sent.
+    {"amounts": {"withholding": "1.50"}},
+    {"rates": {"scale": "4"}}, {"rates": {}}, {"rates": None},
 ])
 def test_native_boundary_refuses_invalid_results(tmp_path, changes):
     with pytest.raises(ValueError):
@@ -235,6 +239,24 @@ def test_cent_rounded_pays_reconcile_to_the_unrounded_monthly_frame():
             for name in ("Role A", "Role B")]
     events = _settle([RoleWithholding(pay, Decimal(600), "{}") for pay in pays], gross=2 * 52000 / 12)
     assert next(event.amount for event in events if event.component == "net_wages") == 7466.66
+
+
+def test_schedule_arithmetic_ignores_a_callers_low_decimal_precision():
+    pay = replace(PAY, pay_period="monthly", earnings=Decimal("5000.00"))
+    result = RoleWithholding(pay, Decimal(810), "{}")
+    with localcontext(Context(prec=2)):
+        events = _settle([result], gross=5000)
+    assert {event.component: event.amount for event in events if event.component != "super_guarantee"} == {
+        "net_wages": 4190.0, "payg_withholding": 810.0,
+    }
+
+
+def test_role_pays_too_large_to_add_exactly_are_refused():
+    huge = replace(PAY, earnings=Decimal("1E+30"))
+    small = replace(PAY, role_name="Role B", earnings=Decimal("0.01"))
+    results = [RoleWithholding(huge, Decimal(0), "{}"), RoleWithholding(small, Decimal(0), "{}")]
+    with pytest.raises(ValueError, match="exactly"):
+        _settle(results, gross=1e30)
 
 
 def test_duplicate_roles_and_missing_paydays_are_refused():
