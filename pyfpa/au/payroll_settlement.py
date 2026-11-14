@@ -10,10 +10,12 @@ the due date (from a rule the caller supplies for each component) and the cash
 date (when the forecast pays). Monthly cash, month-end liabilities and 13-week
 flows are all derived from the same events, so they cannot disagree.
 
-This is a forecast allocation, not a payroll calculation. Each month's gross pay
-is split equally across that month's paydays, and PAYG withholding is a declared
-average rate, not a withholding-schedule calculation. Leave provisions are
-accruals and have no settlement here. No statutory calendar lives in this
+This is a forecast allocation, not a payroll calculation. By default each
+month's gross pay is split equally across that month's paydays, and PAYG
+withholding is a declared average rate. Alternatively the caller passes each
+role's pay and Schedule 1 withholding for each payday, worked out by the native
+calculator (`pyfpa.io.native_tax`); this module only reconciles and dates them.
+Leave provisions are accruals and have no settlement here. No statutory calendar lives in this
 module: due-date rules are passed in.
 """
 
