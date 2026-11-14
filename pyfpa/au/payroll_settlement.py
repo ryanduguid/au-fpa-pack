@@ -68,6 +68,44 @@ def _event(component: str, period: pd.Period, obligation: date, amount: float,
     return SettlementEvent(component, period, obligation, due, cash, amount)
 
 
+def _role_pays(
+    role_withholding: Sequence[RoleWithholding], paydays: Sequence[date],
+) -> tuple[dict[date, tuple[Decimal, Decimal]], Counter[date]]:
+    """Each payday's gross and withholding across its role payments, and how many there are."""
+    scheduled: dict[date, tuple[Decimal, Decimal]] = {}
+    counts: Counter[date] = Counter()
+    seen: set[tuple[str, date]] = set()
+    for result in role_withholding:
+        payment = result.payment
+        key = (payment.role_name, payment.payday)
+        if key in seen:
+            raise ValueError("role_withholding repeats a role and payday")
+        seen.add(key)
+        if payment.payday not in paydays:
+            raise ValueError("role_withholding contains an undeclared payday")
+        counts[payment.payday] += 1
+        gross_before, tax_before = scheduled.get(payment.payday, (Decimal(0), Decimal(0)))
+        scheduled[payment.payday] = (gross_before + payment.earnings, tax_before + result.withholding)
+    return scheduled, counts
+
+
+def _reconciled_withholding(
+    period: pd.Period, row: pd.Series, days: Sequence[date],
+    scheduled: Mapping[date, tuple[Decimal, Decimal]], counts: Counter[date],
+) -> float:
+    """The month's scheduled withholding, once its role pays reconcile to the frame's gross."""
+    if row["bonuses"] != 0:
+        raise ValueError("role_withholding supports regular earnings only, not bonuses")
+    gross = float(row["gross_wages"])
+    actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
+    tolerance = Decimal("0.005") * max(sum(counts[day] for day in days), 1)
+    if not math.isfinite(gross) or gross < 0 or abs(actual - Decimal(str(gross))) > tolerance:
+        raise ValueError(f"role_withholding earnings do not reconcile to {period}")
+    if gross and any(day not in scheduled for day in days):
+        raise ValueError(f"role_withholding is missing a payday in {period}")
+    return float(sum((scheduled[day][1] for day in days if day in scheduled), Decimal(0)))
+
+
 def settlement_events(
     payroll: pd.DataFrame,
     paydays: Sequence[date],
@@ -115,38 +153,17 @@ def settlement_events(
             raise ValueError(f"payday {day.isoformat()} falls outside the payroll months")
         by_month[period].append(day)
 
-    scheduled: dict[date, tuple[Decimal, Decimal]] = {}
+    scheduled: Mapping[date, tuple[Decimal, Decimal]] = {}
     counts: Counter[date] = Counter()
     if role_withholding is not None:
-        seen: set[tuple[str, date]] = set()
-        for result in role_withholding:
-            payment = result.payment
-            key = (payment.role_name, payment.payday)
-            if key in seen:
-                raise ValueError("role_withholding repeats a role and payday")
-            seen.add(key)
-            if payment.payday not in paydays:
-                raise ValueError("role_withholding contains an undeclared payday")
-            counts[payment.payday] += 1
-            gross_before, tax_before = scheduled.get(payment.payday, (Decimal(0), Decimal(0)))
-            scheduled[payment.payday] = (
-                gross_before + payment.earnings, tax_before + result.withholding,
-            )
+        scheduled, counts = _role_pays(role_withholding, paydays)
 
     events: list[SettlementEvent] = []
     for period, row in payroll.iterrows():
         gross = float(row["gross_wages"] + row["bonuses"])
         days = by_month[period]
         if role_withholding is not None:
-            if row["bonuses"] != 0:
-                raise ValueError("role_withholding supports regular earnings only, not bonuses")
-            actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
-            tolerance = Decimal("0.005") * max(sum(counts[day] for day in days), 1)
-            if not math.isfinite(gross) or gross < 0 or abs(actual - Decimal(str(gross))) > tolerance:
-                raise ValueError(f"role_withholding earnings do not reconcile to {period}")
-            if gross and any(day not in scheduled for day in days):
-                raise ValueError(f"role_withholding is missing a payday in {period}")
-            withholding = float(sum((scheduled[day][1] for day in days if day in scheduled), Decimal(0)))
+            withholding = _reconciled_withholding(period, row, days, scheduled, counts)
             net_wages = gross - withholding
         else:
             withholding = gross * rate
