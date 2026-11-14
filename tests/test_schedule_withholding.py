@@ -173,6 +173,28 @@ def test_refusals_never_fall_back_to_an_average_rate(tmp_path, code):
         _run(tmp_path, {"ok": False, "code": "scope.unconfirmed"}, code=code)
 
 
+def test_a_refusal_names_the_role_payday_and_the_calculators_message(tmp_path):
+    refusal = {"ok": False, "code": "period.unsupported", "message": "2027-28 is not supported"}
+    with pytest.raises(ValueError, match=r"Role A on 2026-07-03: period\.unsupported: 2027-28 is not"):
+        _run(tmp_path, refusal, code=2)
+
+
+def test_a_failed_process_without_json_reports_its_exit_code_and_stderr(tmp_path):
+    # A build without --refusal-json prints its usage to stderr and nothing to stdout.
+    executable = tmp_path / "calculator.exe"
+    executable.touch()
+    process = subprocess.CompletedProcess([], 2, "", "usage: australian-tax-calculators COMMAND\nmore\n")
+    with patch("pyfpa.io.native_tax.subprocess.run", return_value=process), pytest.raises(
+        ValueError, match="exited 2: usage: australian-tax-calculators COMMAND$",
+    ):
+        calculate_role_withholding([PAY], executable=executable, engine_version="1.0.0")
+
+
+def test_a_wrong_engine_version_names_the_version_returned(tmp_path):
+    with pytest.raises(ValueError, match="australian-tax-calculators 0.2.0"):
+        _run(tmp_path, _response(engine_version="0.2.0"))
+
+
 @pytest.mark.parametrize("error", [OSError("unavailable"), subprocess.TimeoutExpired("calculator", 10), UnicodeError()])
 def test_native_process_failures_stop_the_projection(tmp_path, error):
     executable = tmp_path / "calculator.exe"
