@@ -23,10 +23,11 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Context, Decimal, DecimalException, Inexact, localcontext
 
 import pandas as pd
 
@@ -68,10 +69,22 @@ def _event(component: str, period: pd.Period, obligation: date, amount: float,
     return SettlementEvent(component, period, obligation, due, cash, amount)
 
 
+@contextmanager
+def _exact() -> Iterator[None]:
+    """Decimal arithmetic that refuses to round, whatever precision the caller's context sets."""
+    try:
+        with localcontext(Context(prec=28)) as context:
+            context.traps[Inexact] = True
+            yield
+    except DecimalException as exc:
+        raise ValueError("role_withholding amounts cannot be added exactly") from exc
+
+
 def _role_pays(
     role_withholding: Sequence[RoleWithholding], paydays: Sequence[date],
 ) -> tuple[dict[date, tuple[Decimal, Decimal]], Counter[date]]:
     """Each payday's gross and withholding across its role payments, and how many there are."""
+    declared = set(paydays)
     scheduled: dict[date, tuple[Decimal, Decimal]] = {}
     counts: Counter[date] = Counter()
     seen: set[tuple[str, date]] = set()
@@ -81,11 +94,12 @@ def _role_pays(
         if key in seen:
             raise ValueError("role_withholding repeats a role and payday")
         seen.add(key)
-        if payment.payday not in paydays:
+        if payment.payday not in declared:
             raise ValueError("role_withholding contains an undeclared payday")
         counts[payment.payday] += 1
         gross_before, tax_before = scheduled.get(payment.payday, (Decimal(0), Decimal(0)))
-        scheduled[payment.payday] = (gross_before + payment.earnings, tax_before + result.withholding)
+        with _exact():
+            scheduled[payment.payday] = (gross_before + payment.earnings, tax_before + result.withholding)
     return scheduled, counts
 
 
@@ -97,13 +111,17 @@ def _reconciled_withholding(
     if row["bonuses"] != 0:
         raise ValueError("role_withholding supports regular earnings only, not bonuses")
     gross = float(row["gross_wages"])
-    actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
-    tolerance = Decimal("0.005") * max(sum(counts[day] for day in days), 1)
-    if not math.isfinite(gross) or gross < 0 or abs(actual - Decimal(str(gross))) > tolerance:
+    if not math.isfinite(gross) or gross < 0:
         raise ValueError(f"role_withholding earnings do not reconcile to {period}")
+    with _exact():
+        actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
+        tolerance = Decimal("0.005") * max(sum(counts[day] for day in days), 1)
+        if abs(actual - Decimal(str(gross))) > tolerance:
+            raise ValueError(f"role_withholding earnings do not reconcile to {period}")
+        withholding = sum((scheduled[day][1] for day in days if day in scheduled), Decimal(0))
     if gross and any(day not in scheduled for day in days):
         raise ValueError(f"role_withholding is missing a payday in {period}")
-    return float(sum((scheduled[day][1] for day in days if day in scheduled), Decimal(0)))
+    return float(withholding)
 
 
 def settlement_events(
@@ -185,7 +203,8 @@ def settlement_events(
                 amount = amounts[component] / len(days)
                 if role_withholding is not None and component != "super_guarantee":
                     gross_pay, withheld_pay = scheduled.get(day, (Decimal(0), Decimal(0)))
-                    amount = float(withheld_pay if component == "payg_withholding" else gross_pay - withheld_pay)
+                    with _exact():
+                        amount = float(withheld_pay if component == "payg_withholding" else gross_pay - withheld_pay)
                 if amount:
                     events.append(_event(component, period, day, amount,
                                          due_rules, early))

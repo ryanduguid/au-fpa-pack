@@ -56,16 +56,19 @@ def _run_calculator(payment: RolePay, executable: Path, timeout: float) -> tuple
 
 def _withholding(body: dict[str, Any], payment: RolePay, engine_version: str) -> Decimal:
     """The withholding from a successful result, once its identity and evidence check out."""
+    rates = body.get("rates")
+    scale = rates.get("scale") if isinstance(rates, dict) else None
     if (
         body.get("engine") != "australian-tax-calculators"
         or body.get("engine_version") != engine_version
         or body.get("calculation") != "payg_withholding"
         or body.get("period") != f"{payment.year} {payment.pay_period}"
+        or scale != str(payment.scale)
     ):
         raise ValueError(
-            "calculator identity, version, calculation or period does not match: "
+            "calculator identity, version, calculation, period or scale does not match: "
             f"{body.get('engine')} {body.get('engine_version')}, "
-            f"{body.get('calculation')} {body.get('period')}"
+            f"{body.get('calculation')} {body.get('period')} scale {scale}"
         )
     warnings = body.get("warnings")
     sources = body.get("sources")
@@ -83,9 +86,13 @@ def _withholding(body: dict[str, Any], payment: RolePay, engine_version: str) ->
     if not isinstance(value, str):
         raise ValueError("calculator withholding must be an AUD decimal string")
     try:
-        return Decimal(value)
+        withholding = Decimal(value)
     except InvalidOperation as exc:
         raise ValueError("calculator withholding must be an AUD decimal string") from exc
+    # Schedule 1 rounds every scale's withholding to whole dollars.
+    if not withholding.is_finite() or withholding != withholding.to_integral_value():
+        raise ValueError(f"calculator withholding must be whole dollars, got {value}")
+    return withholding
 
 
 def calculate_role_withholding(

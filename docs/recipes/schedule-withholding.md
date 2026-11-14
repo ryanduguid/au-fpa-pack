@@ -67,8 +67,10 @@ b = 185.1935) give $187 a week, and $187 × 13 / 3 rounds to $810.
 
 Each result keeps the calculator's full JSON in `evidence_json`, with its
 sources, source date and warnings: keep it with the forecast. A refusal, a
-timeout, a missing executable, a different `engine_version` or a result without
-that evidence stops the calculation rather than falling back to an average rate.
+timeout, a missing executable, a different `engine_version`, a result for
+another scale or period, withholding that is not whole dollars or a result
+without that evidence stops the calculation rather than falling back to an
+average rate.
 
 ## Scope
 
