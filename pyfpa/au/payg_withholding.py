@@ -8,7 +8,7 @@ do not establish eligibility or replace the operator's scope confirmation.
 """
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -32,12 +32,12 @@ class RolePay:
     def __post_init__(self) -> None:
         if not isinstance(self.role_name, str) or not self.role_name.strip():
             raise ValueError("role_name must be a non-empty label")
-        if type(self.payday) is not date:
+        if isinstance(self.payday, datetime) or not isinstance(self.payday, date):
             raise ValueError("payday must be a date")
         require_cents(self.earnings, "earnings")
         if self.pay_period not in ("weekly", "fortnightly", "monthly"):
             raise ValueError("pay_period must be weekly, fortnightly or monthly")
-        if type(self.scale) is not int or self.scale not in (1, 2, 3, 5, 6):
+        if isinstance(self.scale, bool) or not isinstance(self.scale, int) or self.scale not in (1, 2, 3, 5, 6):
             raise ValueError("scale must be 1, 2, 3, 5 or 6")
         if self.scope_confirmed is not True:
             raise ValueError("regular-pay scope must be explicitly confirmed for each role")

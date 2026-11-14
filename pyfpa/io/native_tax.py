@@ -30,7 +30,9 @@ def _run_calculator(payment: RolePay, executable: Path, timeout: float) -> tuple
         "scale": payment.scale, "year": payment.year, "scope_confirmed": True,
     }
     try:
-        process = subprocess.run(
+        # The caller selects the executable on purpose; the argument list is fixed, there is
+        # no shell and the payment's facts travel on stdin.
+        process = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit
             [str(executable), "payg-withholding", "--refusal-json"],
             input=json.dumps(arguments), text=True, encoding="utf-8",
             capture_output=True, timeout=timeout, check=False, shell=False,
