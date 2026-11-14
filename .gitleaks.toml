@@ -66,3 +66,7 @@ regexes = [
   # A bank's published branch code beside a placeholder account.
   '''^083[ -]?004$''',
 ]
+
+[[allowlists]]
+description = "Proof: a pull request allowlisting its own file"
+paths = ['''^proof/bypass/a[.]txt$''']
