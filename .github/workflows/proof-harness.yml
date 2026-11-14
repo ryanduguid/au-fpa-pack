@@ -1,0 +1,57 @@
+name: Proof harness
+
+# Test pull request only, never merged: runs proof/step-test.sh on ubuntu-latest
+# against this branch's secrets.yml step and each repository's .gitleaks.toml.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install gitleaks 8.30.1
+        run: |
+          v=8.30.1
+          base="https://github.com/gitleaks/gitleaks/releases/download/v$v"
+          curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" "$base/gitleaks_${v}_linux_x64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/checksums.txt" "$base/gitleaks_${v}_checksums.txt"
+          sum="$(grep " gitleaks_${v}_linux_x64.tar.gz\$" "$RUNNER_TEMP/checksums.txt" | cut -d' ' -f1)"
+          echo "$sum  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/bin" gitleaks
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Run the harness
+        run: |
+          git config --global user.name t
+          git config --global user.email t@example.invalid
+          git --version
+          gitleaks version
+          status=0
+          for config in proof/configs/*.toml; do
+            name="$(basename "$config" .toml)"
+            for step in old:proof/step-old.txt r1:proof/step-r1.yml new:.github/workflows/secrets.yml; do
+              label="${step%%:*}-$name"
+              dir="$RUNNER_TEMP/h/$label"
+              mkdir -p "$dir"
+              set +e
+              EXPECT=1 bash proof/step-test.sh "${step#*:}" "$PWD/$config" "$dir/repo" > "$dir/result.txt" 2>&1
+              code=$?
+              set -e
+              echo "== $label harness exit=$code"
+              grep -E '^(git |[a-r]-|mismatches)' "$dir/result.txt"
+              # Only the branch's own step must match every expectation.
+              if [ "${step%%:*}" = new ] && [ "$code" -ne 0 ]; then status=1; fi
+            done
+          done
+          exit "$status"
