@@ -23,9 +23,11 @@ import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 import pandas as pd
 
+from pyfpa.au.payg_withholding import RoleWithholding
 from pyfpa.cash13.schemas import WeeklyFlow
 
 DueRule = Callable[[date], date]
@@ -67,9 +69,10 @@ def settlement_events(
     payroll: pd.DataFrame,
     paydays: Sequence[date],
     *,
-    payg_withholding_rate_assumption: float,
+    payg_withholding_rate_assumption: float | None = None,
     due_rules: Mapping[str, DueRule],
     pay_days_before_due: Mapping[str, int] | None = None,
+    role_withholding: Sequence[RoleWithholding] | None = None,
 ) -> list[SettlementEvent]:
     """Dated settlement events for a `payroll_forecast` frame.
 
@@ -77,10 +80,18 @@ def settlement_events(
     payday, to a function from its obligation date to its due date.
     `pay_days_before_due` moves a component's cash date that many days before
     its due date (default 0: paid when due).
+    Supply either the existing average-rate assumption or explicit per-role
+    calculator results. Schedule mode uses their actual gross by payday and
+    reconciles the month's earnings to the frame, rounded to cents. Retain the
+    results' evidence separately; settlement events are cash projections.
     """
-    rate = payg_withholding_rate_assumption
-    if not 0 <= rate < 1:
-        raise ValueError("payg_withholding_rate_assumption must be at least 0 and below 1")
+    rate = 0.0
+    if role_withholding is None:
+        if payg_withholding_rate_assumption is None or not 0 <= payg_withholding_rate_assumption < 1:
+            raise ValueError("payg_withholding_rate_assumption must be at least 0 and below 1")
+        rate = payg_withholding_rate_assumption
+    elif payg_withholding_rate_assumption is not None:
+        raise ValueError("choose either the average-rate assumption or role_withholding")
     if "net_wages" in due_rules:
         raise ValueError("net_wages fall due on each payday, so due_rules cannot move them")
     early = pay_days_before_due or {}
@@ -100,12 +111,44 @@ def settlement_events(
             raise ValueError(f"payday {day.isoformat()} falls outside the payroll months")
         by_month[period].append(day)
 
+    scheduled: dict[date, tuple[Decimal, Decimal]] = {}
+    if role_withholding is not None:
+        seen: set[tuple[str, date]] = set()
+        for result in role_withholding:
+            payment = result.payment
+            key = (payment.role_name, payment.payday)
+            if key in seen:
+                raise ValueError("role_withholding repeats a role and payday")
+            seen.add(key)
+            if payment.payday not in paydays:
+                raise ValueError("role_withholding contains an undeclared payday")
+            gross_before, tax_before = scheduled.get(payment.payday, (Decimal(0), Decimal(0)))
+            scheduled[payment.payday] = (
+                gross_before + payment.earnings, tax_before + result.withholding,
+            )
+
     events: list[SettlementEvent] = []
     for period, row in payroll.iterrows():
         gross = float(row["gross_wages"] + row["bonuses"])
+        days = by_month[period]
+        if role_withholding is not None:
+            if row["bonuses"] != 0:
+                raise ValueError("role_withholding supports regular earnings only, not bonuses")
+            actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
+            if not math.isfinite(gross) or gross < 0 or actual != Decimal(str(gross)).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP,
+            ):
+                raise ValueError(f"role_withholding earnings do not reconcile to {period}")
+            if gross and any(day not in scheduled for day in days):
+                raise ValueError(f"role_withholding is missing a payday in {period}")
+            withholding = float(sum((scheduled[day][1] for day in days if day in scheduled), Decimal(0)))
+            net_wages = gross - withholding
+        else:
+            withholding = gross * rate
+            net_wages = gross * (1 - rate)
         amounts = {
-            "net_wages": gross * (1 - rate),
-            "payg_withholding": gross * rate,
+            "net_wages": net_wages,
+            "payg_withholding": withholding,
             "super_guarantee": float(row["super_guarantee"]),
             "payroll_tax": float(row["payroll_tax"]),
             "workers_comp": float(row["workers_comp"]),
@@ -113,13 +156,16 @@ def settlement_events(
         for component, amount in amounts.items():
             if amount and component != "net_wages" and component not in due_rules:
                 raise ValueError(f"{component} has costs but no due rule")
-        days = by_month[period]
         if not days and any(amounts[c] for c in PAYDAY_COMPONENTS):
             raise ValueError(f"{period} has payroll costs but no payday")
         for day in days:
             for component in PAYDAY_COMPONENTS:
-                if amounts[component]:
-                    events.append(_event(component, period, day, amounts[component] / len(days),
+                amount = amounts[component] / len(days)
+                if role_withholding is not None and component != "super_guarantee":
+                    gross_pay, withheld_pay = scheduled.get(day, (Decimal(0), Decimal(0)))
+                    amount = float(withheld_pay if component == "payg_withholding" else gross_pay - withheld_pay)
+                if amount:
+                    events.append(_event(component, period, day, amount,
                                          due_rules, early))
         month_end = period.end_time.date()
         for component in MONTHLY_COMPONENTS:
