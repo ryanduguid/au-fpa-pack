@@ -16,6 +16,9 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
   liabilities and 13-week flows derived from them; net wages fall due on each
   payday and the caller passes the due-date rule for every other cost
   (`pyfpa.au.payroll_settlement`)
+  - optional [schedule withholding](recipes/schedule-withholding.md) for explicit
+    ordinary role payments, through a caller-selected local Rust calculator;
+    the existing average-rate planning assumption remains available
   - PAYG withholding due dates under Taxation Administration Act 1953,
     Schedule 1, section 16-75 (`pyfpa.au.paygw`)
   - super guarantee due dates under Payday Super and the quarterly rules
