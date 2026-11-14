@@ -50,7 +50,7 @@ interface for those cases.
 
 Schedule settlement uses the explicit gross and withholding for each payday,
 allowing unequal payments. Their monthly gross must reconcile to the forecast
-rounded to cents; the frame's bonuses must be zero. Repeated roles, undeclared
+within half a cent a payment; the frame's bonuses must be zero. Repeated roles, undeclared
 or missing paydays, incompatible modes and unreconciled gross are refused.
 Super and other payroll cost settlement retain their existing treatment.
 

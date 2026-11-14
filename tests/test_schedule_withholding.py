@@ -198,13 +198,21 @@ def test_native_adapter_needs_an_existing_absolute_file_and_a_version(tmp_path):
 
 
 @pytest.mark.parametrize(("kwargs", "message"), [
-    ({"gross": 371}, "reconcile"), ({"gross": float("nan")}, "reconcile"),
+    ({"gross": 371}, "reconcile"), ({"gross": 370.01}, "reconcile"), ({"gross": float("nan")}, "reconcile"),
     ({"bonus": 1}, "bonuses"), ({"payg_withholding_rate_assumption": 0.2}, "either"),
     ({"paydays": ()}, "undeclared"), ({"rules": {"super_guarantee": lambda day: day}}, "no due rule"),
 ])
 def test_schedule_mode_refuses_ambiguous_or_unreconciled_inputs(kwargs, message):
     with pytest.raises(ValueError, match=message):
         _settle([RoleWithholding(PAY, Decimal(1), "{}")], **kwargs)
+
+
+def test_cent_rounded_pays_reconcile_to_the_unrounded_monthly_frame():
+    # Two roles on 52,000 a year: the frame holds 2 * 52000 / 12 and each pay is whole cents.
+    pays = [replace(PAY, role_name=name, pay_period="monthly", earnings=Decimal("4333.33"))
+            for name in ("Role A", "Role B")]
+    events = _settle([RoleWithholding(pay, Decimal(600), "{}") for pay in pays], gross=2 * 52000 / 12)
+    assert next(event.amount for event in events if event.component == "net_wages") == 7466.66
 
 
 def test_duplicate_roles_and_missing_paydays_are_refused():

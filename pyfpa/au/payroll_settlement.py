@@ -20,10 +20,11 @@ module: due-date rules are passed in.
 from __future__ import annotations
 
 import math
+from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 import pandas as pd
 
@@ -82,7 +83,8 @@ def settlement_events(
     its due date (default 0: paid when due).
     Supply either the existing average-rate assumption or explicit per-role
     calculator results. Schedule mode uses their actual gross by payday and
-    reconciles the month's earnings to the frame, rounded to cents. Retain the
+    reconciles the month's earnings to the frame within half a cent a payment,
+    as each payment is in whole cents. Retain the
     results' evidence separately; settlement events are cash projections.
     """
     rate = 0.0
@@ -112,6 +114,7 @@ def settlement_events(
         by_month[period].append(day)
 
     scheduled: dict[date, tuple[Decimal, Decimal]] = {}
+    counts: Counter[date] = Counter()
     if role_withholding is not None:
         seen: set[tuple[str, date]] = set()
         for result in role_withholding:
@@ -122,6 +125,7 @@ def settlement_events(
             seen.add(key)
             if payment.payday not in paydays:
                 raise ValueError("role_withholding contains an undeclared payday")
+            counts[payment.payday] += 1
             gross_before, tax_before = scheduled.get(payment.payday, (Decimal(0), Decimal(0)))
             scheduled[payment.payday] = (
                 gross_before + payment.earnings, tax_before + result.withholding,
@@ -135,9 +139,8 @@ def settlement_events(
             if row["bonuses"] != 0:
                 raise ValueError("role_withholding supports regular earnings only, not bonuses")
             actual = sum((scheduled.get(day, (Decimal(0), Decimal(0)))[0] for day in days), Decimal(0))
-            if not math.isfinite(gross) or gross < 0 or actual != Decimal(str(gross)).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP,
-            ):
+            tolerance = Decimal("0.005") * max(sum(counts[day] for day in days), 1)
+            if not math.isfinite(gross) or gross < 0 or abs(actual - Decimal(str(gross))) > tolerance:
                 raise ValueError(f"role_withholding earnings do not reconcile to {period}")
             if gross and any(day not in scheduled for day in days):
                 raise ValueError(f"role_withholding is missing a payday in {period}")
